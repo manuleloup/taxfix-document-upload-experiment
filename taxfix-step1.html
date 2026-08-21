@@ -575,6 +575,94 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   font-variant-numeric: tabular-nums;
 }
 .tax-val.pend { font-size: 12px; font-weight: 400; color: var(--dim); font-style: italic; letter-spacing: 0; font-family: var(--font-body); }
+
+/* ── Loading state ─────────────────────────── */
+.upload-zone { position: relative; }
+.uz-normal { transition: opacity .15s; }
+.upload-zone.loading .uz-normal { opacity: 0; pointer-events: none; }
+.uz-loading {
+  position: absolute; inset: 0;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.upload-zone.loading .uz-loading { display: flex; }
+.uz-spinner {
+  width: 28px; height: 28px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--green-dark);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.uz-loading-text { font-size: 13.5px; color: var(--muted); }
+
+/* ── Toast ──────────────────────────────────── */
+.toast-area {
+  position: fixed; bottom: 28px; right: 28px;
+  z-index: 300;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--text); color: #fff;
+  padding: 10px 16px; border-radius: 10px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--sh-md);
+  animation: toastIn .2s ease;
+  max-width: 320px; pointer-events: auto;
+}
+.toast.success { background: var(--green-dark); }
+.toast.info    { background: var(--blue); }
+.toast.error   { background: #C0392B; }
+@keyframes toastIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Group complete badge ───────────────────── */
+.group-complete-badge {
+  display: none;
+  font-size: 10.5px; font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 2px 8px; border-radius: 20px;
+}
+.group-header.complete .group-complete-badge { display: inline-flex; align-items: center; gap: 3px; }
+.group-header.complete .group-count { display: none; }
+
+/* ── Doc card (sidebar) ─────────────────────── */
+.doc-card {
+  display: flex; gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+  align-items: flex-start;
+}
+.doc-card:last-child { border-bottom: none; }
+.doc-icon {
+  width: 28px; height: 28px; flex-shrink: 0;
+  border-radius: 6px;
+  background: var(--green-bg); border: 1px solid var(--green-br);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--green-dark);
+}
+.doc-icon.other { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
+.doc-body { flex: 1; min-width: 0; }
+.doc-type { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 1px; }
+.doc-meta { font-size: 11px; color: var(--muted); }
+.doc-file { font-size: 10.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Detected amount inside checklist ──────── */
+.item-detected { font-size: 11px; color: var(--green-dark); font-weight: 500; margin-top: 2px; }
+
+/* ── PAYE complete transition banner ───────── */
+.paye-done-banner {
+  background: var(--green-bg); border: 1px solid var(--green-br);
+  border-radius: var(--r); padding: 11px 15px; margin-bottom: 16px;
+  font-size: 13px; font-weight: 500; color: var(--green-dark);
+  display: flex; align-items: center; gap: 8px;
+  animation: toastIn .25s ease;
+}
 </style>
 
 <!-- HEADER -->
@@ -628,7 +716,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
     <div class="guide-section" id="guideSection">
 
       <!-- PAYE group -->
-      <div class="group-header open active" onclick="toggleGroup(this)">
+      <div class="group-header open active" data-group="paye" onclick="toggleGroup(this)">
         <div class="group-icon lilac">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BC73F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
@@ -639,18 +727,19 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
         </div>
         <div class="group-meta">
           <span class="group-count">3 docs</span>
+          <span class="group-complete-badge">✓ Complete</span>
           <svg class="g-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="group-items open">
-        <div class="item-row">
+      <div class="group-items open" data-group="paye">
+        <div class="item-row" data-key="paye-p60">
           <div class="item-check" onclick="toggleCheck(this)"></div>
           <div class="item-info">
             <div class="item-name">P60</div>
             <div class="item-hint">Year-end earnings &amp; tax summary from your employer</div>
           </div>
         </div>
-        <div class="item-row">
+        <div class="item-row" data-key="paye-p45">
           <div class="item-check" onclick="toggleCheck(this)"></div>
           <div class="item-info">
             <div class="item-name">P45 <span class="item-badge">if you changed jobs</span></div>
@@ -679,7 +768,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
             </div>
           </div>
         </div>
-        <div class="item-row">
+        <div class="item-row" data-key="paye-p11d">
           <div class="item-check" onclick="toggleCheck(this)"></div>
           <div class="item-info">
             <div class="item-name">P11D <span class="item-badge">optional</span></div>
@@ -689,7 +778,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
       </div>
 
       <!-- Rental group -->
-      <div class="group-header" onclick="toggleGroup(this)">
+      <div class="group-header" data-group="rental" onclick="toggleGroup(this)">
         <div class="group-icon green">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38B96C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
@@ -701,25 +790,26 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
         </div>
         <div class="group-meta">
           <span class="group-count">3 docs</span>
+          <span class="group-complete-badge">✓ Complete</span>
           <svg class="g-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="group-items">
-        <div class="item-row">
+      <div class="group-items" data-group="rental">
+        <div class="item-row" data-key="rental-statement">
           <div class="item-check" onclick="toggleCheck(this)"></div>
           <div class="item-info">
             <div class="item-name">Rental income records</div>
             <div class="item-hint">Bank statements or letting agent statements</div>
           </div>
         </div>
-        <div class="item-row">
+        <div class="item-row" data-key="rental-expenses">
           <div class="item-check" onclick="toggleCheck(this)"></div>
           <div class="item-info">
             <div class="item-name">Expense receipts</div>
             <div class="item-hint">Maintenance, repairs, letting agent fees</div>
           </div>
         </div>
-        <div class="item-row">
+        <div class="item-row" data-key="rental-mortgage">
           <div class="item-check" onclick="toggleCheck(this)"></div>
           <div class="item-info">
             <div class="item-name">Mortgage interest statement <span class="item-badge">if mortgaged</span></div>
@@ -734,18 +824,25 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
     <div class="upload-zone" id="uploadZone"
       ondragover="event.preventDefault();this.classList.add('drag-over')"
       ondragleave="this.classList.remove('drag-over')"
-      ondrop="event.preventDefault();this.classList.remove('drag-over')"
+      ondrop="event.preventDefault();this.classList.remove('drag-over');handleFiles(event.dataTransfer.files)"
       onclick="document.getElementById('fileInput').click()">
-      <svg class="uz-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
-      </svg>
-      <div class="uz-title">Drop any document here</div>
-      <div class="uz-sub">We'll read it and match it to the right category automatically</div>
-      <button class="btn-upload-main" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Browse files
-      </button>
-      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none">
+      <div class="uz-normal">
+        <svg class="uz-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+        </svg>
+        <div class="uz-title">Drop any document here</div>
+        <div class="uz-sub">We'll read it and match it to the right category automatically</div>
+        <button class="btn-upload-main" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Browse files
+        </button>
+      </div>
+      <div class="uz-loading">
+        <div class="uz-spinner"></div>
+        <div class="uz-loading-text">Analysing document…</div>
+      </div>
+      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+             onchange="handleFiles(this.files);this.value=''">
     </div>
 
   </main>
@@ -771,7 +868,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
       </div>
     </div>
 
-    <div class="sb-section">
+    <div class="sb-section" id="sbIncome">
       <div class="sb-title">Your income</div>
       <div class="row"><span class="row-lbl">PAYE income</span>     <span class="row-val pend">Awaiting P60</span></div>
       <div class="row"><span class="row-lbl">Self-employment</span> <span class="row-val pend">Not detected</span></div>
@@ -781,9 +878,9 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
     <div class="sb-section">
       <div class="sb-title">
         Uploaded documents
-        <span class="docs-pill">0 docs</span>
+        <span class="docs-pill" id="docsCount">0 docs</span>
       </div>
-      <p class="sb-note">Documents you share appear here. Figures are extracted automatically.</p>
+      <div id="docsList"><p class="sb-note">Documents you share appear here. Figures are extracted automatically.</p></div>
     </div>
 
     <div class="sb-section">
@@ -804,28 +901,208 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 </div>
 
 <script>
-  // ── Guide accordion ─────────────────────────────────────────────
-  function toggleGroup(header) {
-    header.classList.toggle('open');
-    header.nextElementSibling.classList.toggle('open');
-  }
-  function toggleCheck(el) {
-    el.classList.toggle('checked');
-    el.closest('.item-row').querySelector('.item-name').classList.toggle('done');
-  }
-  function toggleAlt(el) {
-    el.classList.toggle('open');
-    el.nextElementSibling.classList.toggle('open');
-  }
+// ── State ────────────────────────────────────────────────────────────────────
+const uploads     = [];          // { name, result, ts }
+const checkedKeys = new Set();   // item keys the user or AI has marked done
 
-  // ── Drag-and-drop on upload zone ─────────────────────────────────
-  // ── Drag-and-drop on all cards ──────────────────────────────────
-  document.querySelectorAll('.ucard').forEach(card => {
-    ['dragenter','dragover'].forEach(ev => {
-      card.addEventListener(ev, e => { e.preventDefault(); card.classList.add('drag-over'); });
-    });
-    ['dragleave','dragend','drop'].forEach(ev => {
-      card.addEventListener(ev, e => { e.preventDefault(); card.classList.remove('drag-over'); });
-    });
+// ── Type → checklist mapping ─────────────────────────────────────────────────
+const TYPE_MAP = {
+  'P60':                     { key: 'paye-p60',        label: 'P60' },
+  'P45':                     { key: 'paye-p45',        label: 'P45' },
+  'payslip':                 { key: 'paye-p60',        label: 'Last payslip (P60 substitute)' },
+  'P11D':                    { key: 'paye-p11d',       label: 'P11D' },
+  'rental_income_statement': { key: 'rental-statement',label: 'Rental income records' },
+  'rental_expense_receipt':  { key: 'rental-expenses', label: 'Expense receipt' },
+  'mortgage_statement':      { key: 'rental-mortgage', label: 'Mortgage interest statement' },
+  'bank_statement':          { key: 'rental-statement',label: 'Bank statement' },
+};
+const CAT_LABEL = {
+  paye_employment: 'PAYE employment',
+  rental_income:   'Rental income',
+  self_employment: 'Self-employment',
+  other:           'Other',
+};
+// A group is "done" when any of its required keys are checked
+const GROUP_REQUIRED = {
+  paye:   ['paye-p60', 'paye-p45'],
+  rental: ['rental-statement'],
+};
+
+// ── Upload handler ───────────────────────────────────────────────────────────
+async function handleFiles(files) {
+  for (const file of Array.from(files)) {
+    await processFile(file);
+  }
+}
+
+async function processFile(file) {
+  const zone = document.getElementById('uploadZone');
+  zone.classList.add('loading');
+  try {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetch('/api/detect', { method: 'POST', body: fd });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error || `Server error ${res.status}`);
+    }
+    const result = await res.json();
+
+    // Log upload
+    uploads.push({ name: file.name, result, ts: Date.now() });
+
+    // Match to checklist
+    const mapping = TYPE_MAP[result.type];
+    if (mapping) {
+      markItemDone(mapping.key, result);
+      showToast(`${mapping.label} detected — checklist updated ✓`, 'success');
+      updateIncomeRow(result);
+    } else {
+      const catLabel = CAT_LABEL[result.category] || 'Other';
+      showToast(`${(result.type || 'Document').replace(/_/g,' ')} detected — logged under ${catLabel}`, 'info');
+    }
+    updateDocSidebar();
+    checkGroupCompletion('paye');
+    checkGroupCompletion('rental');
+
+  } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Could not analyse document — please try again', 'error');
+  } finally {
+    zone.classList.remove('loading');
+  }
+}
+
+// ── Checklist helpers ────────────────────────────────────────────────────────
+function markItemDone(key, result) {
+  checkedKeys.add(key);
+  const row = document.querySelector(`.item-row[data-key="${key}"]`);
+  if (!row) return;
+  row.querySelector('.item-check').classList.add('checked');
+  row.querySelector('.item-name').classList.add('done');
+  if (result && result.key_figure) {
+    let det = row.querySelector('.item-detected');
+    if (!det) {
+      det = document.createElement('div');
+      det.className = 'item-detected';
+      row.querySelector('.item-info').appendChild(det);
+    }
+    det.textContent = result.key_figure + ' detected';
+  }
+}
+
+function checkGroupCompletion(group) {
+  const done = GROUP_REQUIRED[group].some(k => checkedKeys.has(k));
+  if (!done) return;
+  const header = document.querySelector(`.group-header[data-group="${group}"]`);
+  if (header && !header.classList.contains('complete')) {
+    header.classList.add('complete');
+    if (group === 'paye') {
+      showPayeCompleteBanner();
+      expandGroup('rental');
+    }
+  }
+}
+
+function expandGroup(group) {
+  const header = document.querySelector(`.group-header[data-group="${group}"]`);
+  const items  = document.querySelector(`.group-items[data-group="${group}"]`);
+  if (header && !header.classList.contains('open')) {
+    header.classList.add('open');
+    items.classList.add('open');
+    setTimeout(() => header.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 150);
+  }
+}
+
+function showPayeCompleteBanner() {
+  if (document.getElementById('payeDoneBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'payeDoneBanner';
+  banner.className = 'paye-done-banner';
+  banner.innerHTML = `
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+    PAYE complete — now add your rental income documents below
+  `;
+  const guide = document.getElementById('guideSection');
+  guide.insertAdjacentElement('afterend', banner);
+  // Auto-dismiss after 8 s
+  setTimeout(() => banner && banner.remove(), 8000);
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+function updateDocSidebar() {
+  const n = uploads.length;
+  document.getElementById('docsCount').textContent = `${n} doc${n !== 1 ? 's' : ''}`;
+
+  const list = document.getElementById('docsList');
+  list.innerHTML = '';
+  uploads.slice().reverse().forEach(({ name, result }) => {
+    const matched  = !!TYPE_MAP[result.type];
+    const typeLabel= (result.type || 'Unknown').replace(/_/g, ' ');
+    const catLabel = CAT_LABEL[result.category] || 'Other';
+    const card = document.createElement('div');
+    card.className = 'doc-card';
+    card.innerHTML = `
+      <div class="doc-icon ${matched ? '' : 'other'}">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+        </svg>
+      </div>
+      <div class="doc-body">
+        <div class="doc-type">${typeLabel}</div>
+        <div class="doc-meta">${catLabel}${result.key_figure ? ' · ' + result.key_figure : ''}${result.tax_year ? ' · ' + result.tax_year : ''}</div>
+        <div class="doc-file" title="${name}">${name}</div>
+      </div>`;
+    list.appendChild(card);
   });
+}
+
+function updateIncomeRow(result) {
+  if (!result.key_figure) return;
+  let sel = null;
+  if (result.category === 'paye_employment') {
+    sel = '#sbIncome .row:nth-child(2) .row-val';
+  } else if (result.category === 'rental_income') {
+    sel = '#sbIncome .row:nth-child(4) .row-val';
+  }
+  if (!sel) return;
+  const el = document.querySelector(sel);
+  if (el) { el.textContent = result.key_figure; el.classList.remove('pend'); }
+}
+
+// ── Toast ────────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  let area = document.querySelector('.toast-area');
+  if (!area) { area = document.createElement('div'); area.className = 'toast-area'; document.body.appendChild(area); }
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  area.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+// ── Accordion (manual toggles) ───────────────────────────────────────────────
+function toggleGroup(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+function toggleCheck(el) {
+  el.classList.toggle('checked');
+  const key  = el.closest('.item-row')?.dataset.key;
+  el.closest('.item-row').querySelector('.item-name').classList.toggle('done');
+  if (key) {
+    if (el.classList.contains('checked')) { checkedKeys.add(key); checkGroupCompletion(key.split('-')[0]); }
+    else checkedKeys.delete(key);
+  }
+}
+function toggleAlt(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+
+// ── Stale drag handlers on old .ucard elements (kept for safety) ─────────────
+document.querySelectorAll('.ucard').forEach(card => {
+  ['dragenter','dragover'].forEach(ev => card.addEventListener(ev, e => { e.preventDefault(); card.classList.add('drag-over'); }));
+  ['dragleave','dragend','drop'].forEach(ev => card.addEventListener(ev, e => { e.preventDefault(); card.classList.remove('drag-over'); }));
+});
 </script>
