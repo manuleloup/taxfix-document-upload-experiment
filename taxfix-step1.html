@@ -1,13 +1,13 @@
 <title>Taxfix</title>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
 
 <style>
 /* ── Tokens ─────────────────────────────── */
 :root {
-  --font-heading: 'DM Serif Display', 'Georgia', serif;
-  --font-body:    'Source Serif 4', 'Georgia', serif;
-  --font:         'Source Serif 4', 'Georgia', serif;
+  --font-heading: 'IBM Plex Sans', 'Helvetica Neue', sans-serif;
+  --font-body:    'IBM Plex Sans', 'Helvetica Neue', sans-serif;
+  --font:         'IBM Plex Sans', 'Helvetica Neue', sans-serif;
 
   --bg:           #FFFFFF;
   --surface:      #FFFFFF;
@@ -15,16 +15,16 @@
   --border:       #E2D9D2;
   --border-soft:  #EEE8E2;
 
-  --text:         #154618;
+  --text:         #1C1917;
   --muted:        #9A9288;
   --dim:          #B8AFA7;
 
-  --green:        #ADEE68;
-  --green-h:      #CEF5A4;
-  --green-bg:     #ECFFC7;
-  --green-br:     #CEF5A4;
-  --green-dark:   #36893B;
-  --green-text:   #154618;
+  --green:        #292524;
+  --green-h:      #44403C;
+  --green-bg:     #F5F5F4;
+  --green-br:     #D6D3D1;
+  --green-dark:   #44403C;
+  --green-text:   #FFFFFF;
 
   --blue:         #668CFF;
   --blue-bg:      #E8F0FF;
@@ -61,10 +61,12 @@
     --text:         #E8EFF7;
     --muted:        #8B96A7;
     --dim:          #596470;
-    --green:        #3BB96C;
-    --green-h:      #4ECF80;
-    --green-bg:     #0C2318;
-    --green-br:     #194A2F;
+    --green:        #E7E5E4;
+    --green-h:      #FAFAF9;
+    --green-bg:     #292524;
+    --green-br:     #44403C;
+    --green-dark:   #A8A29E;
+    --green-text:   #1C1917;
     --blue:         #7B96F9;
     --blue-bg:      #0E1535;
     --blue-br:      #1D2E60;
@@ -85,10 +87,12 @@
   --text:         #E8EFF7;
   --muted:        #8B96A7;
   --dim:          #596470;
-  --green:        #3BB96C;
-  --green-h:      #4ECF80;
-  --green-bg:     #0C2318;
-  --green-br:     #194A2F;
+  --green:        #E7E5E4;
+  --green-h:      #FAFAF9;
+  --green-bg:     #292524;
+  --green-br:     #44403C;
+  --green-dark:   #A8A29E;
+  --green-text:   #1C1917;
   --blue:         #7B96F9;
   --blue-bg:      #0E1535;
   --blue-br:      #1D2E60;
@@ -197,12 +201,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   height: var(--prog-h);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  padding: 0 32px;
   z-index: 99;
 }
-.prog-steps { display: flex; align-items: center; max-width: 680px; }
+.prog-steps {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 44px;
+}
 .step { display: flex; align-items: center; gap: 8px; }
 .step-track {
   width: 48px;
@@ -234,8 +242,9 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
 /* ── Page layout ─────────────────────────── */
 .page {
-  margin-top: calc(var(--header-h) + var(--prog-h));
+  margin: calc(var(--header-h) + var(--prog-h)) auto 0;
   min-height: calc(100vh - var(--header-h) - var(--prog-h));
+  max-width: 1400px;
   display: flex;
 }
 
