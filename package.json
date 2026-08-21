@@ -1,0 +1,16 @@
+{
+  "name": "taxfix-document-upload-experiment",
+  "version": "0.1.0",
+  "description": "Taxfix document upload UI experiment — self-contained prototype",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.55.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1"
+  }
+}
