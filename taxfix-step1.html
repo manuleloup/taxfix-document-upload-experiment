@@ -1,0 +1,831 @@
+<title>Taxfix</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap">
+
+<style>
+/* ── Tokens ─────────────────────────────── */
+:root {
+  --font-heading: 'DM Serif Display', 'Georgia', serif;
+  --font-body:    'Source Serif 4', 'Georgia', serif;
+  --font:         'Source Serif 4', 'Georgia', serif;
+
+  --bg:           #FFFFFF;
+  --surface:      #FFFFFF;
+  --surface-2:    #F5F0EB;
+  --border:       #E2D9D2;
+  --border-soft:  #EEE8E2;
+
+  --text:         #154618;
+  --muted:        #9A9288;
+  --dim:          #B8AFA7;
+
+  --green:        #ADEE68;
+  --green-h:      #CEF5A4;
+  --green-bg:     #ECFFC7;
+  --green-br:     #CEF5A4;
+  --green-dark:   #36893B;
+  --green-text:   #154618;
+
+  --blue:         #668CFF;
+  --blue-bg:      #E8F0FF;
+  --blue-br:      #B6C5F3;
+
+  --amber:        #F8A21A;
+  --amber-bg:     #FFEFD3;
+  --amber-br:     #F8C677;
+
+  --lilac:        #BC73F2;
+  --lilac-bg:     #F6EBFE;
+  --lilac-br:     #DBB9F3;
+
+  --header-h: 58px;
+  --prog-h:   48px;
+  --sidebar-w: 310px;
+
+  --sh-sm: 0 1px 2px rgba(0,0,0,.05);
+  --sh:    0 1px 4px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.04);
+  --sh-md: 0 6px 20px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.05);
+
+  --r-sm: 8px;
+  --r:    12px;
+  --r-lg: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:           #0E1410;
+    --surface:      #151E14;
+    --surface-2:    #1C2A1A;
+    --border:       #252E3C;
+    --border-soft:  #1E2733;
+    --text:         #E8EFF7;
+    --muted:        #8B96A7;
+    --dim:          #596470;
+    --green:        #3BB96C;
+    --green-h:      #4ECF80;
+    --green-bg:     #0C2318;
+    --green-br:     #194A2F;
+    --blue:         #7B96F9;
+    --blue-bg:      #0E1535;
+    --blue-br:      #1D2E60;
+    --amber:        #FBBF24;
+    --amber-bg:     #1C1408;
+    --amber-br:     #3D2A00;
+    --sh-sm: 0 1px 2px rgba(0,0,0,.25);
+    --sh:    0 1px 4px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.2);
+    --sh-md: 0 6px 20px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"] {
+  --bg:           #0C1017;
+  --surface:      #131A24;
+  --surface-2:    #1A2130;
+  --border:       #252E3C;
+  --border-soft:  #1E2733;
+  --text:         #E8EFF7;
+  --muted:        #8B96A7;
+  --dim:          #596470;
+  --green:        #3BB96C;
+  --green-h:      #4ECF80;
+  --green-bg:     #0C2318;
+  --green-br:     #194A2F;
+  --blue:         #7B96F9;
+  --blue-bg:      #0E1535;
+  --blue-br:      #1D2E60;
+  --amber:        #FBBF24;
+  --amber-bg:     #1C1408;
+  --amber-br:     #3D2A00;
+  --sh-sm: 0 1px 2px rgba(0,0,0,.25);
+  --sh:    0 1px 4px rgba(0,0,0,.3), 0 2px 8px rgba(0,0,0,.2);
+  --sh-md: 0 6px 20px rgba(0,0,0,.4), 0 2px 6px rgba(0,0,0,.25);
+}
+
+/* ── Reset ──────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: var(--font); cursor: pointer; }
+a      { color: inherit; text-decoration: none; }
+
+/* ── Header ─────────────────────────────── */
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--header-h);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  z-index: 100;
+  box-shadow: var(--sh-sm);
+}
+.logo {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+.logo-badge {
+  margin-left: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+nav { display: flex; gap: 2px; margin-left: 40px; }
+.nav-a {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 5px 11px;
+  border-radius: var(--r-sm);
+  transition: color .15s, background .15s;
+}
+.nav-a:hover { color: var(--text); background: var(--surface-2); }
+.nav-a.on    { color: var(--text); font-weight: 600; }
+.header-r { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.earn {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 4px 10px;
+  border-radius: 20px;
+  transition: opacity .15s;
+}
+.earn:hover { opacity: .8; }
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 5px 10px 5px 5px;
+  border-radius: 20px;
+  transition: background .15s;
+}
+.user-chip:hover { background: var(--border-soft); }
+.av {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--green);
+  color: var(--green-text);
+  font-size: 10px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Progress strip ──────────────────────── */
+.prog-strip {
+  position: fixed;
+  top: var(--header-h);
+  inset-inline: 0;
+  height: var(--prog-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  z-index: 99;
+}
+.prog-steps { display: flex; align-items: center; max-width: 680px; }
+.step { display: flex; align-items: center; gap: 8px; }
+.step-track {
+  width: 48px;
+  height: 2px;
+  background: var(--border);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+.step-n {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background .2s, color .2s;
+}
+.step.on   .step-n { background: var(--green); color: var(--green-text); }
+.step.done .step-n { background: var(--green); color: #fff; }
+.step-lbl {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dim);
+  white-space: nowrap;
+}
+.step.on .step-lbl { color: var(--text); font-weight: 600; }
+
+/* ── Page layout ─────────────────────────── */
+.page {
+  margin-top: calc(var(--header-h) + var(--prog-h));
+  min-height: calc(100vh - var(--header-h) - var(--prog-h));
+  display: flex;
+}
+
+/* ── Main ────────────────────────────────── */
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 36px 44px 44px;
+  display: flex;
+  flex-direction: column;
+}
+.main-intro { margin-bottom: 24px; }
+.main-intro h1 {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  color: var(--text);
+  margin-bottom: 5px;
+  text-wrap: balance;
+}
+.main-intro p {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 480px;
+}
+
+/* ── Guide accordion + upload zone ──────── */
+.guide-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border-soft);
+  transition: background .15s;
+}
+.group-header:hover { background: var(--green-bg); }
+.group-header.active { background: var(--green-bg); border-left: 3px solid var(--green-dark); }
+.group-header.active .group-label { color: var(--green-dark); }
+.group-header:last-of-type:not(.open) { border-bottom: none; }
+.group-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.group-icon.blue  { background: var(--blue-bg); }
+.group-icon.green  { background: var(--green-bg); }
+.group-icon.lilac  { background: var(--lilac-bg); }
+.group-text { flex: 1; min-width: 0; }
+.group-label { font-family: var(--font-heading); font-size: 15px; font-weight: 400; color: var(--text); letter-spacing: -0.2px; }
+.group-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.group-meta  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.group-count { font-size: 12px; color: var(--dim); }
+.g-chevron   { color: var(--dim); transition: transform .2s ease; flex-shrink: 0; }
+.group-header.open .g-chevron { transform: rotate(180deg); }
+.group-items { display: none; }
+.group-items.open { display: block; }
+
+.item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.item-row:last-child { border-bottom: none; }
+.item-check {
+  width: 17px; height: 17px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.item-check.checked { background: var(--green-dark); border-color: var(--green-dark); }
+.item-check.checked::after {
+  content: '';
+  width: 8px; height: 5px;
+  border-left: 1.5px solid #fff;
+  border-bottom: 1.5px solid #fff;
+  transform: rotate(-45deg) translateY(-1px);
+  display: block;
+}
+.item-info { flex: 1; min-width: 0; }
+.item-name { font-size: 13px; font-weight: 500; color: var(--text); }
+.item-name.done { color: var(--dim); text-decoration: line-through; }
+.item-hint { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.item-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  color: var(--muted);
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  margin-left: 5px;
+  vertical-align: middle;
+  font-weight: 400;
+}
+
+.alt-row {
+  padding: 8px 16px 9px 20px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border-soft);
+}
+.alt-row:last-child { border-bottom: none; }
+.alt-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+}
+.alt-toggle:hover { color: var(--text); }
+.alt-chevron { flex-shrink: 0; transition: transform .18s ease; color: var(--dim); }
+.alt-toggle.open .alt-chevron { transform: rotate(90deg); }
+.alt-docs { display: none; margin-top: 8px; }
+.alt-docs.open { display: block; }
+.alt-doc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-top: 1px solid var(--border-soft);
+}
+.alt-doc-name { font-size: 12px; color: var(--muted); flex: 1; }
+.btn-up-xs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 11.5px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color .15s, color .15s;
+}
+.btn-up-xs:hover { border-color: var(--green-dark); color: var(--green-dark); }
+
+/* ── Upload zone ──────────────────────────── */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--r-lg);
+  padding: 32px 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--green-dark);
+  background: var(--green-bg);
+}
+.upload-zone.drag-over { box-shadow: 0 0 0 4px var(--green-br); }
+.uz-icon { display: block; margin: 0 auto 10px; color: var(--dim); transition: color .2s; }
+.upload-zone:hover .uz-icon, .upload-zone.drag-over .uz-icon { color: var(--green-dark); }
+.uz-title { font-family: var(--font-heading); font-size: 17px; font-weight: 400; color: var(--text); margin-bottom: 5px; letter-spacing: -0.2px; }
+.uz-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0 auto 16px;
+  max-width: 360px;
+  line-height: 1.5;
+}
+.btn-upload-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 22px;
+  border-radius: var(--r-sm);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.btn-upload-main:hover { border-color: var(--green-dark); color: var(--green-dark); }
+.uz-types { font-size: 11.5px; color: var(--dim); margin-top: 10px; }
+
+
+/* ── Sidebar ─────────────────────────────── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--surface);
+  border-left: 1px solid var(--border-soft);
+  padding: 24px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.sb-section {
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.sb-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.sb-eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 14px;
+}
+.acct-card {
+  background: var(--surface-2);
+  border-radius: var(--r);
+  padding: 16px;
+  text-align: center;
+}
+.acct-av {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--green-dark), 0 0 0 6px var(--surface-2);
+  margin: 0 auto 14px;
+  position: relative;
+  display: block;
+  background: var(--border);
+}
+.acct-av img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+.online {
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 15px; height: 15px;
+  background: var(--green-dark);
+  border-radius: 50%;
+  border: 2px solid var(--surface-2);
+}
+.acct-name { font-family: var(--font-heading); font-size: 18px; font-weight: 400; color: var(--text); margin-bottom: 2px; }
+.acct-cred {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+.acct-bio  { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 0; text-align: left; }
+.acct-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.acct-btn {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 7px 8px;
+  border-radius: 7px;
+  border: 1.5px solid transparent;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.acct-btn.p { background: var(--green); color: var(--green-text); border-color: var(--green); }
+.acct-btn.p:hover { background: var(--green-h); }
+.acct-btn.s { background: transparent; color: var(--text); border-color: var(--border); }
+.acct-btn.s:hover { border-color: var(--green); color: var(--green); }
+.sb-title {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.docs-pill {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--green-dark);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 2px 9px;
+  border-radius: 20px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.row:last-child { border-bottom: none; }
+.row-lbl { font-size: 13px; color: var(--muted); }
+.row-val {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--green-dark);
+  font-variant-numeric: tabular-nums;
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 2px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.row-val.pend {
+  color: var(--dim);
+  font-weight: 400;
+  font-style: italic;
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.sb-note { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.tax-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 4px; }
+.tax-lbl { font-family: var(--font-heading); font-size: 15px; font-weight: 400; color: var(--text); }
+.tax-val {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.8px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.tax-val.pend { font-size: 12px; font-weight: 400; color: var(--dim); font-style: italic; letter-spacing: 0; font-family: var(--font-body); }
+</style>
+
+<!-- HEADER -->
+<header class="header">
+  <span class="logo">taxfix</span>
+  <span class="logo-badge">TaxScouts is now Taxfix</span>
+  <nav>
+    <a href="#" class="nav-a on">Overview</a>
+    <a href="#" class="nav-a">Tax returns</a>
+    <a href="#" class="nav-a">Accountant</a>
+  </nav>
+  <div class="header-r">
+    <span class="earn">Fancy earning £25</span>
+    <div class="user-chip">
+      <div class="av">S</div>
+      Sam ▾
+    </div>
+  </div>
+</header>
+
+<!-- PROGRESS -->
+<div class="prog-strip">
+  <div class="prog-steps">
+    <div class="step on">
+      <div class="step-n">1</div>
+      <span class="step-lbl">Share your documents</span>
+    </div>
+    <div class="step-track"></div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <span class="step-lbl">Review your optimisations</span>
+    </div>
+    <div class="step-track"></div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <span class="step-lbl">Ask questions and start filing</span>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE -->
+<div class="page">
+  <main class="main">
+
+    <div class="main-intro">
+      <h1>Upload your documents to see your tax bill</h1>
+      <p>Upload your documents and we'll work out your income, deductions and tax position.</p>
+    </div>
+
+    <!-- Guided document checklist -->
+    <div class="guide-section" id="guideSection">
+
+      <!-- PAYE group -->
+      <div class="group-header open active" onclick="toggleGroup(this)">
+        <div class="group-icon lilac">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BC73F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
+          </svg>
+        </div>
+        <div class="group-text">
+          <div class="group-label">PAYE employment</div>
+        </div>
+        <div class="group-meta">
+          <span class="group-count">3 docs</span>
+          <svg class="g-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="group-items open">
+        <div class="item-row">
+          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-info">
+            <div class="item-name">P60</div>
+            <div class="item-hint">Year-end earnings &amp; tax summary from your employer</div>
+          </div>
+        </div>
+        <div class="item-row">
+          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-info">
+            <div class="item-name">P45 <span class="item-badge">if you changed jobs</span></div>
+            <div class="item-hint">Issued by your previous employer when you left</div>
+          </div>
+        </div>
+        <div class="alt-row">
+          <div class="alt-toggle" onclick="toggleAlt(this)">
+            <svg class="alt-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            <span>Don't have a P45? Upload an alternative instead</span>
+          </div>
+          <div class="alt-docs">
+            <div class="alt-doc-row">
+              <span class="alt-doc-name">Final payslip (March 2026)</span>
+              <button class="btn-up-xs" onclick="document.getElementById('fileInput').click()">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload
+              </button>
+            </div>
+            <div class="alt-doc-row">
+              <span class="alt-doc-name">Salary confirmation letter</span>
+              <button class="btn-up-xs" onclick="document.getElementById('fileInput').click()">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="item-row">
+          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-info">
+            <div class="item-name">P11D <span class="item-badge">optional</span></div>
+            <div class="item-hint">Benefits in kind: company car, health insurance, etc.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rental group -->
+      <div class="group-header" onclick="toggleGroup(this)">
+        <div class="group-icon green">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38B96C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+          </svg>
+        </div>
+        <div class="group-text">
+          <div class="group-label">Rental income</div>
+          <div class="group-sub">Income records, expenses, mortgage interest</div>
+        </div>
+        <div class="group-meta">
+          <span class="group-count">3 docs</span>
+          <svg class="g-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="group-items">
+        <div class="item-row">
+          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-info">
+            <div class="item-name">Rental income records</div>
+            <div class="item-hint">Bank statements or letting agent statements</div>
+          </div>
+        </div>
+        <div class="item-row">
+          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-info">
+            <div class="item-name">Expense receipts</div>
+            <div class="item-hint">Maintenance, repairs, letting agent fees</div>
+          </div>
+        </div>
+        <div class="item-row">
+          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-info">
+            <div class="item-name">Mortgage interest statement <span class="item-badge">if mortgaged</span></div>
+            <div class="item-hint">Annual statement from your lender</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Upload zone -->
+    <div class="upload-zone" id="uploadZone"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="event.preventDefault();this.classList.remove('drag-over')"
+      onclick="document.getElementById('fileInput').click()">
+      <svg class="uz-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+      </svg>
+      <div class="uz-title">Drop any document here</div>
+      <div class="uz-sub">We'll read it and match it to the right category automatically</div>
+      <button class="btn-upload-main" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Browse files
+      </button>
+      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none">
+    </div>
+
+  </main>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <div class="sb-section">
+      <div class="sb-eyebrow" style="text-align:center;margin-bottom:4px">Need help?</div>
+      <div style="font-family:var(--font-heading);font-size:17px;font-weight:400;color:var(--text);text-align:center;margin-bottom:16px;line-height:1.3;letter-spacing:-0.2px">Ask your dedicated<br>accountant</div>
+      <div class="acct-card">
+        <div class="acct-av">
+          <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBARXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAeKADAAQAAAABAAAAeAAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/+IB2ElDQ19QUk9GSUxFAAEBAAAByAAAAAAEMAAAbW50clJHQiBYWVogB+AAAQABAAAAAAAAYWNzcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPbWAAEAAAAA0y0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJZGVzYwAAAPAAAAAkclhZWgAAARQAAAAUZ1hZWgAAASgAAAAUYlhZWgAAATwAAAAUd3RwdAAAAVAAAAAUclRSQwAAAWQAAAAoZ1RSQwAAAWQAAAAoYlRSQwAAAWQAAAAoY3BydAAAAYwAAAA8bWx1YwAAAAAAAAABAAAADGVuVVMAAAAIAAAAHABzAFIARwBCWFlaIAAAAAAAAG+iAAA49QAAA5BYWVogAAAAAAAAYpkAALeFAAAY2lhZWiAAAAAAAAAkoAAAD4QAALbPWFlaIAAAAAAAAPbWAAEAAAAA0y1wYXJhAAAAAAAEAAAAAmZmAADypwAADVkAABPQAAAKWwAAAAAAAAAAbWx1YwAAAAAAAAABAAAADGVuVVMAAAAgAAAAHABHAG8AbwBnAGwAZQAgAEkAbgBjAC4AIAAyADAAMQA2/8AAEQgAeAB4AwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMAAgICAgICAwICAwUDAwMFBgUFBQUGCAYGBgYGCAoICAgICAgKCgoKCgoKCgwMDAwMDA4ODg4ODw8PDw8PDw8PD//bAEMBAgICBAQEBwQEBxALCQsQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEP/dAAQACP/aAAwDAQACEQMRAD8A/aCiiigAooooAKKa7pGjSSMERAWZmOAABkkk8AAdTXxV8Uv27fg98O7640bSlufE2o27eWfsqhLYSE4CmZuvPUhSMcgmonUjFXkzSnSlN2irn2vRX4q+K/8AgpF8ZpLKeXw/4Y0rSsSqFlJlvP3TdDtPl8+p7VW0D/gof8e9E8rUfFOiaXr2nXDeWgiie0PmYztLhn5I6DFYfXad7XOn+z6tr2P2zor8wvCX/BRxZ57KTx/4GbTNOvWaMXFjdee0bpyQY5ETdx0AYf1r9B/AXxG8FfE7Q08ReB9Vi1SzOA+w4kiY/wAEsZ+ZGHoR9M1tTqxl8LOepQnD4kdtRRRWhkFFFFABRRRQB//Q/aCiiigAooqK4nitbeW6nOI4UZ2PoqjJ/QUAfCP7cHxln8I6Lo3wr0C7WDVPFvnPdMrhZIbKFe/dRLIQCeOAR3NfjZDpf2lr8Xcv2240ucNcxpkutsxABAH93GB9RXLfE3486l8V/wBovxF8UL2QzWN3PLZWaE8Q6egaOIL6ZHz+xYmuXfUfFHhnxC3iTTgZpJIPs8xA3R3MIIALd8svyuDzn5h148fFtSerPosDRcYpJan0zqdhonhzVPDmqXd1DcaXq0LwsUIKcgAOD0AA+ZT32n2rzLSvitpK+E7jw3rdskl3a6g0N4WXAZA37i4UfwvHk7gP4cr714ffeIvE0uhN4Su43NpbTNc2Tsp3oHJJTPflj+fFaWmfDTxj4stdRvrHT5WlYJI42nLllO768/N9a5rwitWdiw1STskeiWvxHk1zwvrHgjWbRJLm1uMbxw6SxZKuv1AKn2IPYVi/Dv8AaE8VfAX4haJ438IapILZmVru3Zj5U8BbEkMq/wAQ4OD1HGDnms608EeLvD95ea1qGlzbpgE+YEbtibS3uTj8zmvmzxXomsafGDfwuiB3Kk5+6xziuihKnKS5ZHLiaFWEHzxP7TtB1qw8S6FpviTSm3WWrWsF5AT1MVxGJEz/AMBYVq18Df8ABOj49aN8Zf2fNK8Px7otd8CRQ6XfxOclkAP2eZT/AHXQbcdipHpX3zXsnzYUUUUAFFFFAH//0f2gooooAKzNbtxdaLqNqeRNbTJ/30hFadGxZP3bdH4P0PFAH8k3wz8CWNz40/sDU02JaPIsrMcEiBipAHqSK/Sbwj4W8Jae0cUGlQ4YDJkUOTx718zy+GItN+Kfi2JYwstrrOpRZ9ENzJt/TFfVnhWaK6063uZGWMIPnLHAG3jqa/Nc+qzdXlTP2jhmjT9hzyWrPprSPgv8O/EdhZXOu6XbOfMBiCxqAOMnJX+VbviXwR4e8MXEFtosCW6GH5tvGX/D2rM8N+I9D/spLAarA8gxJGqOGBwcHOOnWtTxp4t8M2emfab6/jCxxbd2eM55Aq7RdHlsQ/aLEcyeh8g/EcxL5kCEOBnt618RfFbTtKu9OktbqJVdo3IOOc9K+rfGnxD+Hmp6hPp2m65by3SgkLkjnsMkYJ49a+S/Hkivqci3R6oNnfIOc4/LtTyjDuMlcefVoypvl1Pov/gkI91pfxe+IWjRORaz6Vbuy9iY5m2n6jca/f6vw5/4JZ6VFD8YfH15EMBNItRj/fmf/Cv3Gr9CpSvFM/IMRG02gooorQwCiiigD//S/aCiiigApGdY1MjkKq8kngAClrmPG2gv4p8H634ajlaBtUs5rcOhKspkQrkEcg1Mm0m0XTinJJuyPxZ/aL8HP4P/AGgfEb2RV9O8SFdStHQhlIkUCRQRxkOCT6ZrybXJb+Hw9BY39pc3hu96xwWx5ckdCcgAkevX9K9M+KnhrUfBEfh+PUprq8OmTvazfaFB+zK+FA8zqwZhjnp6819AaFoug6losMVzbrJHIEcADDbgOMEc59K/O8TiYur7Sa3P2fB4KUKHsYSvb8ex8EfCHwn43m1B9a0qzvNEtYZS4jv2JDqFBypYK3T5RkYJHB6V9BfHKO91vQNB0nSpRZNfgiWRn+UlcZ9Ovb+Yr3vxF4Y0fQdMV7K08q4nOA0jF2C5xgbievtXkXxZ0K8Xwd4c1qME/YZHyAMZRmXkfTNKdeM6ycVoaQwsoUGpy1PizXvhP4g8F3cU2nwabqdjdJulnkkZ5zJsB2BVOQd2QCB0xXO+LPBut6ZpVjrMsU8EEpC+VICfKLDkBvSv0gtbjSbzSYdStY4bn5AfmQblOPXGa+Ufj/4shfQ5I4gN6sPlHRSDXoYfHupJJRsebi8q9jTcpSuP/Yz/AGh/Dn7OOteM/FPiqxlvoNWgtLRBCyiQeTK7NtTksTuGO3qRX9DXh/W7HxLoWn+IdMJNpqcEdxEWG1tkqhlyOxwa/lq+Anhe48e+KD4ejhS4udUubSK3yu5w0kgLADuAoLMewFf1MaHpNvoOjWOiWg2w2EEcCD2jUL/Svp8FUnKUk9kfA5xhqcKdOUfid7mpRRRXoHghRRRQB//T/aCiiigAooooA+T/ANpX4S3vjDwzqc+iRGRL2BhcxIm5xKgzFMgAJOGGGGDxg1+enwo8ZXUukxLcZM0EZ4xyTHxj8x0r9vFJVgw6jmvxM8d2K/CX45+JfDmsQrp9o99Lc2G44Saxu2LQlT6gHacdGBHavk8/y1W9pDqz9B4TzuV/Yz6LT0/4B2OrWuqazZ3N1qmsG11S5XETI6hbQdkUNkEgfeJGCenFfKHxs1H41XltYeC57+0k0ZAo+3RzxoGVOxGRhvUDvX0nq/hbw54zli1W2s0vXiDL5keS+CckEg9RXAXXg3SNSuzYT+GBKU6GdGcHHTiQkfkM14uCnGOv6f8ABPtMVBVYe9L7it8M7zTI/DcHh2wvo7+7s18qWVHD8spbkjvx9ea+R/ilcXF4l7acySSTmNAOrMWwAPqa+ivFWuQ/DLRZo7a3jtSd5WKILGEBHLYGMknAr53+Cdh/wuD4/wDgnwhqMmLLUtWtvPKj/lmH3tjPfAr0cvoOVRzjsz57OMYo01Tb2R+vP7BX7Jd/8H9Bb4gfEvTRbeLr4bLa2k2s9hAfvE7SQJZO+DlQMdSQP0ipzuZHZz1Yk/nTa+yhBRVkfmNevKpLmkFFFFWYhRRRQB//1P2gooooAKKK5nV/F2haMWiubgSTr1ij+d/occD8SKUpJascYt6I6brX4/ft9+F7vxr4ps/F/hZ/OlsLERRMPuTJDLIJEUj+6+SD719x/EHx7rt9YvbwE6fbOhzGh+dgegZuPyHFcN4x8I2+rfBvStTWHfL4ecCYBcnyLxVySPQSBR/wLNeRmNXnpS5Omp7+R01DER5/tafft+J+Ofw5+Pc/g0S6TOW0+cKVkVzht394ds5qj4t/ahvoHc2d49xLDv8An3cnd0I9x+lem/GT4E6XrpkvreH7PcMC+5Bg+nNfEt18DfGkF9KUk82CPksRghR614uGo0JvnPr8VVxUFyR18yl4j8feJvHU63mqzNgAqWfn5T2/HFe0fsu+JrbwL8dvBni2e1e8trC/ieVY/v7DwxX6A5A9q8ztfA91Eq2cmWY4+hr7a/Zj+EZt4da+Iepw4sdGhaztSw/11/dIVwPaKMs5x0O31r3cFTjKrGnA+cximqU6lQ/fzw94h0TxXotp4i8N3seoabfIJIZ4m3KwP8iO4PIPBrZr8dPgV468ZfBbxJfW2kk3miXDxtdafISEJK8vGefLcZ6gYPcGv0y8KfGjwR4ptopTO+lSyceXeAR4YcEeYCU69MkE+lenzo+WdNnrNFNR1kUOhDKwyCDkEGnVRAUUUUAf/9X9nZJI4kMkrBFHUscAfia4XVviT4U0sMiXX22Zf+WduPMOfQnoPxNeB6lda94smkfXbtpUjbHkplIhnkfIODx65q7p+hRQcRLx9K4J4x7RR2wwq6s6y/8AGPiTxHmOH/iV2bfwxnMzD/aft9F/OsWCxhiYALhU5J9W6/8A1604IQvyYps1u+4tbtiRvvKfusPf0OOhrjnNyd2dUYpKyOI1uwfU5hbpyoPzHsBXt/wxjsprC60e9gE9rLAYpoW5EkR+V1I9w1cUbaKFW2j7wrd8IX40TU47hv8AVhgJM/3H+Vj+AOfwrfCSUaiuZ1m3HQ+TfjZ8MJvAOuf2axM+m3YMlhcN/wAtYe6E9N6dG/A4wcV8b+NfBtzPufT7lYo3HzqB1X396/a34wWHh3V/BE3hbxHC0811cJHpzR4EkVw/CupPQKMlh3XI71+Q/i/Q9U07xzqHw71GNpNWtLgWwjjyPO3co68/dZSGPOBzk8GvGzTL3h6nufC9v8j9AyDNo4qly1H78Vr5rv8A5niPw3+FurePPHUGhaPbi6upWEUKA4XcT8zs2OFUZLHsBX6Ba7ouj6JLpfwo8Jsp0zQ18qSYcfaL2Yj7RcH6ngeigDtVz4Ix+H/hPoPiWTSrIX+uPbhJNSBzHGWcK0EII+7kjL8bsHgDFL4S00i5uNcvG3SpHJIQfV+AT9TnFfUZXgnh6Eq9T4np6Hx+fZnHEVVQo/Avxff/ACPLINLiXxDqHygmSU4+gNe3+HNPjh36dKgMN6nmKCMjzFGGH4jH5GuHj0ZmvlvYgWDtk4FejahfWWj6NBqd3OsP2d1Klj99jxsUdSzcgAZJzwK4KjPOhGxUg8QeNPhrdG68NTmeyBJewnJa3Yd9veNvdeM9Qa+gfAPx58FeNgLK5kOiasuFe0uyF+b/AKZv91x6Y59QK8v1K1S/t9xGA4zg8EA14f4l8Hxtd/aYlwV9K0pYhpWZnUoJu6P0sVldQ6EMp6Ecg0tfnt4S+IXjPwMVjsLhrm1HW2nYvGQOyk8r+HHtXon/AA0d4v8A+gFa/wDf1/8ACumNeLWpg6D6H//W/QPSoD51u/T7XDsb/fj5B/LIrqFtwn19Kw9N/wCYb/vn/wBBNdO3+sH+e1eIeq2UXUkfKACRx9akVVChoxw3P9aD95PqKlh/1Sf7ooQFZ4yRgDpTLiANDKpH30IOPcetXV+8f89qbL/q3/z2qhGJ4K8SeIPiTqvhG41KATf2GbuPUUfMEkssK+UJIQeJCDluODz0PTS8W/szQeJvG978SfDV1G9/qFtFZFpmIWKOPIZkAQsJHB2uSegwMZNUfgX/AMh6y/67al/6G9fXnhH/AJBH/bWT+dfRSirKTV35nCq0oNqDtfT5Hy/4k+EOkeAvhdq0d3OrXTRoSyDAAWRGcgH0UGvmDwlK134Uu9fJzHrV04tjyCbS2JijPPZ2VnH+9X3p8f8A/kn+qf8AXtN/6Aa+CfA//JJPCf8A17N/6MeuXMKsnCKvozTCxWrOn0mBVTD/ACjrnpiix8EWFtr8niLVZ5dSuct9lMxHlWiN1SKMAKpPdyCx7twBU9r/AMer/wC6a7C4/wCPQ/QV5DOtbEkgBG09uKwr60jlTcwxW9N94/X+lZt5/qaSC55nfWC5YKuHc4X/AD7Vmf2Ldf8APQ/n/wDWrqLv/j4i/wB4/wAjTqdykf/Z" alt="Dan R">
+          <div class="online"></div>
+        </div>
+        <div class="acct-name">Dan R</div>
+        <div class="acct-cred">Chartered Accountant, ACA</div>
+        <div class="acct-bio">11 years in UK property &amp; employment tax. He'll check every figure, apply your remaining deductions and submit to HMRC on your behalf.</div>
+        <div class="acct-btns" style="margin-top:14px">
+          <button class="acct-btn p">Send a message</button>
+          <button class="acct-btn s">Schedule a call</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Your income</div>
+      <div class="row"><span class="row-lbl">PAYE income</span>     <span class="row-val pend">Awaiting P60</span></div>
+      <div class="row"><span class="row-lbl">Self-employment</span> <span class="row-val pend">Not detected</span></div>
+      <div class="row"><span class="row-lbl">Rental income</span>   <span class="row-val pend">Not detected</span></div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">
+        Uploaded documents
+        <span class="docs-pill">0 docs</span>
+      </div>
+      <p class="sb-note">Documents you share appear here. Figures are extracted automatically.</p>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-title">Deductions found</div>
+      <div class="row"><span class="row-lbl">Expenses</span>              <span class="row-val pend">—</span></div>
+      <div class="row"><span class="row-lbl">Pension contributions</span> <span class="row-val pend">—</span></div>
+      <div class="row"><span class="row-lbl">Allowances</span>            <span class="row-val pend">—</span></div>
+    </div>
+
+    <div class="sb-section">
+      <div class="tax-row">
+        <span class="tax-lbl">Tax due:</span>
+        <span class="tax-val pend">Add documents to calculate</span>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+  // ── Guide accordion ─────────────────────────────────────────────
+  function toggleGroup(header) {
+    header.classList.toggle('open');
+    header.nextElementSibling.classList.toggle('open');
+  }
+  function toggleCheck(el) {
+    el.classList.toggle('checked');
+    el.closest('.item-row').querySelector('.item-name').classList.toggle('done');
+  }
+  function toggleAlt(el) {
+    el.classList.toggle('open');
+    el.nextElementSibling.classList.toggle('open');
+  }
+
+  // ── Drag-and-drop on upload zone ─────────────────────────────────
+  // ── Drag-and-drop on all cards ──────────────────────────────────
+  document.querySelectorAll('.ucard').forEach(card => {
+    ['dragenter','dragover'].forEach(ev => {
+      card.addEventListener(ev, e => { e.preventDefault(); card.classList.add('drag-over'); });
+    });
+    ['dragleave','dragend','drop'].forEach(ev => {
+      card.addEventListener(ev, e => { e.preventDefault(); card.classList.remove('drag-over'); });
+    });
+  });
+</script>
