@@ -663,6 +663,14 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   display: flex; align-items: center; gap: 8px;
   animation: toastIn .25s ease;
 }
+
+/* ── Income row flash on update ─────────────────────── */
+@keyframes valueLand {
+  0%   { background: var(--green);   color: var(--green-text); transform: scale(1.06); }
+  60%  { background: var(--green-bg); }
+  100% { background: var(--green-bg); color: var(--green-dark); transform: scale(1); }
+}
+.row-val.flash { animation: valueLand .5s ease forwards; }
 </style>
 
 <!-- HEADER -->
@@ -1059,15 +1067,21 @@ function updateDocSidebar() {
 
 function updateIncomeRow(result) {
   if (!result.key_figure) return;
-  let sel = null;
-  if (result.category === 'paye_employment') {
-    sel = '#sbIncome .row:nth-child(2) .row-val';
-  } else if (result.category === 'rental_income') {
-    sel = '#sbIncome .row:nth-child(4) .row-val';
-  }
+  const SEL = {
+    paye_employment: '#sbIncome .row:nth-child(2) .row-val',
+    self_employment: '#sbIncome .row:nth-child(3) .row-val',
+    rental_income:   '#sbIncome .row:nth-child(4) .row-val',
+  };
+  const sel = SEL[result.category];
   if (!sel) return;
   const el = document.querySelector(sel);
-  if (el) { el.textContent = result.key_figure; el.classList.remove('pend'); }
+  if (!el) return;
+  el.textContent = result.key_figure;
+  el.classList.remove('pend');
+  // Brief flash to signal the value just landed
+  el.classList.remove('flash');
+  void el.offsetWidth; // reflow to restart animation
+  el.classList.add('flash');
 }
 
 // ── Toast ────────────────────────────────────────────────────────────────────
