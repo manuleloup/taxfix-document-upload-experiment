@@ -1,0 +1,397 @@
+<title>Taxfix</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap">
+
+<style>
+/* ── Tokens ──────────────────────────────────────────── */
+:root {
+  --font-heading: 'DM Serif Display', 'Georgia', serif;
+  --font:         'Source Serif 4', 'Georgia', serif;
+
+  --bg:        #FFFFFF;
+  --surface:   #FFFFFF;
+  --surface-2: #F5F0EB;
+  --border:    #E2D9D2;
+  --border-soft:#EEE8E2;
+
+  --text:       #154618;
+  --muted:      #9A9288;
+  --dim:        #B8AFA7;
+
+  --green:      #ADEE68;
+  --green-h:    #CEF5A4;
+  --green-bg:   #ECFFC7;
+  --green-br:   #CEF5A4;
+  --green-dark: #36893B;
+  --green-text: #154618;
+
+  --blue:    #668CFF;
+  --blue-bg: #E8F0FF;
+  --blue-br: #B6C5F3;
+
+  --lilac:    #BC73F2;
+  --lilac-bg: #F6EBFE;
+  --lilac-br: #DBB9F3;
+
+  --amber:    #F8A21A;
+  --amber-bg: #FFEFD3;
+  --amber-br: #F8C677;
+
+  --header-h: 58px;
+  --sh-sm: 0 1px 2px rgba(0,0,0,.05);
+  --sh:    0 1px 4px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.04);
+  --r-sm: 8px; --r: 12px; --r-lg: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:        #0E1410;
+    --surface:   #151E14;
+    --surface-2: #1C2A1A;
+    --border:    #252E3C;
+    --border-soft:#1E2733;
+    --text:      #E8EFF7;
+    --muted:     #8B96A7;
+    --dim:       #596470;
+    --green:     #3BB96C;
+    --green-h:   #4ECF80;
+    --green-bg:  #0C2318;
+    --green-br:  #194A2F;
+    --blue:      #7B96F9;
+    --blue-bg:   #0E1535;
+    --blue-br:   #1D2E60;
+    --lilac:     #C98AF5;
+    --lilac-bg:  #1E0D2E;
+    --lilac-br:  #3D1A5E;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:        #0C1017;
+  --surface:   #131A24;
+  --surface-2: #1A2130;
+  --border:    #252E3C;
+  --border-soft:#1E2733;
+  --text:      #E8EFF7;
+  --muted:     #8B96A7;
+  --dim:       #596470;
+  --green:     #3BB96C;
+  --green-h:   #4ECF80;
+  --green-bg:  #0C2318;
+  --green-br:  #194A2F;
+  --blue:      #7B96F9;
+  --blue-bg:   #0E1535;
+  --blue-br:   #1D2E60;
+  --lilac:     #C98AF5;
+  --lilac-bg:  #1E0D2E;
+  --lilac-br:  #3D1A5E;
+}
+
+/* ── Reset ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ── Header ──────────────────────────────────────────── */
+.header {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--header-h);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  z-index: 100;
+  box-shadow: var(--sh-sm);
+}
+.logo {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  color: var(--text);
+}
+.logo-badge {
+  margin-left: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+nav { display: flex; gap: 2px; margin-left: 40px; }
+.nav-a {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 5px 11px;
+  border-radius: var(--r-sm);
+  transition: color .15s, background .15s;
+}
+.nav-a:hover { color: var(--text); background: var(--surface-2); }
+.nav-a.on { color: var(--text); font-weight: 600; }
+.header-r { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+.earn {
+  font-size: 12.5px; font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 4px 10px; border-radius: 20px;
+}
+.user-chip {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13.5px; font-weight: 600;
+  background: var(--surface-2); border: 1px solid var(--border);
+  padding: 5px 10px 5px 5px; border-radius: 20px;
+}
+.av {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--green); color: var(--green-text);
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ── Onboarding page ─────────────────────────────────── */
+.onb-page {
+  padding-top: var(--header-h);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-bottom: 32px;
+  gap: 44px;
+}
+
+/* ── Hero text ───────────────────────────────────────── */
+.onb-hero { text-align: center; max-width: 560px; }
+.onb-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--green-dark);
+  margin-bottom: 18px;
+}
+.onb-eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+.onb-h1 {
+  font-family: var(--font-heading);
+  font-size: 46px;
+  font-weight: 400;
+  letter-spacing: -1.2px;
+  line-height: 1.08;
+  color: var(--text);
+  margin-bottom: 16px;
+  text-wrap: balance;
+}
+.onb-sub {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ── Three step cards ────────────────────────────────── */
+.onb-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+  width: 100%;
+  max-width: 880px;
+}
+.step-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px 26px 32px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow .2s, border-color .2s;
+}
+.step-card:hover {
+  box-shadow: var(--sh);
+  border-color: var(--border-soft);
+}
+.step-num {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-bottom: 18px;
+}
+.step-icon {
+  width: 52px; height: 52px;
+  border-radius: 15px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 22px;
+  flex-shrink: 0;
+}
+.step-icon.lilac { background: var(--lilac-bg); color: var(--lilac); }
+.step-icon.green  { background: var(--green-bg); color: var(--green-dark); }
+.step-icon.blue   { background: var(--blue-bg);  color: var(--blue); }
+
+.step-title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+.step-body {
+  font-size: 13.5px;
+  color: var(--muted);
+  line-height: 1.7;
+  flex: 1;
+}
+
+/* ── CTA ─────────────────────────────────────────────── */
+.onb-cta { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.btn-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--green);
+  color: var(--green-text);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px 32px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: background .15s;
+  text-decoration: none;
+}
+.btn-start:hover { background: var(--green-h); }
+.onb-hint {
+  font-size: 12px;
+  color: var(--dim);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.onb-hint span { display: flex; align-items: center; gap: 5px; }
+.onb-hint span::before {
+  content: '';
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--border);
+  display: none;
+}
+.onb-hint span + span::before { display: block; }
+
+/* ── Responsive ──────────────────────────────────────── */
+@media (max-width: 720px) {
+  .onb-steps { grid-template-columns: 1fr; max-width: 480px; }
+  .onb-h1 { font-size: 34px; }
+}
+</style>
+
+<!-- HEADER -->
+<header class="header">
+  <span class="logo">taxfix</span>
+  <span class="logo-badge">TaxScouts is now Taxfix</span>
+  <nav>
+    <a href="#" class="nav-a on">Overview</a>
+    <a href="#" class="nav-a">Tax returns</a>
+    <a href="#" class="nav-a">Accountant</a>
+  </nav>
+  <div class="header-r">
+    <span class="earn">Fancy earning £25</span>
+    <div class="user-chip">
+      <div class="av">S</div>
+      Sam ▾
+    </div>
+  </div>
+</header>
+
+<!-- ONBOARDING PAGE -->
+<div class="onb-page">
+
+  <!-- Hero -->
+  <div class="onb-hero">
+    <h1 class="onb-h1">Upload all documents<br>to file.</h1>
+  </div>
+
+  <!-- Steps -->
+  <div class="onb-steps">
+
+    <!-- Step 1 -->
+    <div class="step-card">
+      <div class="step-num">01</div>
+      <div class="step-icon lilac">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <polyline points="16 13 12 9 8 13"/>
+          <line x1="12" y1="9" x2="12" y2="17"/>
+        </svg>
+      </div>
+      <h2 class="step-title">Upload your documents</h2>
+      <p class="step-body">P60, payslips, rental records, etc. We'll read and categorise it all automatically.</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card">
+      <div class="step-num">02</div>
+      <div class="step-icon green">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <line x1="11" y1="8" x2="11" y2="14"/>
+          <line x1="8" y1="11" x2="14" y2="11"/>
+        </svg>
+      </div>
+      <h2 class="step-title">Confirm &amp; Optimise</h2>
+      <p class="step-body">Our AI checks completeness, finds deductions you might have missed, and shows your estimated tax bill.</p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card">
+      <div class="step-num">03</div>
+      <div class="step-icon blue">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+          <polyline points="16 11 17.5 13 21 9" stroke-width="2"/>
+        </svg>
+      </div>
+      <h2 class="step-title">Your accountant files</h2>
+      <p class="step-body">Tony reviews your return, answers any questions, and submits to HMRC on your behalf.</p>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="onb-cta">
+    <a href="https://claude.ai/code/artifact/06b5059d-4d49-4682-937b-2773e0957d41" class="btn-start">
+      Get started
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+    </a>
+  </div>
+
+</div>
