@@ -16,8 +16,8 @@
   --border-soft:  #EEE8E2;
 
   --text:         #1C1917;
-  --muted:        #9A9288;
-  --dim:          #B8AFA7;
+  --muted:        #57534E;
+  --dim:          #78716C;
 
   --green:        #292524;
   --green-h:      #44403C;
@@ -33,10 +33,6 @@
   --amber:        #F8A21A;
   --amber-bg:     #FFEFD3;
   --amber-br:     #F8C677;
-
-  --lilac:        #BC73F2;
-  --lilac-bg:     #F6EBFE;
-  --lilac-br:     #DBB9F3;
 
   --header-h: 58px;
   --prog-h:   48px;
@@ -255,7 +251,14 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   display: flex;
   flex-direction: column;
 }
-.main-intro { margin-bottom: 24px; }
+.main-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.main-intro-text { flex: 1; min-width: 0; }
 .main-intro h1 {
   font-family: var(--font-heading);
   font-size: 26px;
@@ -274,11 +277,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
 /* ── Guide accordion + upload zone ──────── */
 .guide-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.checklist-group {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--r-lg);
   overflow: hidden;
-  margin-bottom: 16px;
 }
 .group-header {
   display: flex;
@@ -290,19 +298,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   border-bottom: 1px solid var(--border-soft);
   transition: background .15s;
 }
-.group-header:hover { background: var(--green-bg); }
-.group-header.active { background: var(--green-bg); border-left: 3px solid var(--green-dark); }
-.group-header.active .group-label { color: var(--green-dark); }
-.group-header:last-of-type:not(.open) { border-bottom: none; }
+.group-header:hover { background: var(--surface-2); }
+.group-header:not(.open) { border-bottom: none; }
 .group-icon {
   width: 30px; height: 30px;
   border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--dim);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.group-icon.blue  { background: var(--blue-bg); }
-.group-icon.green  { background: var(--green-bg); }
-.group-icon.lilac  { background: var(--lilac-bg); }
 .group-text { flex: 1; min-width: 0; }
 .group-label { font-family: var(--font-heading); font-size: 15px; font-weight: 400; color: var(--text); letter-spacing: -0.2px; }
 .group-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
@@ -317,19 +322,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 16px 10px 20px;
-  border-bottom: 1px solid var(--border-soft);
+  padding: 12px 16px 12px 20px;
 }
-.item-row:last-child { border-bottom: none; }
 .item-check {
-  width: 17px; height: 17px;
-  border-radius: 4px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
   border: 1.5px solid var(--border);
   background: var(--surface);
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  transition: background .15s, border-color .15s;
+  transition: background .3s, border-color .3s;
 }
 .item-check.checked { background: var(--green-dark); border-color: var(--green-dark); }
 .item-check.checked::after {
@@ -342,8 +344,23 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 }
 .item-info { flex: 1; min-width: 0; }
 .item-name { font-size: 13px; font-weight: 500; color: var(--text); }
-.item-name.done { color: var(--dim); text-decoration: line-through; }
+.item-name.done { color: var(--muted); }
 .item-hint { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.item-doc-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  flex-shrink: 0;
+  max-width: 170px;
+  transition: color .15s;
+}
+.item-doc-link:hover { color: var(--green-dark); text-decoration: underline; }
+.item-doc-icon { flex-shrink: 0; color: var(--dim); }
+.item-doc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-badge {
   display: inline-block;
   font-size: 10.5px;
@@ -443,6 +460,17 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 .btn-upload-main:hover { border-color: var(--green-dark); color: var(--green-dark); }
 .uz-types { font-size: 11.5px; color: var(--dim); margin-top: 10px; }
 
+/* ── Upload zone: compact variant (top, beside H1) ── */
+.upload-zone.compact {
+  flex-shrink: 0;
+  width: 260px;
+  padding: 14px 18px;
+}
+.upload-zone.compact .uz-icon { margin-bottom: 6px; }
+.upload-zone.compact .uz-title { font-size: 13.5px; margin-bottom: 3px; }
+.upload-zone.compact .uz-sub { font-size: 11.5px; margin-bottom: 10px; }
+.upload-zone.compact .btn-upload-main { padding: 6px 16px; font-size: 12px; }
+
 
 /* ── Sidebar ─────────────────────────────── */
 .sidebar {
@@ -533,6 +561,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   margin-bottom: 12px;
 }
 .acct-bio  { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 0; text-align: left; }
+.acct-status {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.5;
+  text-align: left;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+}
 .acct-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .acct-btn {
   font-size: 11.5px;
@@ -546,6 +584,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 .acct-btn.p:hover { background: var(--green-h); }
 .acct-btn.s { background: transparent; color: var(--text); border-color: var(--border); }
 .acct-btn.s:hover { border-color: var(--green); color: var(--green); }
+.acct-btn-primary { width: 100%; margin-top: 6px; padding: 9px 8px; }
 .sb-title {
   font-family: var(--font-heading);
   font-size: 15px;
@@ -556,15 +595,6 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   align-items: center;
   justify-content: space-between;
 }
-.docs-pill {
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--green-dark);
-  background: var(--green-bg);
-  border: 1px solid var(--green-br);
-  padding: 2px 9px;
-  border-radius: 20px;
-}
 .row {
   display: flex;
   justify-content: space-between;
@@ -574,15 +604,12 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 }
 .row:last-child { border-bottom: none; }
 .row-lbl { font-size: 13px; color: var(--muted); }
+.row-slot { display: flex; align-items: center; gap: 6px; }
 .row-val {
   font-size: 12px;
   font-weight: 500;
-  color: var(--green-dark);
+  color: var(--text);
   font-variant-numeric: tabular-nums;
-  background: var(--green-bg);
-  border: 1px solid var(--green-br);
-  padding: 2px 9px;
-  border-radius: 999px;
   white-space: nowrap;
 }
 .row-val.pend {
@@ -590,9 +617,20 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   font-weight: 400;
   font-style: italic;
   background: var(--surface-2);
-  border-color: var(--border);
+  border: 1px solid var(--border);
+  padding: 2px 9px;
+  border-radius: 999px;
 }
-.sb-note { font-size: 12px; color: var(--muted); line-height: 1.55; }
+.row-chip {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  padding: 1px 7px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
 .tax-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 4px; }
 .tax-lbl { font-family: var(--font-heading); font-size: 15px; font-weight: 400; color: var(--text); }
 .tax-val {
@@ -660,29 +698,62 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 .group-header.complete .group-complete-badge { display: inline-flex; align-items: center; gap: 3px; }
 .group-header.complete .group-count { display: none; }
 
-/* ── Doc card (sidebar) ─────────────────────── */
-.doc-card {
-  display: flex; gap: 8px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-soft);
-  align-items: flex-start;
-}
-.doc-card:last-child { border-bottom: none; }
-.doc-icon {
-  width: 28px; height: 28px; flex-shrink: 0;
-  border-radius: 6px;
-  background: var(--green-bg); border: 1px solid var(--green-br);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--green-dark);
-}
-.doc-icon.other { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
-.doc-body { flex: 1; min-width: 0; }
-.doc-type { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 1px; }
-.doc-meta { font-size: 11px; color: var(--muted); }
-.doc-file { font-size: 10.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
 /* ── Detected amount inside checklist ──────── */
 .item-detected { font-size: 11px; color: var(--green-dark); font-weight: 500; margin-top: 2px; }
+
+/* ── Document History (chat-style log) ──────── */
+.history-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 16px;
+}
+.history-header {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 12px;
+}
+.history-log {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.history-empty { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+.history-entry {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.history-icon {
+  width: 26px; height: 26px; flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--dim);
+  display: flex; align-items: center; justify-content: center;
+}
+.history-body { flex: 1; min-width: 0; }
+.history-file {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.history-comment {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+  background: var(--surface-2);
+  border-radius: var(--r-sm);
+  padding: 8px 10px;
+  display: inline-block;
+}
 
 /* ── PAYE complete transition banner ───────── */
 .paye-done-banner {
@@ -737,17 +808,45 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   <main class="main">
 
     <div class="main-intro">
-      <h1>Upload your documents to see your tax bill</h1>
-      <p>Upload your documents and we'll work out your income, deductions and tax position.</p>
+      <div class="main-intro-text">
+        <h1>Upload your documents to see your tax bill</h1>
+        <p>Upload your documents and we'll work out your income, deductions and tax position.</p>
+      </div>
+
+      <!-- Sub-component: Upload Target (part of Document Checklist) -->
+      <div class="upload-zone compact" id="uploadZone" data-component="upload-target"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="event.preventDefault();this.classList.remove('drag-over');handleFiles(event.dataTransfer.files)"
+        onclick="document.getElementById('fileInput').click()">
+        <div class="uz-normal">
+          <svg class="uz-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
+          </svg>
+          <div class="uz-title">Drop any document here</div>
+          <div class="uz-sub">We'll match it to the right category automatically</div>
+          <button class="btn-upload-main" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Browse files
+          </button>
+        </div>
+        <div class="uz-loading">
+          <div class="uz-spinner"></div>
+          <div class="uz-loading-text">Analysing document…</div>
+        </div>
+        <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none"
+               onchange="handleFiles(this.files);this.value=''">
+      </div>
     </div>
 
     <!-- COMPONENT: Document Checklist — "Your documents" -->
     <div class="guide-section" id="guideSection" data-component="document-checklist">
 
       <!-- PAYE group -->
-      <div class="group-header open active" data-group="paye" onclick="toggleGroup(this)">
-        <div class="group-icon lilac">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#BC73F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <div class="checklist-group">
+      <div class="group-header open complete" data-group="paye" onclick="toggleGroup(this)">
+        <div class="group-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/>
           </svg>
         </div>
@@ -762,14 +861,19 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
       </div>
       <div class="group-items open" data-group="paye">
         <div class="item-row" data-key="paye-p60">
-          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-check checked"></div>
           <div class="item-info">
-            <div class="item-name">P60</div>
+            <div class="item-name done">P60</div>
             <div class="item-hint">Year-end earnings &amp; tax summary from your employer</div>
+            <div class="item-detected">£43,220.00 detected</div>
           </div>
+          <a class="item-doc-link" href="data:text/plain;base64,TW9jayBkb2N1bWVudDogcDYwX0VtcGxveWVyX05hbWUucGRmCgpUaGlzIGlzIGEgcGxhY2Vob2xkZXIgZm9yIHRoZSBwcm90b3R5cGUgZGVtby4KSW4gdGhlIHJlYWwgcHJvZHVjdCwgdGhpcyBsaW5rIG9wZW5zIHRoZSBhY3R1YWwgZG9jdW1lbnQgeW91IHVwbG9hZGVkLg==" target="_blank" rel="noopener noreferrer" title="p60_Employer_Name.pdf">
+            <svg class="item-doc-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <span class="item-doc-name">p60_Employer_Name.pdf</span>
+          </a>
         </div>
         <div class="item-row" data-key="paye-p45">
-          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-check"></div>
           <div class="item-info">
             <div class="item-name">P45 <span class="item-badge">if you changed jobs</span></div>
             <div class="item-hint">Issued by your previous employer when you left</div>
@@ -798,18 +902,20 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
           </div>
         </div>
         <div class="item-row" data-key="paye-p11d">
-          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-check"></div>
           <div class="item-info">
             <div class="item-name">P11D <span class="item-badge">optional</span></div>
             <div class="item-hint">Benefits in kind: company car, health insurance, etc.</div>
           </div>
         </div>
       </div>
+      </div>
 
       <!-- Rental group -->
+      <div class="checklist-group">
       <div class="group-header" data-group="rental" onclick="toggleGroup(this)">
-        <div class="group-icon green">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38B96C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <div class="group-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
           </svg>
         </div>
@@ -825,53 +931,37 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
       </div>
       <div class="group-items" data-group="rental">
         <div class="item-row" data-key="rental-statement">
-          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-check"></div>
           <div class="item-info">
             <div class="item-name">Rental income records</div>
             <div class="item-hint">Bank statements or letting agent statements</div>
           </div>
         </div>
         <div class="item-row" data-key="rental-expenses">
-          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-check"></div>
           <div class="item-info">
             <div class="item-name">Expense receipts</div>
             <div class="item-hint">Maintenance, repairs, letting agent fees</div>
           </div>
         </div>
         <div class="item-row" data-key="rental-mortgage">
-          <div class="item-check" onclick="toggleCheck(this)"></div>
+          <div class="item-check"></div>
           <div class="item-info">
             <div class="item-name">Mortgage interest statement <span class="item-badge">if mortgaged</span></div>
             <div class="item-hint">Annual statement from your lender</div>
           </div>
         </div>
       </div>
+      </div>
 
     </div>
 
-    <!-- Sub-component: Upload Target (part of Document Checklist) -->
-    <div class="upload-zone" id="uploadZone" data-component="upload-target"
-      ondragover="event.preventDefault();this.classList.add('drag-over')"
-      ondragleave="this.classList.remove('drag-over')"
-      ondrop="event.preventDefault();this.classList.remove('drag-over');handleFiles(event.dataTransfer.files)"
-      onclick="document.getElementById('fileInput').click()">
-      <div class="uz-normal">
-        <svg class="uz-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
-        </svg>
-        <div class="uz-title">Drop any document here</div>
-        <div class="uz-sub">We'll read it and match it to the right category automatically</div>
-        <button class="btn-upload-main" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          Browse files
-        </button>
+    <!-- COMPONENT: Document History -->
+    <div class="history-panel" id="historyPanel" data-component="document-history">
+      <div class="history-header">Document history</div>
+      <div class="history-log" id="historyLog">
+        <p class="history-empty" id="historyEmpty">Documents you upload will show up here, with a quick note on what we found.</p>
       </div>
-      <div class="uz-loading">
-        <div class="uz-spinner"></div>
-        <div class="uz-loading-text">Analysing document…</div>
-      </div>
-      <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none"
-             onchange="handleFiles(this.files);this.value=''">
     </div>
 
   </main>
@@ -885,24 +975,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
       <div class="sb-section" id="sbIncome">
         <div class="sb-title">Your income</div>
-        <div class="row"><span class="row-lbl">PAYE income</span>     <span class="row-val pend">Awaiting P60</span></div>
-        <div class="row"><span class="row-lbl">Self-employment</span> <span class="row-val pend">Not detected</span></div>
-        <div class="row"><span class="row-lbl">Rental income</span>   <span class="row-val pend">Not detected</span></div>
-      </div>
-
-      <div class="sb-section">
-        <div class="sb-title">
-          Uploaded documents
-          <span class="docs-pill" id="docsCount">0 docs</span>
-        </div>
-        <div id="docsList"><p class="sb-note">Documents you share appear here. Figures are extracted automatically.</p></div>
+        <div class="row"><span class="row-lbl">PAYE income</span>     <span class="row-slot"><span class="row-val">£43,220.00</span><span class="row-chip">P60</span></span></div>
+        <div class="row"><span class="row-lbl">Self-employment</span> <span class="row-slot"><span class="row-val pend">Not detected</span></span></div>
+        <div class="row"><span class="row-lbl">Rental income</span>   <span class="row-slot"><span class="row-val pend">Not detected</span></span></div>
       </div>
 
       <div class="sb-section">
         <div class="sb-title">Deductions found</div>
-        <div class="row"><span class="row-lbl">Expenses</span>              <span class="row-val pend">—</span></div>
-        <div class="row"><span class="row-lbl">Pension contributions</span> <span class="row-val pend">—</span></div>
-        <div class="row"><span class="row-lbl">Allowances</span>            <span class="row-val pend">—</span></div>
+        <div class="row"><span class="row-lbl">Expenses</span>              <span class="row-slot"><span class="row-val pend">—</span></span></div>
+        <div class="row"><span class="row-lbl">Pension contributions</span> <span class="row-slot"><span class="row-val pend">—</span></span></div>
+        <div class="row"><span class="row-lbl">Allowances</span>            <span class="row-slot"><span class="row-val pend">—</span></span></div>
       </div>
 
       <div class="sb-section">
@@ -926,10 +1008,12 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
           <div class="acct-name">Dan R</div>
           <div class="acct-cred">Chartered Accountant, ACA</div>
           <div class="acct-bio">11 years in UK property &amp; employment tax. He'll check every figure, apply your remaining deductions and submit to HMRC on your behalf.</div>
-          <div class="acct-btns" style="margin-top:14px">
-            <button class="acct-btn p">Send a message</button>
+          <div class="acct-status" id="acctStatus"></div>
+          <div class="acct-btns" style="margin-top:8px">
+            <button class="acct-btn s">Ask a question</button>
             <button class="acct-btn s">Schedule a call</button>
           </div>
+          <button class="acct-btn p acct-btn-primary" id="acctHandoverBtn">Hand over for review</button>
         </div>
       </div>
     </div>
@@ -991,16 +1075,17 @@ async function processFile(file) {
     // Match to checklist
     const mapping = TYPE_MAP[result.type];
     if (mapping) {
-      markItemDone(mapping.key, result);
+      markItemDone(mapping.key, result, file);
       showToast(`${mapping.label} detected — checklist updated ✓`, 'success');
-      updateIncomeRow(result);
     } else {
       const catLabel = CAT_LABEL[result.category] || 'Other';
       showToast(`${(result.type || 'Document').replace(/_/g,' ')} detected — logged under ${catLabel}`, 'info');
     }
-    updateDocSidebar();
+    addHistoryEntry(file.name, result);
+    updateIncomeRow(result);
     checkGroupCompletion('paye');
     checkGroupCompletion('rental');
+    updateAccountantStatus();
 
   } catch (err) {
     console.error(err);
@@ -1011,12 +1096,26 @@ async function processFile(file) {
 }
 
 // ── Checklist helpers ────────────────────────────────────────────────────────
-function markItemDone(key, result) {
+function markItemDone(key, result, file) {
   checkedKeys.add(key);
   const row = document.querySelector(`.item-row[data-key="${key}"]`);
   if (!row) return;
   row.querySelector('.item-check').classList.add('checked');
   row.querySelector('.item-name').classList.add('done');
+  if (file) {
+    let link = row.querySelector('.item-doc-link');
+    if (!link) {
+      link = document.createElement('a');
+      link.className = 'item-doc-link';
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.innerHTML = '<svg class="item-doc-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="item-doc-name"></span>';
+      row.appendChild(link);
+    }
+    link.href = URL.createObjectURL(file);
+    link.title = file.name;
+    link.querySelector('.item-doc-name').textContent = file.name;
+  }
   if (result && result.key_figure) {
     let det = row.querySelector('.item-detected');
     if (!det) {
@@ -1066,46 +1165,90 @@ function showPayeCompleteBanner() {
   setTimeout(() => banner && banner.remove(), 8000);
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────────────────
-function updateDocSidebar() {
-  const n = uploads.length;
-  document.getElementById('docsCount').textContent = `${n} doc${n !== 1 ? 's' : ''}`;
+// ── Document History ─────────────────────────────────────────────────────────
+function addHistoryEntry(fileName, result) {
+  const log   = document.getElementById('historyLog');
+  const empty = document.getElementById('historyEmpty');
+  if (empty) empty.remove();
 
-  const list = document.getElementById('docsList');
-  list.innerHTML = '';
-  uploads.slice().reverse().forEach(({ name, result }) => {
-    const matched  = !!TYPE_MAP[result.type];
-    const typeLabel= (result.type || 'Unknown').replace(/_/g, ' ');
-    const catLabel = CAT_LABEL[result.category] || 'Other';
-    const card = document.createElement('div');
-    card.className = 'doc-card';
-    card.innerHTML = `
-      <div class="doc-icon ${matched ? '' : 'other'}">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
-        </svg>
-      </div>
-      <div class="doc-body">
-        <div class="doc-type">${typeLabel}</div>
-        <div class="doc-meta">${catLabel}${result.key_figure ? ' · ' + result.key_figure : ''}${result.tax_year ? ' · ' + result.tax_year : ''}</div>
-        <div class="doc-file" title="${name}">${name}</div>
-      </div>`;
-    list.appendChild(card);
-  });
+  const label   = (TYPE_MAP[result.type] && TYPE_MAP[result.type].label) || (result.type || 'Document').replace(/_/g, ' ');
+  const comment = result.description ? `Got your ${label} — ${result.description}` : `Got your ${label}.`;
+
+  const entry = document.createElement('div');
+  entry.className = 'history-entry';
+
+  const icon = document.createElement('div');
+  icon.className = 'history-icon';
+  icon.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  const body = document.createElement('div');
+  body.className = 'history-body';
+
+  const fileEl = document.createElement('div');
+  fileEl.className = 'history-file';
+  fileEl.title = fileName;
+  fileEl.textContent = fileName;
+
+  const commentEl = document.createElement('div');
+  commentEl.className = 'history-comment';
+  commentEl.textContent = comment;
+
+  body.appendChild(fileEl);
+  body.appendChild(commentEl);
+  entry.appendChild(icon);
+  entry.appendChild(body);
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
 }
 
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+// PAYE income and Rental income are both bounded fields in the v1 matrix —
+// a single document fully states the answer, so the field shows which
+// document did that (e.g. "P60"), not an item count. Unbounded fields
+// (e.g. Expenses) would show a running count instead, once one is wired up.
 function updateIncomeRow(result) {
-  if (!result.key_figure) return;
   let sel = null;
   if (result.category === 'paye_employment') {
-    sel = '#sbIncome .row:nth-child(2) .row-val';
+    sel = '#sbIncome .row:nth-child(2) .row-slot';
   } else if (result.category === 'rental_income') {
-    sel = '#sbIncome .row:nth-child(4) .row-val';
+    sel = '#sbIncome .row:nth-child(4) .row-slot';
   }
   if (!sel) return;
-  const el = document.querySelector(sel);
-  if (el) { el.textContent = result.key_figure; el.classList.remove('pend'); }
+  const slot = document.querySelector(sel);
+  if (!slot) return;
+
+  const matches = uploads.filter(u => u.result.category === result.category);
+  const latest  = matches.slice().reverse().find(u => u.result.key_figure);
+  if (!latest) return;
+
+  const label = (TYPE_MAP[latest.result.type] && TYPE_MAP[latest.result.type].label)
+    || (latest.result.type || '').replace(/_/g, ' ');
+
+  slot.innerHTML = '';
+  const val = document.createElement('span');
+  val.className = 'row-val';
+  val.textContent = latest.result.key_figure;
+  const chip = document.createElement('span');
+  chip.className = 'row-chip';
+  chip.textContent = label;
+  slot.appendChild(val);
+  slot.appendChild(chip);
 }
+
+// ── Accountant panel status ─────────────────────────────────────────────────
+// Simplified completion check for the prototype: PAYE is the only mandatory
+// bounded field modelled today. A full completion model across all fields
+// (per the boundedness/necessity matrix) is a later, data-model-level change.
+function updateAccountantStatus() {
+  const payeHeader = document.querySelector('.group-header[data-group="paye"]');
+  const payeDone   = payeHeader && payeHeader.classList.contains('complete');
+  const el = document.getElementById('acctStatus');
+  if (!el) return;
+  el.textContent = payeDone
+    ? 'You can add more to find further savings, or hand over now.'
+    : "We can't calculate your exact bill yet — add your P60, or hand over what you have now.";
+}
+updateAccountantStatus();
 
 // ── Toast ────────────────────────────────────────────────────────────────────
 function showToast(msg, type = '') {
@@ -1122,15 +1265,6 @@ function showToast(msg, type = '') {
 function toggleGroup(header) {
   header.classList.toggle('open');
   header.nextElementSibling.classList.toggle('open');
-}
-function toggleCheck(el) {
-  el.classList.toggle('checked');
-  const key  = el.closest('.item-row')?.dataset.key;
-  el.closest('.item-row').querySelector('.item-name').classList.toggle('done');
-  if (key) {
-    if (el.classList.contains('checked')) { checkedKeys.add(key); checkGroupCompletion(key.split('-')[0]); }
-    else checkedKeys.delete(key);
-  }
 }
 function toggleAlt(el) {
   el.classList.toggle('open');
