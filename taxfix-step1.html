@@ -313,39 +313,56 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 .group-sub   { font-size: 12px; color: var(--muted); margin-top: 1px; }
 .group-meta  { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .group-count { font-size: 12px; color: var(--dim); }
+.group-count:empty { display: none; }
 .g-chevron   { color: var(--dim); transition: transform .2s ease; flex-shrink: 0; }
 .group-header.open .g-chevron { transform: rotate(180deg); }
 .group-items { display: none; }
 .group-items.open { display: block; }
 
+/* Three columns: item content (flexible) | documents (flexible, left-
+   aligned, can hold more than one) | checkmark (small, fixed — just wide
+   enough for the icon). The checkmark column stretches the full row height
+   and centers the icon within it, and the docs column starts flush left
+   rather than hugging the checkmark — both deliberately keep the tick
+   visually separate from any one document, so it reads as "this row is
+   satisfied" rather than being paired with a specific file. */
 .item-row {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 1fr 1fr 20px;
   gap: 12px;
   padding: 12px 16px 12px 20px;
 }
-.item-check {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .3s, border-color .3s;
-}
-.item-check.checked { background: var(--green-dark); border-color: var(--green-dark); }
-.item-check.checked::after {
-  content: '';
-  width: 8px; height: 5px;
-  border-left: 1.5px solid #fff;
-  border-bottom: 1.5px solid #fff;
-  transform: rotate(-45deg) translateY(-1px);
-  display: block;
-}
-.item-info { flex: 1; min-width: 0; }
+.item-info { min-width: 0; align-self: start; }
+.item-name-row { display: flex; align-items: center; gap: 6px; }
 .item-name { font-size: 13px; font-weight: 500; color: var(--text); }
 .item-name.done { color: var(--muted); }
 .item-hint { font-size: 12px; color: var(--muted); margin-top: 1px; }
+.item-chip {
+  display: inline-block;
+  font-size: 10.5px;
+  color: var(--muted);
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-weight: 400;
+}
+.item-docs {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  align-self: start;
+}
+.item-check-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+}
+.item-satisfied-icon { flex-shrink: 0; color: var(--muted); }
+.item-satisfied-note { font-size: 11px; color: var(--muted); font-style: italic; }
 .item-doc-link {
   display: inline-flex;
   align-items: center;
@@ -354,70 +371,12 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   font-weight: 500;
   color: var(--muted);
   text-decoration: none;
-  flex-shrink: 0;
-  max-width: 170px;
+  max-width: 100%;
   transition: color .15s;
 }
 .item-doc-link:hover { color: var(--green-dark); text-decoration: underline; }
 .item-doc-icon { flex-shrink: 0; color: var(--dim); }
 .item-doc-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.item-badge {
-  display: inline-block;
-  font-size: 10.5px;
-  color: var(--muted);
-  padding: 1px 6px;
-  border-radius: 10px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  margin-left: 5px;
-  vertical-align: middle;
-  font-weight: 400;
-}
-
-.alt-row {
-  padding: 8px 16px 9px 20px;
-  background: var(--surface-2);
-  border-bottom: 1px solid var(--border-soft);
-}
-.alt-row:last-child { border-bottom: none; }
-.alt-toggle {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
-  user-select: none;
-}
-.alt-toggle:hover { color: var(--text); }
-.alt-chevron { flex-shrink: 0; transition: transform .18s ease; color: var(--dim); }
-.alt-toggle.open .alt-chevron { transform: rotate(90deg); }
-.alt-docs { display: none; margin-top: 8px; }
-.alt-docs.open { display: block; }
-.alt-doc-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 0;
-  border-top: 1px solid var(--border-soft);
-}
-.alt-doc-name { font-size: 12px; color: var(--muted); flex: 1; }
-.btn-up-xs {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 9px;
-  border-radius: 5px;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  font-size: 11.5px;
-  color: var(--text);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  transition: border-color .15s, color .15s;
-}
-.btn-up-xs:hover { border-color: var(--green-dark); color: var(--green-dark); }
 
 /* ── Upload zone ──────────────────────────── */
 .upload-zone {
@@ -686,25 +645,24 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 .toast.error   { background: #C0392B; }
 @keyframes toastIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 
-/* ── Group complete badge ───────────────────── */
-.group-complete-badge {
-  display: none;
-  font-size: 10.5px; font-weight: 600;
-  color: var(--green-dark);
-  background: var(--green-bg);
-  border: 1px solid var(--green-br);
-  padding: 2px 8px; border-radius: 20px;
-}
-.group-header.complete .group-complete-badge { display: inline-flex; align-items: center; gap: 3px; }
-.group-header.complete .group-count { display: none; }
-
 /* ── Detected amount inside checklist ──────── */
 .item-detected { font-size: 11px; color: var(--green-dark); font-weight: 500; margin-top: 2px; }
 
+/* ── Catch-all note below the checklist ──────── */
+.checklist-footnote {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.checklist-footnote-icon { flex-shrink: 0; color: var(--dim); margin-top: 1px; }
+
 /* ── Document History (chat-style log) ──────── */
 .history-panel {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface-2);
   border-radius: var(--r-lg);
   padding: 16px;
 }
@@ -718,8 +676,8 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 .history-log {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  max-height: 260px;
+  gap: 14px;
+  max-height: 560px;
   overflow-y: auto;
 }
 .history-empty { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
@@ -728,32 +686,170 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   gap: 10px;
   align-items: flex-start;
 }
-.history-icon {
+.history-avatar {
   width: 26px; height: 26px; flex-shrink: 0;
   border-radius: 50%;
   background: var(--surface-2);
   color: var(--dim);
   display: flex; align-items: center; justify-content: center;
 }
-.history-body { flex: 1; min-width: 0; }
-.history-file {
-  font-size: 11.5px;
+.history-entry.resolved .history-avatar { background: var(--green-bg); color: var(--green-dark); }
+.history-entry.pending  .history-avatar { background: var(--blue-bg);  color: var(--blue); }
+.history-content { flex: 1; min-width: 0; }
+/* Attachment shown as its own compact chip above the message, the way
+   Slack/ChatGPT-style chat UIs separate "what was attached" from "what
+   the assistant said about it" rather than folding the filename into
+   the message text. */
+.history-attachment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px 3px 7px;
+  margin-bottom: 6px;
+  max-width: 100%;
 }
+.history-attachment-icon { flex-shrink: 0; color: var(--dim); }
+.history-attachment-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The bubble carries the state tint (resolved = neutral, pending = blue) —
+   an "awaiting input" variant later only needs a new .history-entry.<state>
+   modifier here, no markup changes. */
+.history-bubble {
+  background: var(--surface);
+  border-radius: 4px 14px 14px 14px;
+  padding: 10px 12px;
+}
+.history-entry.pending .history-bubble { background: var(--blue-bg); }
 .history-comment {
   font-size: 12.5px;
-  color: var(--muted);
+  color: var(--text);
   line-height: 1.5;
-  background: var(--surface-2);
-  border-radius: var(--r-sm);
-  padding: 8px 10px;
-  display: inline-block;
 }
+/* Outcome shown as its own small result banner — a clear "here's what
+   happened" statement, not a line blended into the paragraph above it. */
+.history-result {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green-dark);
+  background: var(--green-bg);
+  border: 1px solid var(--green-br);
+  border-radius: var(--r-sm);
+  padding: 6px 9px;
+  margin-top: 8px;
+}
+.history-result-icon { flex-shrink: 0; }
+.history-timestamp {
+  font-size: 10.5px;
+  color: var(--dim);
+  margin-top: 4px;
+}
+/* ── User-authored message (from the compose box) ───────── */
+.history-entry.user { flex-direction: row-reverse; }
+.history-entry.user .history-content { display: flex; flex-direction: column; align-items: flex-end; }
+.history-entry.user .history-bubble {
+  background: var(--text);
+  border-radius: 14px 4px 14px 14px;
+  max-width: 85%;
+}
+.history-entry.user .history-comment { color: var(--bg); }
+/* ── Compose box ──────────────────────────────────────────── */
+.history-compose {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+.history-compose-input {
+  flex: 1;
+  font-size: 12.5px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+}
+.history-compose-input:focus { outline: none; border-color: var(--blue); }
+.history-compose-btn {
+  width: 34px; height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--text);
+  color: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background .15s;
+}
+.history-compose-btn:hover { background: var(--muted); }
+.history-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.history-chip {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--blue-br);
+  background: var(--surface);
+  color: var(--blue);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.history-chip:hover { background: var(--blue); color: #fff; }
+.history-freetext { display: flex; gap: 6px; margin-top: 8px; }
+.history-freetext-input {
+  flex: 1;
+  font-size: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+.history-freetext-input:focus { outline: none; border-color: var(--blue); }
+.history-freetext-btn {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.history-freetext-btn:hover { border-color: var(--blue); color: var(--blue); }
+.history-followup { margin-top: 8px; }
+.history-followup-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.history-followup-row { display: flex; gap: 6px; }
+.history-split-input {
+  flex: 1;
+  font-size: 12px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+.history-split-input:focus { outline: none; border-color: var(--blue); }
+.history-split-btn {
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--blue-br);
+  background: var(--surface);
+  color: var(--blue);
+  cursor: pointer;
+}
+.history-split-btn:hover { background: var(--blue); color: #fff; }
 
 /* ── PAYE complete transition banner ───────── */
 .paye-done-banner {
@@ -809,8 +905,8 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
     <div class="main-intro">
       <div class="main-intro-text">
-        <h1>Upload your documents to see your tax bill</h1>
-        <p>Upload your documents and we'll work out your income, deductions and tax position.</p>
+        <h1>Upload your documents to see your tax position</h1>
+        <p>Upload your documents and we'll give you an early estimate of your income, deductions and tax position — your accountant confirms the final figures.</p>
       </div>
 
       <!-- Sub-component: Upload Target (part of Document Checklist) -->
@@ -854,59 +950,50 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
           <div class="group-label">PAYE employment</div>
         </div>
         <div class="group-meta">
-          <span class="group-count">3 docs</span>
-          <span class="group-complete-badge">✓ Complete</span>
+          <span class="group-count" id="groupCountPaye">1 document added</span>
           <svg class="g-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
       <div class="group-items open" data-group="paye">
         <div class="item-row" data-key="paye-p60">
-          <div class="item-check checked"></div>
           <div class="item-info">
-            <div class="item-name done">P60</div>
+            <div class="item-name-row">
+              <span class="item-name done">P60</span>
+            </div>
             <div class="item-hint">Year-end earnings &amp; tax summary from your employer</div>
             <div class="item-detected">£43,220.00 detected</div>
           </div>
-          <a class="item-doc-link" href="data:text/plain;base64,TW9jayBkb2N1bWVudDogcDYwX0VtcGxveWVyX05hbWUucGRmCgpUaGlzIGlzIGEgcGxhY2Vob2xkZXIgZm9yIHRoZSBwcm90b3R5cGUgZGVtby4KSW4gdGhlIHJlYWwgcHJvZHVjdCwgdGhpcyBsaW5rIG9wZW5zIHRoZSBhY3R1YWwgZG9jdW1lbnQgeW91IHVwbG9hZGVkLg==" target="_blank" rel="noopener noreferrer" title="p60_Employer_Name.pdf">
-            <svg class="item-doc-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            <span class="item-doc-name">p60_Employer_Name.pdf</span>
-          </a>
+          <div class="item-docs">
+            <a class="item-doc-link" href="data:text/plain;base64,TW9jayBkb2N1bWVudDogcDYwX0VtcGxveWVyX05hbWUucGRmCgpUaGlzIGlzIGEgcGxhY2Vob2xkZXIgZm9yIHRoZSBwcm90b3R5cGUgZGVtby4KSW4gdGhlIHJlYWwgcHJvZHVjdCwgdGhpcyBsaW5rIG9wZW5zIHRoZSBhY3R1YWwgZG9jdW1lbnQgeW91IHVwbG9hZGVkLg==" target="_blank" rel="noopener noreferrer" title="p60_Employer_Name.pdf">
+              <svg class="item-doc-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span class="item-doc-name">p60_Employer_Name.pdf</span>
+            </a>
+          </div>
+          <div class="item-check-col">
+            <svg class="item-satisfied-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
         </div>
         <div class="item-row" data-key="paye-p45">
-          <div class="item-check"></div>
           <div class="item-info">
-            <div class="item-name">P45 <span class="item-badge">if you changed jobs</span></div>
-            <div class="item-hint">Issued by your previous employer when you left</div>
-          </div>
-        </div>
-        <div class="alt-row">
-          <div class="alt-toggle" onclick="toggleAlt(this)">
-            <svg class="alt-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            <span>Don't have a P45? Upload an alternative instead</span>
-          </div>
-          <div class="alt-docs">
-            <div class="alt-doc-row">
-              <span class="alt-doc-name">Final payslip (March 2026)</span>
-              <button class="btn-up-xs" onclick="document.getElementById('fileInput').click()">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Upload
-              </button>
+            <div class="item-name-row">
+              <span class="item-name">P45 (or final payslip / salary letter)</span>
+              <span class="item-chip">Conditional</span>
             </div>
-            <div class="alt-doc-row">
-              <span class="alt-doc-name">Salary confirmation letter</span>
-              <button class="btn-up-xs" onclick="document.getElementById('fileInput').click()">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                Upload
-              </button>
-            </div>
+            <div class="item-hint">Issued when you left a job — no P45? A final payslip or salary confirmation letter also works.</div>
           </div>
+          <div class="item-docs"></div>
+          <div class="item-check-col"></div>
         </div>
         <div class="item-row" data-key="paye-p11d">
-          <div class="item-check"></div>
           <div class="item-info">
-            <div class="item-name">P11D <span class="item-badge">optional</span></div>
+            <div class="item-name-row">
+              <span class="item-name">P11D</span>
+              <span class="item-chip">Optional</span>
+            </div>
             <div class="item-hint">Benefits in kind: company car, health insurance, etc.</div>
           </div>
+          <div class="item-docs"></div>
+          <div class="item-check-col"></div>
         </div>
       </div>
       </div>
@@ -924,43 +1011,82 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
           <div class="group-sub">Income records, expenses, mortgage interest</div>
         </div>
         <div class="group-meta">
-          <span class="group-count">3 docs</span>
-          <span class="group-complete-badge">✓ Complete</span>
+          <span class="group-count" id="groupCountRental"></span>
           <svg class="g-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
       <div class="group-items" data-group="rental">
         <div class="item-row" data-key="rental-statement">
-          <div class="item-check"></div>
           <div class="item-info">
-            <div class="item-name">Rental income records</div>
+            <div class="item-name-row">
+              <span class="item-name">Rental income records</span>
+            </div>
             <div class="item-hint">Bank statements or letting agent statements</div>
           </div>
+          <div class="item-docs"></div>
+          <div class="item-check-col"></div>
         </div>
         <div class="item-row" data-key="rental-expenses">
-          <div class="item-check"></div>
           <div class="item-info">
-            <div class="item-name">Expense receipts</div>
+            <div class="item-name-row">
+              <span class="item-name">Expense receipts</span>
+              <span class="item-chip">Optional</span>
+            </div>
             <div class="item-hint">Maintenance, repairs, letting agent fees</div>
           </div>
+          <div class="item-docs"></div>
+          <div class="item-check-col"></div>
         </div>
         <div class="item-row" data-key="rental-mortgage">
-          <div class="item-check"></div>
           <div class="item-info">
-            <div class="item-name">Mortgage interest statement <span class="item-badge">if mortgaged</span></div>
-            <div class="item-hint">Annual statement from your lender</div>
+            <div class="item-name-row">
+              <span class="item-name">Mortgage interest statement</span>
+              <span class="item-chip">Conditional</span>
+            </div>
+            <div class="item-hint">If mortgaged: annual statement from your lender</div>
           </div>
+          <div class="item-docs"></div>
+          <div class="item-check-col"></div>
         </div>
       </div>
       </div>
+
+      <p class="checklist-footnote">
+        <svg class="checklist-footnote-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r="0.5" fill="currentColor"/></svg>
+        <span>Got something else that helps confirm your figures? Drop it above and we'll work out where it fits.</span>
+      </p>
 
     </div>
 
     <!-- COMPONENT: Document History -->
+    <div class="history-header">AI document analysis and support</div>
     <div class="history-panel" id="historyPanel" data-component="document-history">
-      <div class="history-header">Document history</div>
       <div class="history-log" id="historyLog">
-        <p class="history-empty" id="historyEmpty">Documents you upload will show up here, with a quick note on what we found.</p>
+        <div class="history-entry resolved">
+          <div class="history-avatar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><circle cx="9" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1" fill="currentColor" stroke="none"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1" fill="currentColor" stroke="none"/></svg>
+          </div>
+          <div class="history-content">
+            <div class="history-attachment">
+              <svg class="history-attachment-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span class="history-attachment-name" title="p60_Employer_Name.pdf">p60_Employer_Name.pdf</span>
+            </div>
+            <div class="history-bubble">
+              <div class="history-comment">Got it — this is a P60 showing gross pay of £43,220.00 for the tax year, with tax already deducted at source.</div>
+              <div class="history-result">
+                <svg class="history-result-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Matched to PAYE income</span>
+              </div>
+            </div>
+            <div class="history-timestamp">Just now</div>
+          </div>
+        </div>
+      </div>
+      <div class="history-compose">
+        <input type="text" id="historyComposeInput" class="history-compose-input" placeholder="Ask a question about your documents…">
+        <button type="button" id="historyComposeBtn" class="history-compose-btn" aria-label="Send">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
     </div>
 
@@ -973,14 +1099,13 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
     <div class="tax-position" id="taxPosition" data-component="tax-position">
       <div class="tp-header">Your Tax Position so far</div>
 
+      <div class="sb-eyebrow">Income Sources</div>
       <div class="sb-section" id="sbIncome">
-        <div class="sb-title">Your income</div>
         <div class="row"><span class="row-lbl">PAYE income</span>     <span class="row-slot"><span class="row-val">£43,220.00</span><span class="row-chip">P60</span></span></div>
-        <div class="row"><span class="row-lbl">Self-employment</span> <span class="row-slot"><span class="row-val pend">Not detected</span></span></div>
         <div class="row"><span class="row-lbl">Rental income</span>   <span class="row-slot"><span class="row-val pend">Not detected</span></span></div>
       </div>
 
-      <div class="sb-section">
+      <div class="sb-section" id="sbDeductions">
         <div class="sb-title">Deductions found</div>
         <div class="row"><span class="row-lbl">Expenses</span>              <span class="row-slot"><span class="row-val pend">—</span></span></div>
         <div class="row"><span class="row-lbl">Pension contributions</span> <span class="row-slot"><span class="row-val pend">—</span></span></div>
@@ -1023,31 +1148,67 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
 <script>
 // ── State ────────────────────────────────────────────────────────────────────
-const uploads     = [];          // { name, result, ts }
-const checkedKeys = new Set();   // item keys the user or AI has marked done
+const checkedKeys = new Set();   // item keys the AI has marked done
+const fieldState  = {};          // fieldName -> { count, total, lastLabel }
+
+// Seed state to match the pre-populated P60 demo row, so a real PAYE
+// upload afterwards adds to this total rather than silently replacing it.
+checkedKeys.add('paye-p60');
+fieldState['PAYE income'] = { count: 1, total: 43220.00, lastLabel: 'P60' };
 
 // ── Type → checklist mapping ─────────────────────────────────────────────────
 const TYPE_MAP = {
   'P60':                     { key: 'paye-p60',        label: 'P60' },
   'P45':                     { key: 'paye-p45',        label: 'P45' },
-  'payslip':                 { key: 'paye-p60',        label: 'Last payslip (P60 substitute)' },
+  'payslip':                 { key: 'paye-p45',        label: 'Last payslip',              note: 'Satisfied via payslip' },
+  'salary_letter':           { key: 'paye-p45',        label: 'Salary confirmation letter', note: 'Satisfied via salary letter' },
   'P11D':                    { key: 'paye-p11d',       label: 'P11D' },
   'rental_income_statement': { key: 'rental-statement',label: 'Rental income records' },
   'rental_expense_receipt':  { key: 'rental-expenses', label: 'Expense receipt' },
   'mortgage_statement':      { key: 'rental-mortgage', label: 'Mortgage interest statement' },
   'bank_statement':          { key: 'rental-statement',label: 'Bank statement' },
 };
-const CAT_LABEL = {
-  paye_employment: 'PAYE employment',
-  rental_income:   'Rental income',
-  self_employment: 'Self-employment',
-  other:           'Other',
-};
 // A group is "done" when any of its required keys are checked
 const GROUP_REQUIRED = {
   paye:   ['paye-p60', 'paye-p45'],
   rental: ['rental-statement'],
 };
+// Every item a group can show — used to count "N documents added"
+const GROUP_ITEMS = {
+  paye:   ['paye-p60', 'paye-p45', 'paye-p11d'],
+  rental: ['rental-statement', 'rental-expenses', 'rental-mortgage'],
+};
+
+// checklist key -> the tax-position field it feeds
+const FIELD_MAP = {
+  'paye-p60':        'PAYE income',
+  'paye-p45':        'PAYE income',
+  'paye-p11d':       'Benefits in kind',
+  'rental-statement':'Rental income',
+  'rental-expenses': 'Expenses',
+  'rental-mortgage': 'Mortgage interest',
+};
+// Bounded fields: one document fully states the answer, so they show
+// which document did that. Everything else (Expenses) is unbounded and
+// shows a running count + total instead.
+const BOUNDED_FIELDS = new Set(['PAYE income', 'Rental income', 'Mortgage interest', 'Benefits in kind']);
+const FIELD_ROW_SELECTOR = {
+  'PAYE income':   '#sbIncome .row:nth-child(1) .row-slot',
+  'Rental income': '#sbIncome .row:nth-child(2) .row-slot',
+  'Expenses':      '#sbDeductions .row:nth-child(2) .row-slot',
+};
+
+// Document types that are inherently ambiguous regardless of how sure the
+// model is — they always go through the "what does this cover?" flow.
+const INHERENTLY_AMBIGUOUS = new Set(['bank_statement', 'rental_expense_receipt']);
+const LOW_CONFIDENCE = 0.7;
+
+function needsUserInput(result) {
+  if (INHERENTLY_AMBIGUOUS.has(result.type)) return true;
+  if (!TYPE_MAP[result.type]) return true;
+  if (typeof result.confidence === 'number' && result.confidence < LOW_CONFIDENCE) return true;
+  return false;
+}
 
 // ── Upload handler ───────────────────────────────────────────────────────────
 async function handleFiles(files) {
@@ -1056,36 +1217,50 @@ async function handleFiles(files) {
   }
 }
 
+// ── Mock classification (no backend call yet) ───────────────────────────────
+// A fixed array standing in for the real /api/detect response, cycled in
+// upload order. To wire up the real API later: replace the body of
+// mockDetect() with the fetch() call — processFile, resolveDocument, and
+// every history/checklist renderer already expect this exact result shape
+// ({ type, confidence, description, key_figure }), so nothing else changes.
+const MOCK_RESULTS = [
+  { detectedType: 'P60',                     confidence: 'high', description: 'This is a P60 showing gross pay of £43,220.00 for the tax year, with tax already deducted at source.', extractedValue: '£43,220.00' },
+  { detectedType: 'P45',                     confidence: 'high', description: 'This is a P45 from a previous employer, showing pay and tax to the leaving date.', extractedValue: '£18,400.00' },
+  { detectedType: 'mortgage_statement',      confidence: 'high', description: 'This is an annual mortgage interest statement from a lender.', extractedValue: '£2,150.00' },
+  { detectedType: 'rental_income_statement', confidence: 'high', description: 'This looks like a letting agent statement showing rental income received over the year.', extractedValue: '£9,600.00' },
+  { detectedType: 'bank_statement',          confidence: 'low',  description: "This looks like a bank statement, but I can't confidently tell what it's evidence of.", extractedValue: null },
+  { detectedType: 'rental_expense_receipt',  confidence: 'low',  description: "This looks like a receipt, but I can't confidently tell what it's for.", extractedValue: '£64.20' },
+];
+// Starts at 1, not 0 — index 0 (P60) is already reflected in the seeded
+// demo state, so the first real upload shouldn't double-count it.
+let mockUploadIndex = 1;
+function mockDetect(file) {
+  const entry = MOCK_RESULTS[mockUploadIndex % MOCK_RESULTS.length];
+  mockUploadIndex++;
+  return new Promise(resolve => setTimeout(() => resolve({
+    type: entry.detectedType,
+    confidence: entry.confidence === 'high' ? 0.95 : 0.4,
+    description: entry.description,
+    key_figure: entry.extractedValue,
+    tax_year: null,
+  }), 700));
+}
+
 async function processFile(file) {
   const zone = document.getElementById('uploadZone');
   zone.classList.add('loading');
   try {
-    const fd = new FormData();
-    fd.append('file', file);
-    const res = await fetch('/api/detect', { method: 'POST', body: fd });
-    if (!res.ok) {
-      const e = await res.json().catch(() => ({}));
-      throw new Error(e.error || `Server error ${res.status}`);
-    }
-    const result = await res.json();
+    const result = await mockDetect(file);
 
-    // Log upload
-    uploads.push({ name: file.name, result, ts: Date.now() });
-
-    // Match to checklist
-    const mapping = TYPE_MAP[result.type];
-    if (mapping) {
-      markItemDone(mapping.key, result, file);
-      showToast(`${mapping.label} detected — checklist updated ✓`, 'success');
+    if (needsUserInput(result)) {
+      addPendingHistoryEntry(file.name, result, file);
+      showToast(`${file.name} needs a quick answer — see Document history`, 'info');
     } else {
-      const catLabel = CAT_LABEL[result.category] || 'Other';
-      showToast(`${(result.type || 'Document').replace(/_/g,' ')} detected — logged under ${catLabel}`, 'info');
+      const mapping = TYPE_MAP[result.type];
+      const restatement = resolveDocument({ fieldName: FIELD_MAP[mapping.key], key: mapping.key, result, file, fileName: file.name });
+      addResolvedHistoryEntry(file.name, result, mapping, restatement);
+      showToast(`${mapping.label} detected — checklist updated ✓`, 'success');
     }
-    addHistoryEntry(file.name, result);
-    updateIncomeRow(result);
-    checkGroupCompletion('paye');
-    checkGroupCompletion('rental');
-    updateAccountantStatus();
 
   } catch (err) {
     console.error(err);
@@ -1100,31 +1275,59 @@ function markItemDone(key, result, file) {
   checkedKeys.add(key);
   const row = document.querySelector(`.item-row[data-key="${key}"]`);
   if (!row) return;
-  row.querySelector('.item-check').classList.add('checked');
-  row.querySelector('.item-name').classList.add('done');
-  if (file) {
-    let link = row.querySelector('.item-doc-link');
-    if (!link) {
-      link = document.createElement('a');
-      link.className = 'item-doc-link';
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.innerHTML = '<svg class="item-doc-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="item-doc-name"></span>';
-      row.appendChild(link);
-    }
-    link.href = URL.createObjectURL(file);
-    link.title = file.name;
-    link.querySelector('.item-doc-name').textContent = file.name;
+  const info = row.querySelector('.item-info');
+  info.querySelector('.item-name').classList.add('done');
+
+  // Checkmark is its own small, fixed-width column — it marks the whole
+  // row as satisfied, not any one of the documents in the docs column.
+  const checkCol = row.querySelector('.item-check-col');
+  if (!checkCol.querySelector('.item-satisfied-icon')) {
+    checkCol.innerHTML =
+      '<svg class="item-satisfied-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
   }
+
   if (result && result.key_figure) {
-    let det = row.querySelector('.item-detected');
+    let det = info.querySelector('.item-detected');
     if (!det) {
       det = document.createElement('div');
       det.className = 'item-detected';
-      row.querySelector('.item-info').appendChild(det);
+      info.appendChild(det);
     }
     det.textContent = result.key_figure + ' detected';
   }
+
+  const docs = row.querySelector('.item-docs');
+
+  // Alternate documents (e.g. a payslip standing in for a P45) get a note
+  // instead of implying the canonical document type was actually provided.
+  const mapping = TYPE_MAP[result && result.type];
+  if (mapping && mapping.note && !docs.querySelector('.item-satisfied-note')) {
+    const note = document.createElement('span');
+    note.className = 'item-satisfied-note';
+    note.textContent = mapping.note;
+    docs.appendChild(note);
+  }
+
+  // Each upload for this item gets its own link — an item can be backed
+  // by more than one document (e.g. two payslips standing in for a P45).
+  if (file) {
+    const link = document.createElement('a');
+    link.className = 'item-doc-link';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.href = URL.createObjectURL(file);
+    link.title = file.name;
+    link.innerHTML = '<svg class="item-doc-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="item-doc-name"></span>';
+    link.querySelector('.item-doc-name').textContent = file.name;
+    docs.appendChild(link);
+  }
+}
+
+function updateGroupCount(group) {
+  const el = document.getElementById(group === 'paye' ? 'groupCountPaye' : 'groupCountRental');
+  if (!el) return;
+  const n = GROUP_ITEMS[group].filter(k => checkedKeys.has(k)).length;
+  el.textContent = n === 0 ? '' : `${n} document${n !== 1 ? 's' : ''} added`;
 }
 
 function checkGroupCompletion(group) {
@@ -1165,75 +1368,307 @@ function showPayeCompleteBanner() {
   setTimeout(() => banner && banner.remove(), 8000);
 }
 
+// ── Field evidence (tax position) ───────────────────────────────────────────
+// A single place that updates a field's count/total and its sidebar row,
+// so the history panel and the sidebar always agree.
+function recordFieldEvidence(fieldName, result) {
+  if (!fieldState[fieldName]) fieldState[fieldName] = { count: 0, total: 0, lastLabel: '' };
+  const state = fieldState[fieldName];
+  state.count += 1;
+  const amount = parseCurrency(result && result.key_figure);
+  if (amount != null) state.total += amount;
+  const mapping = TYPE_MAP[result && result.type];
+  state.lastLabel = (mapping && mapping.label) || ((result && result.type) ? result.type.replace(/_/g, ' ') : 'Document');
+  renderFieldRow(fieldName, state);
+  return state;
+}
+
+function renderFieldRow(fieldName, state) {
+  const sel = FIELD_ROW_SELECTOR[fieldName];
+  if (!sel) return;
+  const slot = document.querySelector(sel);
+  if (!slot) return;
+  slot.innerHTML = '';
+  const val = document.createElement('span');
+  val.className = 'row-val';
+  if (BOUNDED_FIELDS.has(fieldName)) {
+    val.textContent = state.total > 0 ? formatCurrency(state.total) : state.lastLabel;
+    slot.appendChild(val);
+    const chip = document.createElement('span');
+    chip.className = 'row-chip';
+    chip.textContent = state.lastLabel;
+    slot.appendChild(chip);
+  } else {
+    const itemsLabel = `${state.count} item${state.count !== 1 ? 's' : ''} recorded`;
+    val.textContent = state.total > 0 ? `${formatCurrency(state.total)} · ${itemsLabel}` : itemsLabel;
+    slot.appendChild(val);
+  }
+}
+
+// One-sentence restatement of a field's effect, echoed in the history entry.
+function fieldRestatement(fieldName) {
+  const s = fieldState[fieldName];
+  if (!s) return '';
+  if (BOUNDED_FIELDS.has(fieldName)) return `Matched to ${fieldName}`;
+  const itemsLabel = `${s.count} item${s.count !== 1 ? 's' : ''} recorded`;
+  return `Added to ${fieldName} — ${itemsLabel}${s.total > 0 ? ', ' + formatCurrency(s.total) + ' total' : ''}`;
+}
+
+function parseCurrency(str) {
+  if (!str) return null;
+  const n = parseFloat(String(str).replace(/[^0-9.]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+function formatCurrency(n) {
+  return '£' + n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// Applies a resolved document to the checklist and its field, and refreshes
+// everything that depends on completion. Only resolved documents ever reach
+// this — pending ones don't touch the checklist, sidebar, or accountant panel.
+function resolveDocument({ fieldName, key, result, file, fileName }) {
+  if (key) markItemDone(key, result, file);
+  let restatement = '';
+  if (fieldName) {
+    recordFieldEvidence(fieldName, result);
+    restatement = fieldRestatement(fieldName);
+  }
+  checkGroupCompletion('paye');
+  checkGroupCompletion('rental');
+  updateGroupCount('paye');
+  updateGroupCount('rental');
+  updateAccountantStatus();
+  return restatement;
+}
+
 // ── Document History ─────────────────────────────────────────────────────────
-function addHistoryEntry(fileName, result) {
+// Newest entry at the top. Two states: resolved (auto or answered) and
+// pending (needs a quick answer before it counts toward anything).
+function historyLog() {
   const log   = document.getElementById('historyLog');
   const empty = document.getElementById('historyEmpty');
   if (empty) empty.remove();
-
-  const label   = (TYPE_MAP[result.type] && TYPE_MAP[result.type].label) || (result.type || 'Document').replace(/_/g, ' ');
-  const comment = result.description ? `Got your ${label} — ${result.description}` : `Got your ${label}.`;
-
-  const entry = document.createElement('div');
-  entry.className = 'history-entry';
-
-  const icon = document.createElement('div');
-  icon.className = 'history-icon';
-  icon.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-
-  const body = document.createElement('div');
-  body.className = 'history-body';
-
-  const fileEl = document.createElement('div');
-  fileEl.className = 'history-file';
-  fileEl.title = fileName;
-  fileEl.textContent = fileName;
-
-  const commentEl = document.createElement('div');
-  commentEl.className = 'history-comment';
-  commentEl.textContent = comment;
-
-  body.appendChild(fileEl);
-  body.appendChild(commentEl);
-  entry.appendChild(icon);
-  entry.appendChild(body);
+  return log;
+}
+function appendEntry(entry) {
+  const log = historyLog();
   log.appendChild(entry);
   log.scrollTop = log.scrollHeight;
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────────────────
-// PAYE income and Rental income are both bounded fields in the v1 matrix —
-// a single document fully states the answer, so the field shows which
-// document did that (e.g. "P60"), not an item count. Unbounded fields
-// (e.g. Expenses) would show a running count instead, once one is wired up.
-function updateIncomeRow(result) {
-  let sel = null;
-  if (result.category === 'paye_employment') {
-    sel = '#sbIncome .row:nth-child(2) .row-slot';
-  } else if (result.category === 'rental_income') {
-    sel = '#sbIncome .row:nth-child(4) .row-slot';
-  }
-  if (!sel) return;
-  const slot = document.querySelector(sel);
-  if (!slot) return;
-
-  const matches = uploads.filter(u => u.result.category === result.category);
-  const latest  = matches.slice().reverse().find(u => u.result.key_figure);
-  if (!latest) return;
-
-  const label = (TYPE_MAP[latest.result.type] && TYPE_MAP[latest.result.type].label)
-    || (latest.result.type || '').replace(/_/g, ' ');
-
-  slot.innerHTML = '';
-  const val = document.createElement('span');
-  val.className = 'row-val';
-  val.textContent = latest.result.key_figure;
-  const chip = document.createElement('span');
-  chip.className = 'row-chip';
-  chip.textContent = label;
-  slot.appendChild(val);
-  slot.appendChild(chip);
+function addResolvedHistoryEntry(fileName, result, mapping, restatement) {
+  const entry = document.createElement('div');
+  entry.className = 'history-entry resolved';
+  const comment = result.description ? `Got it — ${result.description}` : `Got it — this is your ${mapping.label}.`;
+  entry.innerHTML = resolvedEntryHTML();
+  fillResolvedEntry(entry, fileName, comment, restatement);
+  appendEntry(entry);
 }
+
+// The AI's avatar glyph — same icon for every message, resolved or pending;
+// the avatar/bubble tint (not the glyph) signals which state it's in.
+function aiAvatarSVG() {
+  return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><circle cx="9" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1" fill="currentColor" stroke="none"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1" fill="currentColor" stroke="none"/></svg>';
+}
+function relativeTime(ts) {
+  const diffSec = Math.round((Date.now() - ts) / 1000);
+  if (diffSec < 45) return 'Just now';
+  const diffMin = Math.round(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} min ago`;
+  const diffHr = Math.round(diffMin / 60);
+  return `${diffHr}h ago`;
+}
+
+function attachmentIconSVG() {
+  return '<svg class="history-attachment-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+}
+// Shared shell for every entry — avatar, attachment chip, bubble, timestamp.
+// The resolved/pending modifier class controls tint only, so an "awaiting
+// input" visual variant can be added later without touching this markup.
+function entryShellHTML() {
+  return `
+    <div class="history-avatar">${aiAvatarSVG()}</div>
+    <div class="history-content">
+      <div class="history-attachment">${attachmentIconSVG()}<span class="history-attachment-name"></span></div>
+      <div class="history-bubble">
+        <div class="history-comment"></div>
+      </div>
+      <div class="history-timestamp"></div>
+    </div>`;
+}
+function fillEntryShell(entry, fileName, comment) {
+  const nameEl = entry.querySelector('.history-attachment-name');
+  nameEl.title = fileName;
+  nameEl.textContent = fileName;
+  entry.querySelector('.history-comment').textContent = comment;
+  entry.querySelector('.history-timestamp').textContent = relativeTime(Date.now());
+}
+
+function resolvedEntryHTML() {
+  return entryShellHTML();
+}
+function fillResolvedEntry(entry, fileName, comment, restatement) {
+  fillEntryShell(entry, fileName, comment);
+  const result = document.createElement('div');
+  result.className = 'history-result';
+  result.innerHTML = '<svg class="history-result-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span></span>';
+  result.querySelector('span').textContent = restatement || 'No changes to your tax position.';
+  entry.querySelector('.history-bubble').appendChild(result);
+}
+
+// What to ask, and which quick-reply options to offer, for a document the
+// system can't confidently place on its own.
+function questionTextFor(result) {
+  if (result.type === 'bank_statement') {
+    return "This looks like a bank statement, but I can't tell if it covers rental income, an expense, or both. What does it cover?";
+  }
+  if (TYPE_MAP[result.type]) {
+    return `This looks like it might be your ${TYPE_MAP[result.type].label}, but I'm not fully sure. Is that right?`;
+  }
+  return "This looks like a receipt, but I can't tell what it's for. What does this cover?";
+}
+function chipOptionsFor(result) {
+  if (result.type === 'bank_statement') {
+    return [
+      { label: 'Rental income', field: 'Rental income', key: 'rental-statement' },
+      { label: 'Expenses',      field: 'Expenses',      key: 'rental-expenses' },
+      { label: 'Both',          both: true },
+    ];
+  }
+  if (TYPE_MAP[result.type]) {
+    const m = TYPE_MAP[result.type];
+    return [
+      { label: `Yes, it's my ${m.label}`, field: FIELD_MAP[m.key], key: m.key },
+      { label: 'Something else',          field: null, key: null },
+    ];
+  }
+  return [
+    { label: 'Rental expense',          field: 'Expenses', key: 'rental-expenses' },
+    { label: 'Business expense',        field: 'Expenses', key: null },
+    { label: 'Not related to my taxes', field: null, key: null },
+  ];
+}
+
+function addPendingHistoryEntry(fileName, result, file) {
+  const entry = document.createElement('div');
+  entry.className = 'history-entry pending';
+  entry.innerHTML = entryShellHTML();
+  entry.querySelector('.history-bubble').insertAdjacentHTML('beforeend', `
+    <div class="history-chips"></div>
+    <div class="history-freetext">
+      <input type="text" class="history-freetext-input" placeholder="Or describe it in your own words">
+      <button type="button" class="history-freetext-btn">Add</button>
+    </div>`);
+  fillEntryShell(entry, fileName, questionTextFor(result));
+
+  const chipRow = entry.querySelector('.history-chips');
+  chipOptionsFor(result).forEach(opt => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'history-chip';
+    btn.textContent = opt.label;
+    btn.onclick = () => handleChipChoice(entry, opt, result, file, fileName);
+    chipRow.appendChild(btn);
+  });
+
+  entry.querySelector('.history-freetext-btn').onclick = () => {
+    const input = entry.querySelector('.history-freetext-input');
+    const text = input.value.trim();
+    if (!text) return;
+    handleFreeTextChoice(entry, text, fileName);
+  };
+
+  appendEntry(entry);
+}
+
+function handleChipChoice(entry, opt, result, file, fileName) {
+  if (opt.both) {
+    showSplitFollowUp(entry, result, file, fileName);
+    return;
+  }
+  const restatement = resolveDocument({ fieldName: opt.field, key: opt.key, result, file, fileName });
+  collapseToResolved(entry, fileName, `Got it — logged as ${opt.label}.`, restatement);
+}
+
+function showSplitFollowUp(entry, result, file, fileName) {
+  entry.querySelector('.history-chips').remove();
+  entry.querySelector('.history-freetext').remove();
+
+  const follow = document.createElement('div');
+  follow.className = 'history-followup';
+  follow.innerHTML = `
+    <div class="history-followup-label">Roughly what share is rental income vs. expenses?</div>
+    <div class="history-followup-row">
+      <input type="text" class="history-split-input" placeholder="e.g. 70% rental, 30% expenses">
+      <button type="button" class="history-split-btn">Confirm</button>
+    </div>`;
+  entry.querySelector('.history-bubble').appendChild(follow);
+
+  follow.querySelector('.history-split-btn').onclick = () => {
+    const splitText = follow.querySelector('.history-split-input').value.trim() || 'an approximate split';
+    // The split is descriptive only — we don't have a reliable way to divide
+    // one figure across two fields, so no amount is attributed to either.
+    const neutral = { ...result, key_figure: null };
+    const r1 = resolveDocument({ fieldName: 'Rental income', key: 'rental-statement', result: neutral, file, fileName });
+    const r2 = resolveDocument({ fieldName: 'Expenses',      key: null,               result: neutral, file, fileName });
+    collapseToResolved(entry, fileName, `Got it — logged as both (${splitText}).`, `${r1} · ${r2}`);
+  };
+}
+
+function handleFreeTextChoice(entry, text, fileName) {
+  // Free text can't be reliably matched to a field without another AI pass,
+  // so it's logged for the record but doesn't move any field's total here.
+  collapseToResolved(entry, fileName, `Got it — logged as "${text}".`, "Not counted toward your tax position yet — your accountant can review this.");
+}
+
+function collapseToResolved(entry, fileName, comment, restatement) {
+  entry.className = 'history-entry resolved';
+  entry.innerHTML = resolvedEntryHTML();
+  fillResolvedEntry(entry, fileName, comment, restatement);
+}
+
+// ── Compose box ──────────────────────────────────────────────────────────────
+// No real chat backend yet — sending a message logs it and gets a generic
+// acknowledgment, same "mock now, swap later" approach as mockDetect().
+function addUserMessage(text) {
+  const entry = document.createElement('div');
+  entry.className = 'history-entry user';
+  entry.innerHTML = `
+    <div class="history-content">
+      <div class="history-bubble"><div class="history-comment"></div></div>
+      <div class="history-timestamp"></div>
+    </div>`;
+  entry.querySelector('.history-comment').textContent = text;
+  entry.querySelector('.history-timestamp').textContent = relativeTime(Date.now());
+  appendEntry(entry);
+}
+function addAiTextReply(text) {
+  const entry = document.createElement('div');
+  entry.className = 'history-entry resolved';
+  entry.innerHTML = `
+    <div class="history-avatar">${aiAvatarSVG()}</div>
+    <div class="history-content">
+      <div class="history-bubble"><div class="history-comment"></div></div>
+      <div class="history-timestamp"></div>
+    </div>`;
+  entry.querySelector('.history-comment').textContent = text;
+  entry.querySelector('.history-timestamp').textContent = relativeTime(Date.now());
+  appendEntry(entry);
+}
+function sendComposeMessage() {
+  const input = document.getElementById('historyComposeInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addUserMessage(text);
+  setTimeout(() => {
+    addAiTextReply("Thanks — I've noted that. Your accountant will see it when they review your documents.");
+  }, 500);
+}
+document.getElementById('historyComposeBtn').addEventListener('click', sendComposeMessage);
+document.getElementById('historyComposeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendComposeMessage();
+});
 
 // ── Accountant panel status ─────────────────────────────────────────────────
 // Simplified completion check for the prototype: PAYE is the only mandatory
@@ -1266,11 +1701,6 @@ function toggleGroup(header) {
   header.classList.toggle('open');
   header.nextElementSibling.classList.toggle('open');
 }
-function toggleAlt(el) {
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('open');
-}
-
 // ── Stale drag handlers on old .ucard elements (kept for safety) ─────────────
 document.querySelectorAll('.ucard').forEach(card => {
   ['dragenter','dragover'].forEach(ev => card.addEventListener(ev, e => { e.preventDefault(); card.classList.add('drag-over'); }));
