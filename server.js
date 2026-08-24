@@ -1,30 +1,30 @@
 import express from 'express';
 import multer  from 'multer';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import 'dotenv/config';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app    = express();
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 25 * 1024 * 1024 } });
-const ai     = new Anthropic();   // reads ANTHROPIC_API_KEY from env
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+const genai  = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model  = genai.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 app.use(express.static(__dirname));
 
 // ── Prompt ──────────────────────────────────────────────────────────────────
-const SYSTEM = `You are a document classifier for a UK tax filing service.
-A taxpayer has just uploaded a file as part of their annual Self Assessment return.`;
+const PROMPT = `You are analysing a UK tax document uploaded for an annual Self Assessment return.
 
-const PROMPT = `Examine this document and return ONLY a valid JSON object — no markdown, no explanation — with exactly these fields:
+Return ONLY a valid JSON object — no markdown, no explanation — with exactly these fields:
 
 {
   "type": <one of: "P60", "P45", "P11D", "payslip", "rental_income_statement", "rental_expense_receipt", "mortgage_statement", "bank_statement", "invoice", "other">,
   "category": <one of: "paye_employment", "rental_income", "self_employment", "other">,
   "confidence": <number 0.0–1.0>,
-  "description": <1-2 sentence description>,
-  "tax_year": <"2023-24" style if visible, else null>,
-  "key_figure": <main monetary figure e.g. "£45,234.00" if visible, else null>
+  "description": <1–2 sentence description of the document>,
+  "tax_year": <"2023-24" format string if visible, else null>,
+  "key_figure": <the main income or financial figure — for P60/P45/payslip use gross pay, for rental use total rent received; format as "£XX,XXX.XX"; null if not visible>
 }`;
 
 // ── Detection endpoint ───────────────────────────────────────────────────────
@@ -32,39 +32,29 @@ app.post('/api/detect', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
   const { mimetype, buffer, originalname } = req.file;
-  const isPdf   = mimetype === 'application/pdf';
-  const isImage = mimetype.startsWith('image/');
 
-  if (!isPdf && !isImage) {
+  if (!mimetype.startsWith('image/') && mimetype !== 'application/pdf') {
     return res.status(400).json({ error: `Unsupported file type: ${mimetype}` });
   }
 
   const base64 = buffer.toString('base64');
 
-  const docBlock = isPdf
-    ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }
-    : { type: 'image',    source: { type: 'base64', media_type: mimetype, data: base64 } };
-
   try {
-    const msg = await ai.messages.create({
-      model:      'claude-sonnet-4-6',
-      max_tokens: 512,
-      system:     SYSTEM,
-      messages:   [{ role: 'user', content: [docBlock, { type: 'text', text: PROMPT }] }],
-      // Include PDF beta flag — harmless for non-PDF calls; needed on some model versions
-      betas: ['pdfs-2024-09-25'],
-    });
+    const result = await model.generateContent([
+      { inlineData: { data: base64, mimeType: mimetype } },
+      PROMPT,
+    ]);
 
-    const raw    = msg.content[0].text.trim().replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-    const result = JSON.parse(raw);
+    const raw    = result.response.text().trim()
+                     .replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
+    const parsed = JSON.parse(raw);
 
-    console.log(`[detect] ${originalname} → ${result.type} (${result.category}, ${Math.round(result.confidence * 100)}%)`);
-    res.json(result);
+    console.log(`[detect] ${originalname} → ${parsed.type} (${parsed.category}, ${Math.round(parsed.confidence * 100)}%)`);
+    res.json(parsed);
 
   } catch (err) {
     console.error('[detect]', err.message);
     if (err instanceof SyntaxError) {
-      // Model returned non-JSON — fall back gracefully
       res.json({ type: 'other', category: 'other', confidence: 0,
                  description: 'Could not identify document', tax_year: null, key_figure: null });
     } else {
@@ -76,7 +66,7 @@ app.post('/api/detect', upload.single('file'), async (req, res) => {
 // ── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`\n🌿  Taxfix Document Upload prototype`);
+  console.log(`\n🌿  Taxfix Document Upload`);
   console.log(`    http://localhost:${PORT}`);
-  console.log(`\n    Make sure ANTHROPIC_API_KEY is set in .env\n`);
+  console.log(`\n    Needs: GEMINI_API_KEY in .env\n`);
 });
