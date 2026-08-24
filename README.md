@@ -4,11 +4,13 @@ A self-contained HTML prototype for the Taxfix **Step 1 — Upload your document
 
 ## What it is
 
-An interactive mockup exploring how to guide users through document collection before calculating their tax bill. It combines:
+An interactive mockup exploring how to guide users through document collection before calculating their tax bill. It's built from three named components — see [PAGE-COMPONENTS.md](PAGE-COMPONENTS.md) for their full definitions (purpose, what each should/shouldn't contain, how they relate). Each is marked in `taxfix-step1.html` with a `data-component` attribute, so they can be found and referred to unambiguously in code:
 
-- **Accordion document checklist** — income-source groups (PAYE employment, Rental income) with per-document line items and checkboxes, so users know exactly what to upload
-- **Drag-and-drop upload zone** — a single drop target at the bottom; any document can be dropped and the system matches it to the right category automatically
-- **Accountant sidebar** — dedicated accountant card (photo, credentials, bio) with "Send a message" and "Schedule a call" CTAs, plus a live summary of income, deductions, and estimated tax due
+- **Document Checklist** (`data-component="document-checklist"`) — income-source groups (PAYE employment, Rental income) with per-document line items and checkboxes, so users know exactly what to upload. Its Upload Target sub-component (`data-component="upload-target"`) is the single drop zone at the bottom that accepts any document and routes it to the right category automatically
+- **Tax Position** (`data-component="tax-position"`), *"Your Tax Position so far"* — a live, visually distinct summary of income, deductions found, and estimated tax due, occupying the top of the sidebar
+- **Accountant Panel** (`data-component="accountant-panel"`) — dedicated accountant card (photo, credentials, bio) with "Send a message" and "Schedule a call" CTAs, sitting below the Tax Position
+
+Layout is a 3:2 column split (Document Checklist : sidebar).
 
 ## Design
 
@@ -26,5 +28,3 @@ Open `taxfix-step1.html` directly in a browser — no build step, no dependencie
 ## Next steps
 
 This currently covers only the Step 1 upload screen, now in grayscale wireframe form. Further screens in the flow (Overview, UTR registration, Employment income, etc.) will be built out the same way — grayscale, no branding — so the UX gets settled before any visual polish.
-
-A more fully-built structural reference for that fuller flow exists at [v0.app/gabrie-be/taxfix-prototype-structural-shadcn-no-branding](https://v0.app/gabrie-be/chat/taxfix-prototype-structural-shadcn-no-branding-mOaEOngwip3).

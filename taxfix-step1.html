@@ -40,7 +40,6 @@
 
   --header-h: 58px;
   --prog-h:   48px;
-  --sidebar-w: 310px;
 
   --sh-sm: 0 1px 2px rgba(0,0,0,.05);
   --sh:    0 1px 4px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.04);
@@ -245,12 +244,12 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   margin: calc(var(--header-h) + var(--prog-h)) auto 0;
   min-height: calc(100vh - var(--header-h) - var(--prog-h));
   max-width: 1400px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 3fr 2fr;
 }
 
 /* ── Main ────────────────────────────────── */
 .main {
-  flex: 1;
   min-width: 0;
   padding: 36px 44px 44px;
   display: flex;
@@ -447,8 +446,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
 /* ── Sidebar ─────────────────────────────── */
 .sidebar {
-  width: var(--sidebar-w);
-  flex-shrink: 0;
+  min-width: 0;
   background: var(--surface);
   border-left: 1px solid var(--border-soft);
   padding: 24px 20px;
@@ -462,6 +460,28 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   border-bottom: 1px solid var(--border-soft);
 }
 .sb-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+/* ── Tax Position (component) ───────────── */
+.tax-position {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  margin-bottom: 24px;
+}
+.tp-header {
+  font-family: var(--font-heading);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 16px;
+}
+
+/* ── Accountant Panel (component) ─────────── */
+.accountant-panel {
+  padding-top: 20px;
+  border-top: 1px solid var(--border-soft);
+}
 .sb-eyebrow {
   font-size: 10.5px;
   font-weight: 700;
@@ -721,8 +741,8 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
       <p>Upload your documents and we'll work out your income, deductions and tax position.</p>
     </div>
 
-    <!-- Guided document checklist -->
-    <div class="guide-section" id="guideSection">
+    <!-- COMPONENT: Document Checklist — "Your documents" -->
+    <div class="guide-section" id="guideSection" data-component="document-checklist">
 
       <!-- PAYE group -->
       <div class="group-header open active" data-group="paye" onclick="toggleGroup(this)">
@@ -829,8 +849,8 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
     </div>
 
-    <!-- Upload zone -->
-    <div class="upload-zone" id="uploadZone"
+    <!-- Sub-component: Upload Target (part of Document Checklist) -->
+    <div class="upload-zone" id="uploadZone" data-component="upload-target"
       ondragover="event.preventDefault();this.classList.add('drag-over')"
       ondragleave="this.classList.remove('drag-over')"
       ondrop="event.preventDefault();this.classList.remove('drag-over');handleFiles(event.dataTransfer.files)"
@@ -859,50 +879,58 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   <!-- SIDEBAR -->
   <aside class="sidebar">
 
-    <div class="sb-section">
-      <div class="sb-eyebrow" style="text-align:center;margin-bottom:4px">Need help?</div>
-      <div style="font-family:var(--font-heading);font-size:17px;font-weight:400;color:var(--text);text-align:center;margin-bottom:16px;line-height:1.3;letter-spacing:-0.2px">Ask your dedicated<br>accountant</div>
-      <div class="acct-card">
-        <div class="acct-av">
-          <img src="data:image/jpeg;base64,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" alt="Dan R">
-          <div class="online"></div>
+    <!-- COMPONENT: Tax Position — "Your Tax Position (so far)" -->
+    <div class="tax-position" id="taxPosition" data-component="tax-position">
+      <div class="tp-header">Your Tax Position so far</div>
+
+      <div class="sb-section" id="sbIncome">
+        <div class="sb-title">Your income</div>
+        <div class="row"><span class="row-lbl">PAYE income</span>     <span class="row-val pend">Awaiting P60</span></div>
+        <div class="row"><span class="row-lbl">Self-employment</span> <span class="row-val pend">Not detected</span></div>
+        <div class="row"><span class="row-lbl">Rental income</span>   <span class="row-val pend">Not detected</span></div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-title">
+          Uploaded documents
+          <span class="docs-pill" id="docsCount">0 docs</span>
         </div>
-        <div class="acct-name">Dan R</div>
-        <div class="acct-cred">Chartered Accountant, ACA</div>
-        <div class="acct-bio">11 years in UK property &amp; employment tax. He'll check every figure, apply your remaining deductions and submit to HMRC on your behalf.</div>
-        <div class="acct-btns" style="margin-top:14px">
-          <button class="acct-btn p">Send a message</button>
-          <button class="acct-btn s">Schedule a call</button>
+        <div id="docsList"><p class="sb-note">Documents you share appear here. Figures are extracted automatically.</p></div>
+      </div>
+
+      <div class="sb-section">
+        <div class="sb-title">Deductions found</div>
+        <div class="row"><span class="row-lbl">Expenses</span>              <span class="row-val pend">—</span></div>
+        <div class="row"><span class="row-lbl">Pension contributions</span> <span class="row-val pend">—</span></div>
+        <div class="row"><span class="row-lbl">Allowances</span>            <span class="row-val pend">—</span></div>
+      </div>
+
+      <div class="sb-section">
+        <div class="tax-row">
+          <span class="tax-lbl">Tax due:</span>
+          <span class="tax-val pend">Add documents to calculate</span>
         </div>
       </div>
     </div>
 
-    <div class="sb-section" id="sbIncome">
-      <div class="sb-title">Your income</div>
-      <div class="row"><span class="row-lbl">PAYE income</span>     <span class="row-val pend">Awaiting P60</span></div>
-      <div class="row"><span class="row-lbl">Self-employment</span> <span class="row-val pend">Not detected</span></div>
-      <div class="row"><span class="row-lbl">Rental income</span>   <span class="row-val pend">Not detected</span></div>
-    </div>
-
-    <div class="sb-section">
-      <div class="sb-title">
-        Uploaded documents
-        <span class="docs-pill" id="docsCount">0 docs</span>
-      </div>
-      <div id="docsList"><p class="sb-note">Documents you share appear here. Figures are extracted automatically.</p></div>
-    </div>
-
-    <div class="sb-section">
-      <div class="sb-title">Deductions found</div>
-      <div class="row"><span class="row-lbl">Expenses</span>              <span class="row-val pend">—</span></div>
-      <div class="row"><span class="row-lbl">Pension contributions</span> <span class="row-val pend">—</span></div>
-      <div class="row"><span class="row-lbl">Allowances</span>            <span class="row-val pend">—</span></div>
-    </div>
-
-    <div class="sb-section">
-      <div class="tax-row">
-        <span class="tax-lbl">Tax due:</span>
-        <span class="tax-val pend">Add documents to calculate</span>
+    <!-- COMPONENT: Accountant Panel — "Your accountant" -->
+    <div class="accountant-panel" id="accountantPanel" data-component="accountant-panel">
+      <div class="sb-section">
+        <div class="sb-eyebrow" style="text-align:center;margin-bottom:4px">Need help?</div>
+        <div style="font-family:var(--font-heading);font-size:17px;font-weight:400;color:var(--text);text-align:center;margin-bottom:16px;line-height:1.3;letter-spacing:-0.2px">Ask your dedicated<br>accountant</div>
+        <div class="acct-card">
+          <div class="acct-av">
+            <img src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAASABIAAD/4QBARXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAeKADAAQAAAABAAAAeAAAAAD/7QA4UGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAAA4QklNBCUAAAAAABDUHYzZjwCyBOmACZjs+EJ+/+IB2ElDQ19QUk9GSUxFAAEBAAAByAAAAAAEMAAAbW50clJHQiBYWVogB+AAAQABAAAAAAAAYWNzcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPbWAAEAAAAA0y0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJZGVzYwAAAPAAAAAkclhZWgAAARQAAAAUZ1hZWgAAASgAAAAUYlhZWgAAATwAAAAUd3RwdAAAAVAAAAAUclRSQwAAAWQAAAAoZ1RSQwAAAWQAAAAoYlRSQwAAAWQAAAAoY3BydAAAAYwAAAA8bWx1YwAAAAAAAAABAAAADGVuVVMAAAAIAAAAHABzAFIARwBCWFlaIAAAAAAAAG+iAAA49QAAA5BYWVogAAAAAAAAYpkAALeFAAAY2lhZWiAAAAAAAAAkoAAAD4QAALbPWFlaIAAAAAAAAPbWAAEAAAAA0y1wYXJhAAAAAAAEAAAAAmZmAADypwAADVkAABPQAAAKWwAAAAAAAAAAbWx1YwAAAAAAAAABAAAADGVuVVMAAAAgAAAAHABHAG8AbwBnAGwAZQAgAEkAbgBjAC4AIAAyADAAMQA2/8AAEQgAeAB4AwEiAAIRAQMRAf/EAB8AAAEFAQEBAQEBAAAAAAAAAAABAgMEBQYHCAkKC//EALUQAAIBAwMCBAMFBQQEAAABfQECAwAEEQUSITFBBhNRYQcicRQygZGhCCNCscEVUtHwJDNicoIJChYXGBkaJSYnKCkqNDU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6g4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2drh4uPk5ebn6Onq8fLz9PX29/j5+v/EAB8BAAMBAQEBAQEBAQEAAAAAAAABAgMEBQYHCAkKC//EALURAAIBAgQEAwQHBQQEAAECdwABAgMRBAUhMQYSQVEHYXETIjKBCBRCkaGxwQkjM1LwFWJy0QoWJDThJfEXGBkaJicoKSo1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoKDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uLj5OXm5+jp6vLz9PX29/j5+v/bAEMAAgICAgICAwICAwUDAwMFBgUFBQUGCAYGBgYGCAoICAgICAgKCgoKCgoKCgwMDAwMDA4ODg4ODw8PDw8PDw8PD//bAEMBAgICBAQEBwQEBxALCQsQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEP/dAAQACP/aAAwDAQACEQMRAD8A/aCiiigAooooAKKa7pGjSSMERAWZmOAABkkk8AAdTXxV8Uv27fg98O7640bSlufE2o27eWfsqhLYSE4CmZuvPUhSMcgmonUjFXkzSnSlN2irn2vRX4q+K/8AgpF8ZpLKeXw/4Y0rSsSqFlJlvP3TdDtPl8+p7VW0D/gof8e9E8rUfFOiaXr2nXDeWgiie0PmYztLhn5I6DFYfXad7XOn+z6tr2P2zor8wvCX/BRxZ57KTx/4GbTNOvWaMXFjdee0bpyQY5ETdx0AYf1r9B/AXxG8FfE7Q08ReB9Vi1SzOA+w4kiY/wAEsZ+ZGHoR9M1tTqxl8LOepQnD4kdtRRRWhkFFFFABRRRQB//Q/aCiiigAooqK4nitbeW6nOI4UZ2PoqjJ/QUAfCP7cHxln8I6Lo3wr0C7WDVPFvnPdMrhZIbKFe/dRLIQCeOAR3NfjZDpf2lr8Xcv2240ucNcxpkutsxABAH93GB9RXLfE3486l8V/wBovxF8UL2QzWN3PLZWaE8Q6egaOIL6ZHz+xYmuXfUfFHhnxC3iTTgZpJIPs8xA3R3MIIALd8svyuDzn5h148fFtSerPosDRcYpJan0zqdhonhzVPDmqXd1DcaXq0LwsUIKcgAOD0AA+ZT32n2rzLSvitpK+E7jw3rdskl3a6g0N4WXAZA37i4UfwvHk7gP4cr714ffeIvE0uhN4Su43NpbTNc2Tsp3oHJJTPflj+fFaWmfDTxj4stdRvrHT5WlYJI42nLllO768/N9a5rwitWdiw1STskeiWvxHk1zwvrHgjWbRJLm1uMbxw6SxZKuv1AKn2IPYVi/Dv8AaE8VfAX4haJ438IapILZmVru3Zj5U8BbEkMq/wAQ4OD1HGDnms608EeLvD95ea1qGlzbpgE+YEbtibS3uTj8zmvmzxXomsafGDfwuiB3Kk5+6xziuihKnKS5ZHLiaFWEHzxP7TtB1qw8S6FpviTSm3WWrWsF5AT1MVxGJEz/AMBYVq18Df8ABOj49aN8Zf2fNK8Px7otd8CRQ6XfxOclkAP2eZT/AHXQbcdipHpX3zXsnzYUUUUAFFFFAH//0f2gooooAKzNbtxdaLqNqeRNbTJ/30hFadGxZP3bdH4P0PFAH8k3wz8CWNz40/sDU02JaPIsrMcEiBipAHqSK/Sbwj4W8Jae0cUGlQ4YDJkUOTx718zy+GItN+Kfi2JYwstrrOpRZ9ENzJt/TFfVnhWaK6063uZGWMIPnLHAG3jqa/Nc+qzdXlTP2jhmjT9hzyWrPprSPgv8O/EdhZXOu6XbOfMBiCxqAOMnJX+VbviXwR4e8MXEFtosCW6GH5tvGX/D2rM8N+I9D/spLAarA8gxJGqOGBwcHOOnWtTxp4t8M2emfab6/jCxxbd2eM55Aq7RdHlsQ/aLEcyeh8g/EcxL5kCEOBnt618RfFbTtKu9OktbqJVdo3IOOc9K+rfGnxD+Hmp6hPp2m65by3SgkLkjnsMkYJ49a+S/Hkivqci3R6oNnfIOc4/LtTyjDuMlcefVoypvl1Pov/gkI91pfxe+IWjRORaz6Vbuy9iY5m2n6jca/f6vw5/4JZ6VFD8YfH15EMBNItRj/fmf/Cv3Gr9CpSvFM/IMRG02gooorQwCiiigD//S/aCiiigApGdY1MjkKq8kngAClrmPG2gv4p8H634ajlaBtUs5rcOhKspkQrkEcg1Mm0m0XTinJJuyPxZ/aL8HP4P/AGgfEb2RV9O8SFdStHQhlIkUCRQRxkOCT6ZrybXJb+Hw9BY39pc3hu96xwWx5ckdCcgAkevX9K9M+KnhrUfBEfh+PUprq8OmTvazfaFB+zK+FA8zqwZhjnp6819AaFoug6losMVzbrJHIEcADDbgOMEc59K/O8TiYur7Sa3P2fB4KUKHsYSvb8ex8EfCHwn43m1B9a0qzvNEtYZS4jv2JDqFBypYK3T5RkYJHB6V9BfHKO91vQNB0nSpRZNfgiWRn+UlcZ9Ovb+Yr3vxF4Y0fQdMV7K08q4nOA0jF2C5xgbievtXkXxZ0K8Xwd4c1qME/YZHyAMZRmXkfTNKdeM6ycVoaQwsoUGpy1PizXvhP4g8F3cU2nwabqdjdJulnkkZ5zJsB2BVOQd2QCB0xXO+LPBut6ZpVjrMsU8EEpC+VICfKLDkBvSv0gtbjSbzSYdStY4bn5AfmQblOPXGa+Ufj/4shfQ5I4gN6sPlHRSDXoYfHupJJRsebi8q9jTcpSuP/Yz/AGh/Dn7OOteM/FPiqxlvoNWgtLRBCyiQeTK7NtTksTuGO3qRX9DXh/W7HxLoWn+IdMJNpqcEdxEWG1tkqhlyOxwa/lq+Anhe48e+KD4ejhS4udUubSK3yu5w0kgLADuAoLMewFf1MaHpNvoOjWOiWg2w2EEcCD2jUL/Svp8FUnKUk9kfA5xhqcKdOUfid7mpRRRXoHghRRRQB//T/aCiiigAooooA+T/ANpX4S3vjDwzqc+iRGRL2BhcxIm5xKgzFMgAJOGGGGDxg1+enwo8ZXUukxLcZM0EZ4xyTHxj8x0r9vFJVgw6jmvxM8d2K/CX45+JfDmsQrp9o99Lc2G44Saxu2LQlT6gHacdGBHavk8/y1W9pDqz9B4TzuV/Yz6LT0/4B2OrWuqazZ3N1qmsG11S5XETI6hbQdkUNkEgfeJGCenFfKHxs1H41XltYeC57+0k0ZAo+3RzxoGVOxGRhvUDvX0nq/hbw54zli1W2s0vXiDL5keS+CckEg9RXAXXg3SNSuzYT+GBKU6GdGcHHTiQkfkM14uCnGOv6f8ABPtMVBVYe9L7it8M7zTI/DcHh2wvo7+7s18qWVHD8spbkjvx9ea+R/ilcXF4l7acySSTmNAOrMWwAPqa+ivFWuQ/DLRZo7a3jtSd5WKILGEBHLYGMknAr53+Cdh/wuD4/wDgnwhqMmLLUtWtvPKj/lmH3tjPfAr0cvoOVRzjsz57OMYo01Tb2R+vP7BX7Jd/8H9Bb4gfEvTRbeLr4bLa2k2s9hAfvE7SQJZO+DlQMdSQP0ipzuZHZz1Yk/nTa+yhBRVkfmNevKpLmkFFFFWYhRRRQB//1P2gooooAKKK5nV/F2haMWiubgSTr1ij+d/occD8SKUpJascYt6I6brX4/ft9+F7vxr4ps/F/hZ/OlsLERRMPuTJDLIJEUj+6+SD719x/EHx7rt9YvbwE6fbOhzGh+dgegZuPyHFcN4x8I2+rfBvStTWHfL4ecCYBcnyLxVySPQSBR/wLNeRmNXnpS5Omp7+R01DER5/tafft+J+Ofw5+Pc/g0S6TOW0+cKVkVzht394ds5qj4t/ahvoHc2d49xLDv8An3cnd0I9x+lem/GT4E6XrpkvreH7PcMC+5Bg+nNfEt18DfGkF9KUk82CPksRghR614uGo0JvnPr8VVxUFyR18yl4j8feJvHU63mqzNgAqWfn5T2/HFe0fsu+JrbwL8dvBni2e1e8trC/ieVY/v7DwxX6A5A9q8ztfA91Eq2cmWY4+hr7a/Zj+EZt4da+Iepw4sdGhaztSw/11/dIVwPaKMs5x0O31r3cFTjKrGnA+cximqU6lQ/fzw94h0TxXotp4i8N3seoabfIJIZ4m3KwP8iO4PIPBrZr8dPgV468ZfBbxJfW2kk3miXDxtdafISEJK8vGefLcZ6gYPcGv0y8KfGjwR4ptopTO+lSyceXeAR4YcEeYCU69MkE+lenzo+WdNnrNFNR1kUOhDKwyCDkEGnVRAUUUUAf/9X9nZJI4kMkrBFHUscAfia4XVviT4U0sMiXX22Zf+WduPMOfQnoPxNeB6lda94smkfXbtpUjbHkplIhnkfIODx65q7p+hRQcRLx9K4J4x7RR2wwq6s6y/8AGPiTxHmOH/iV2bfwxnMzD/aft9F/OsWCxhiYALhU5J9W6/8A1604IQvyYps1u+4tbtiRvvKfusPf0OOhrjnNyd2dUYpKyOI1uwfU5hbpyoPzHsBXt/wxjsprC60e9gE9rLAYpoW5EkR+V1I9w1cUbaKFW2j7wrd8IX40TU47hv8AVhgJM/3H+Vj+AOfwrfCSUaiuZ1m3HQ+TfjZ8MJvAOuf2axM+m3YMlhcN/wAtYe6E9N6dG/A4wcV8b+NfBtzPufT7lYo3HzqB1X396/a34wWHh3V/BE3hbxHC0811cJHpzR4EkVw/CupPQKMlh3XI71+Q/i/Q9U07xzqHw71GNpNWtLgWwjjyPO3co68/dZSGPOBzk8GvGzTL3h6nufC9v8j9AyDNo4qly1H78Vr5rv8A5niPw3+FurePPHUGhaPbi6upWEUKA4XcT8zs2OFUZLHsBX6Ba7ouj6JLpfwo8Jsp0zQ18qSYcfaL2Yj7RcH6ngeigDtVz4Ix+H/hPoPiWTSrIX+uPbhJNSBzHGWcK0EII+7kjL8bsHgDFL4S00i5uNcvG3SpHJIQfV+AT9TnFfUZXgnh6Eq9T4np6Hx+fZnHEVVQo/Avxff/ACPLINLiXxDqHygmSU4+gNe3+HNPjh36dKgMN6nmKCMjzFGGH4jH5GuHj0ZmvlvYgWDtk4FejahfWWj6NBqd3OsP2d1Klj99jxsUdSzcgAZJzwK4KjPOhGxUg8QeNPhrdG68NTmeyBJewnJa3Yd9veNvdeM9Qa+gfAPx58FeNgLK5kOiasuFe0uyF+b/AKZv91x6Y59QK8v1K1S/t9xGA4zg8EA14f4l8Hxtd/aYlwV9K0pYhpWZnUoJu6P0sVldQ6EMp6Ecg0tfnt4S+IXjPwMVjsLhrm1HW2nYvGQOyk8r+HHtXon/AA0d4v8A+gFa/wDf1/8ACumNeLWpg6D6H//W/QPSoD51u/T7XDsb/fj5B/LIrqFtwn19Kw9N/wCYb/vn/wBBNdO3+sH+e1eIeq2UXUkfKACRx9akVVChoxw3P9aD95PqKlh/1Sf7ooQFZ4yRgDpTLiANDKpH30IOPcetXV+8f89qbL/q3/z2qhGJ4K8SeIPiTqvhG41KATf2GbuPUUfMEkssK+UJIQeJCDluODz0PTS8W/szQeJvG978SfDV1G9/qFtFZFpmIWKOPIZkAQsJHB2uSegwMZNUfgX/AMh6y/67al/6G9fXnhH/AJBH/bWT+dfRSirKTV35nCq0oNqDtfT5Hy/4k+EOkeAvhdq0d3OrXTRoSyDAAWRGcgH0UGvmDwlK134Uu9fJzHrV04tjyCbS2JijPPZ2VnH+9X3p8f8A/kn+qf8AXtN/6Aa+CfA//JJPCf8A17N/6MeuXMKsnCKvozTCxWrOn0mBVTD/ACjrnpiix8EWFtr8niLVZ5dSuct9lMxHlWiN1SKMAKpPdyCx7twBU9r/AMer/wC6a7C4/wCPQ/QV5DOtbEkgBG09uKwr60jlTcwxW9N94/X+lZt5/qaSC55nfWC5YKuHc4X/AD7Vmf2Ldf8APQ/n/wDWrqLv/j4i/wB4/wAjTqdykf/Z" alt="Dan R">
+            <div class="online"></div>
+          </div>
+          <div class="acct-name">Dan R</div>
+          <div class="acct-cred">Chartered Accountant, ACA</div>
+          <div class="acct-bio">11 years in UK property &amp; employment tax. He'll check every figure, apply your remaining deductions and submit to HMRC on your behalf.</div>
+          <div class="acct-btns" style="margin-top:14px">
+            <button class="acct-btn p">Send a message</button>
+            <button class="acct-btn s">Schedule a call</button>
+          </div>
+        </div>
       </div>
     </div>
 
