@@ -23,7 +23,7 @@ All colours are CSS custom properties defined once in `:root` (light) and re-def
 | `--lilac` | `#BC73F2` | `#CE8AF5` | Accountant Panel accent |
 | `--lilac-dark` | `#604587` | `#CE8AF5` (= `--lilac`) | Text/icon on lilac-tinted surfaces |
 | `--lilac-bg` | `#F6EBFE` | `#241531` | Accountant Panel card background |
-| `--lilac-br` | `#DBB9F3` | `#4A2E63` | Accountant Panel card border |
+| `--lilac-br` | `#DBB9F3` | `#4A2E63` | Border on the credential badge only — the card itself has no outer border |
 | `--blue` | `#668CFF` | `#7B96F9` | "Other documents" column icon colour |
 | `--blue-bg` | `#E8F0FF` | `#0E1535` | Tax Profile panel background (all three columns) |
 | `--blue-br` | `#B6C5F3` | `#1D2E60` | Tax Profile panel's column dividers |
@@ -39,8 +39,8 @@ Neutrals (`--bg`, `--surface`, `--surface-2`, `--border`, `--border-soft`, `--te
 
 Two colours are in active use. Each is reserved for one job, not spread across the page:
 
-- **Green** — the single "this is happening / this succeeded" colour. Progress bar's active step, the primary "Hand over for review" button, done-checkmarks, success toasts, detected-value text. Nowhere else.
-- **Lilac** — the Accountant Panel's identity colour, and *only* the Accountant Panel's. Card background, border, credential badge, text-link hovers inside that one component. It does not appear on the Tax Position or the Document Checklist, by design — those stay neutral so they don't visually compete with the panel that's supposed to feel distinct ([PAGE-COMPONENTS.md](PAGE-COMPONENTS.md)).
+- **Green** — the single "this is happening / this succeeded" colour. Progress bar's active step, the primary "Submit for Accountant Review" button, done-checkmarks, success toasts, detected-value text. Nowhere else.
+- **Lilac** — the Accountant Panel's identity colour, and *only* the Accountant Panel's. Card background and credential badge inside that one component — the card has no outer border of its own (the lilac fill alone is what marks the panel as distinct; a matching lilac outline was tried and dropped as redundant). It does not appear on the Tax Position or the Document Checklist, by design — those stay neutral so they don't visually compete with the panel that's supposed to feel distinct ([PAGE-COMPONENTS.md](PAGE-COMPONENTS.md)).
 - **Blue** — the Tax Profile panel (the Document Checklist's PAYE / Rental / Other columns), and only that panel. The whole panel sits on a light blue field with no outer border, its columns divided by `--blue-br` hairlines instead of neutral ones; the "Other" column additionally uses `--blue` for its icon. This keeps it visually distinct from the neutral Tax Position and from green's "done" signal and lilac's Accountant identity.
 - **Amber** is defined as a token (validated against the same production source) but not wired into any component yet. Reach for it — not a new hex value — the next time a component needs a fourth accent (e.g. flagging a document that just became required).
 

@@ -119,7 +119,7 @@ Reassure the user that a qualified human checks everything before it reaches HMR
 
 ### Description
 
-A persistent, largely static element identifying the accountant who will review and file the return, with their credentials and a way to contact them. Its content does not depend on what the user has uploaded.
+An element identifying the accountant who will review and file the return, with their credentials. Structure is constant (avatar, name, credential, bio, status line, supporting copy, action button), but the status line and supporting copy update live as checklist progress changes — same pattern as the Tax Position's live figures.
 
 ### Role in the journey
 
@@ -129,7 +129,7 @@ It underwrites the whole experience. The user is being asked to accept figures p
 
 - A named, credentialled human
 - A statement of what they do: check every figure, apply remaining deductions, file with HMRC
-- A contact route
+- A contact route — **currently absent.** "Ask a question" / "Schedule a call" were removed so the card carries one single action ("Submit for Accountant Review") rather than three competing CTAs. That leaves no way to reach the accountant except by submitting the whole file, which narrows this component's original purpose — worth a deliberate decision on whether a contact route comes back, and in what form, rather than staying dropped by default.
 
 ### Must not do
 
@@ -143,7 +143,7 @@ One place where the two components cooperate: the per-figure marker showing whet
 
 ### How it evolves
 
-Static now, and likely the last to change. The eventual question is whether it stays constant or becomes responsive, appearing at the moment the user is looking at an unconfirmed figure.
+Now responsive to checklist progress (status line and supporting copy), with a one-time highlight the moment PAYE and Rental both complete. The button itself stays constant by design — same label, always enabled — so "submit early, refine later" stays a legitimate path rather than something the UI gates behind completeness.
 
 ---
 
