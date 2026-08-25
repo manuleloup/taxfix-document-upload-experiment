@@ -24,9 +24,9 @@ All colours are CSS custom properties defined once in `:root` (light) and re-def
 | `--lilac-dark` | `#604587` | `#CE8AF5` (= `--lilac`) | Text/icon on lilac-tinted surfaces |
 | `--lilac-bg` | `#F6EBFE` | `#241531` | Accountant Panel card background |
 | `--lilac-br` | `#DBB9F3` | `#4A2E63` | Accountant Panel card border |
-| `--blue` | `#668CFF` | `#7B96F9` | Reserved — not yet assigned to a surface |
-| `--blue-bg` | `#E8F0FF` | `#0E1535` | Reserved |
-| `--blue-br` | `#B6C5F3` | `#1D2E60` | Reserved |
+| `--blue` | `#668CFF` | `#7B96F9` | "Other documents" column icon colour |
+| `--blue-bg` | `#E8F0FF` | `#0E1535` | Tax Profile panel background (all three columns) |
+| `--blue-br` | `#B6C5F3` | `#1D2E60` | Tax Profile panel's column dividers |
 | `--amber` | `#F8A21A` | `#FBBF24` | Reserved — not yet assigned to a surface |
 | `--amber-bg` | `#FFEFD3` | `#1C1408` | Reserved |
 | `--amber-br` | `#F8C677` | `#3D2A00` | Reserved |
@@ -41,7 +41,8 @@ Two colours are in active use. Each is reserved for one job, not spread across t
 
 - **Green** — the single "this is happening / this succeeded" colour. Progress bar's active step, the primary "Hand over for review" button, done-checkmarks, success toasts, detected-value text. Nowhere else.
 - **Lilac** — the Accountant Panel's identity colour, and *only* the Accountant Panel's. Card background, border, credential badge, text-link hovers inside that one component. It does not appear on the Tax Position or the Document Checklist, by design — those stay neutral so they don't visually compete with the panel that's supposed to feel distinct ([PAGE-COMPONENTS.md](PAGE-COMPONENTS.md)).
-- **Blue and amber** are defined as tokens (validated against the same production source) but not wired into any component yet. Reach for them — not a new hex value — the next time a component needs a third accent.
+- **Blue** — the Tax Profile panel (the Document Checklist's PAYE / Rental / Other columns), and only that panel. The whole panel sits on a light blue field with no outer border, its columns divided by `--blue-br` hairlines instead of neutral ones; the "Other" column additionally uses `--blue` for its icon. This keeps it visually distinct from the neutral Tax Position and from green's "done" signal and lilac's Accountant identity.
+- **Amber** is defined as a token (validated against the same production source) but not wired into any component yet. Reach for it — not a new hex value — the next time a component needs a fourth accent (e.g. flagging a document that just became required).
 
 Before adding a new colour anywhere: check whether green or lilac already covers the intent. If it's decoration rather than signal (an icon just to differentiate a row, a border for visual interest), that's a sign it should stay on the neutral scale, not reach for a token.
 
