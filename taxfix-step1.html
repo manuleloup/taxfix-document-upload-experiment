@@ -115,7 +115,8 @@ body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
 }
 button { font-family: var(--font); cursor: pointer; }
@@ -247,7 +248,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 /* ── Page layout ─────────────────────────── */
 .page {
   margin: calc(var(--header-h) + var(--prog-h)) auto 0;
-  min-height: calc(100vh - var(--header-h) - var(--prog-h));
+  height: calc(100vh - var(--header-h) - var(--prog-h));
   max-width: 1400px;
   display: grid;
   grid-template-columns: 7fr 3fr;
@@ -256,6 +257,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 /* ── Main ────────────────────────────────── */
 .main {
   min-width: 0;
+  min-height: 0;
   padding: 36px 44px 44px;
   display: flex;
   flex-direction: column;
@@ -366,7 +368,8 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   transition: opacity .14s ease, transform .14s ease, visibility .14s;
   pointer-events: none;
 }
-.tp-item:hover .tp-hint, .tp-item:focus-within .tp-hint {
+.tp-item:hover .tp-hint, .tp-item:focus-within .tp-hint,
+.row-source:hover .tp-hint, .row-source:focus-within .tp-hint {
   opacity: 1; visibility: visible; transform: translateY(0);
 }
 
@@ -463,6 +466,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 /* ── Sidebar ─────────────────────────────── */
 .sidebar {
   min-width: 0;
+  min-height: 0;
   background: var(--surface);
   border-left: 1px solid var(--border-soft);
   padding: 24px 20px;
@@ -602,6 +606,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   border-bottom: 1px solid var(--border-soft);
 }
 .row:last-child { border-bottom: none; }
+.row-lbl-group { display: flex; align-items: center; gap: 5px; min-width: 0; }
 .row-lbl { font-size: 13px; color: var(--muted); }
 .row-slot { display: flex; align-items: center; gap: 6px; }
 .row-val {
@@ -616,16 +621,19 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   font-weight: 400;
   font-style: italic;
 }
-.row-chip {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--green-dark);
-  background: var(--green-bg);
-  border: 1px solid var(--green-br);
-  padding: 1px 7px;
-  border-radius: 20px;
-  white-space: nowrap;
+/* Source indicator sits beside the label, not the value — so .row-slot
+   holds nothing but the figure and every value lines up flush right,
+   regardless of whether that row even has a source. Hover/focus reveals
+   which document the figure came from, reusing the checklist's .tp-hint. */
+.row-source {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dim);
+  position: relative;
 }
+.row-source:hover, .row-source:focus-within { color: var(--text); }
 .tax-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 4px; }
 .tax-lbl { font-family: var(--font-heading); font-size: 15px; font-weight: 400; color: var(--text); }
 .tax-val {
@@ -820,6 +828,41 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   border-color: var(--border);
 }
 .history-result-icon { flex-shrink: 0; }
+
+/* Extraction-confirmation row — the standard "does this look right?"
+   line under every resolved document card. */
+.history-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.history-confirm-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+}
+.history-confirm-btn:hover { border-color: var(--green-dark); color: var(--green-dark); }
+.history-confirm-done { font-size: 11.5px; color: var(--dim); font-style: italic; }
+
+/* Momentum line — plain text, no bubble or avatar, marking a milestone
+   (a column going complete) without competing with the chat above it. */
+.history-momentum {
+  font-size: 12px;
+  color: var(--dim);
+  font-style: italic;
+  text-align: center;
+  padding: 2px 0;
+}
+
 .history-timestamp {
   font-size: 10.5px;
   color: var(--dim);
@@ -926,66 +969,6 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   transition: background .15s;
 }
 .history-compose-btn:hover { background: var(--muted); }
-.history-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.history-chip {
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--blue-br);
-  background: var(--surface);
-  color: var(--blue);
-  cursor: pointer;
-  transition: background .15s, color .15s;
-}
-.history-chip:hover { background: var(--blue); color: #fff; }
-.history-freetext { display: flex; gap: 6px; margin-top: 8px; }
-.history-freetext-input {
-  flex: 1;
-  font-size: 12px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--surface);
-  color: var(--text);
-}
-.history-freetext-input:focus { outline: none; border-color: var(--blue); }
-.history-freetext-btn {
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  transition: border-color .15s, color .15s;
-}
-.history-freetext-btn:hover { border-color: var(--blue); color: var(--blue); }
-.history-followup { margin-top: 8px; }
-.history-followup-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
-.history-followup-row { display: flex; gap: 6px; }
-.history-split-input {
-  flex: 1;
-  font-size: 12px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
-  background: var(--surface);
-  color: var(--text);
-}
-.history-split-input:focus { outline: none; border-color: var(--blue); }
-.history-split-btn {
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--blue-br);
-  background: var(--surface);
-  color: var(--blue);
-  cursor: pointer;
-}
-.history-split-btn:hover { background: var(--blue); color: #fff; }
 
 /* ── PAYE complete transition banner ───────── */
 .paye-done-banner {
@@ -995,6 +978,23 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
   display: flex; align-items: center; gap: 8px;
   animation: toastIn .25s ease;
 }
+
+/* ── Closing nudge — anchored to the accountant card, not a corner toast ── */
+.handover-nudge {
+  background: var(--green-bg); border: 1px solid var(--green-br);
+  border-radius: var(--r); padding: 12px 14px; margin-bottom: 14px;
+  display: flex; flex-direction: column; gap: 9px;
+  animation: toastIn .25s ease;
+}
+.handover-nudge span { font-size: 12.5px; font-weight: 500; color: var(--green-dark); line-height: 1.45; }
+.handover-nudge-btn {
+  align-self: flex-start;
+  font-size: 11.5px; font-weight: 700;
+  padding: 6px 14px; border-radius: 20px;
+  background: var(--green); color: var(--green-text); border: none;
+  cursor: pointer; transition: background .15s;
+}
+.handover-nudge-btn:hover { background: var(--green-h); }
 </style>
 
 <!-- HEADER -->
@@ -1050,7 +1050,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
       <div class="tp-panel" id="taxProfilePanel">
 
         <!-- PAYE column -->
-        <div class="tp-col done" data-group="paye">
+        <div class="tp-col" data-group="paye">
           <div class="tp-col-head">
             <span class="tp-col-icon">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1058,22 +1058,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
               </svg>
             </span>
             <span class="tp-col-title">PAYE employment</span>
-            <span class="tp-col-count" id="groupCountPaye">1/3</span>
+            <span class="tp-col-count" id="groupCountPaye"></span>
           </div>
           <div class="tp-items">
-            <div class="tp-item done" data-key="paye-p60" tabindex="0">
+            <div class="tp-item" data-key="paye-p60" tabindex="0">
               <div class="tp-hint">Year-end earnings &amp; tax summary from your employer</div>
               <span class="tp-marker">
                 <span class="tp-marker-dot"></span>
                 <svg class="tp-marker-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
               </span>
-              <div class="tp-body">
-                <div class="tp-name">P60</div>
-                <a class="tp-file" href="data:text/plain;base64,TW9jayBkb2N1bWVudDogcDYwX0VtcGxveWVyX05hbWUucGRmCgpUaGlzIGlzIGEgcGxhY2Vob2xkZXIgZm9yIHRoZSBwcm90b3R5cGUgZGVtby4KSW4gdGhlIHJlYWwgcHJvZHVjdCwgdGhpcyBsaW5rIG9wZW5zIHRoZSBhY3R1YWwgZG9jdW1lbnQgeW91IHVwbG9hZGVkLg==" target="_blank" rel="noopener noreferrer" title="p60_Employer_Name.pdf">
-                  <svg class="tp-file-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  <span class="tp-file-name">p60_Employer_Name.pdf</span>
-                </a>
-              </div>
+              <div class="tp-body"><div class="tp-name">P60</div></div>
             </div>
             <div class="tp-item" data-key="paye-p45" tabindex="0">
               <div class="tp-hint">Issued when you left a job — no P45? A final payslip or salary confirmation letter also works.</div>
@@ -1145,33 +1139,13 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
     <div class="history-header">AI document analysis and support</div>
     <div class="history-panel" id="historyPanel" data-component="document-history">
       <div class="history-log" id="historyLog">
-        <div class="history-entry resolved" id="seedCard" data-file-name="p60_Employer_Name.pdf" data-tag-label="Matched to PAYE income">
-          <div class="history-avatar">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><circle cx="9" cy="14" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="14" r="1" fill="currentColor" stroke="none"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1" fill="currentColor" stroke="none"/></svg>
-          </div>
-          <div class="history-content">
-            <div class="history-attachment">
-              <svg class="history-attachment-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span class="history-attachment-name" title="p60_Employer_Name.pdf">p60_Employer_Name.pdf</span>
-            </div>
-            <div class="history-bubble">
-              <div class="history-comment">Got it — this is a P60 showing gross pay of £43,220.00 for the tax year, with tax already deducted at source.</div>
-              <div class="history-result">
-                <svg class="history-result-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>Matched to PAYE income</span>
-              </div>
-            </div>
-            <div class="history-timestamp">Just now</div>
-          </div>
-        </div>
+        <p class="history-empty" id="historyEmpty">Nothing uploaded yet — click "Browse files" below to get started.</p>
       </div>
 
       <!-- Sub-component: Upload Target (part of Document Checklist) -->
-      <div class="upload-zone" id="uploadZone" data-component="upload-target"
-        ondragover="event.preventDefault();this.classList.add('drag-over')"
-        ondragleave="this.classList.remove('drag-over')"
-        ondrop="event.preventDefault();this.classList.remove('drag-over');handleFiles(event.dataTransfer.files)"
-        onclick="document.getElementById('fileInput').click()">
+      <!-- Fully simulated: a click just pulls the next item from the
+           scripted uploadQueue — no real file picker or drag-drop. -->
+      <div class="upload-zone" id="uploadZone" data-component="upload-target" onclick="advanceScript()">
         <div class="uz-normal">
           <svg class="uz-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/>
@@ -1180,7 +1154,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
             <div class="uz-title">Drop any document here</div>
             <div class="uz-sub">We'll match it to the right category automatically</div>
           </div>
-          <button class="btn-upload-main" onclick="event.stopPropagation();document.getElementById('fileInput').click()">
+          <button class="btn-upload-main" onclick="event.stopPropagation();advanceScript()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Browse files
           </button>
@@ -1189,8 +1163,6 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
           <div class="uz-spinner"></div>
           <div class="uz-loading-text">Analysing document…</div>
         </div>
-        <input type="file" id="fileInput" multiple accept=".pdf,.jpg,.jpeg,.png" style="display:none"
-               onchange="handleFiles(this.files);this.value=''">
       </div>
 
       <div class="history-compose">
@@ -1212,10 +1184,16 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 
       <div class="sb-eyebrow">Income Sources</div>
       <div class="sb-section" id="sbIncome">
-        <div class="row" id="rowPaye"><span class="row-lbl">PAYE income</span>        <span class="row-slot"><span class="row-val">£43,220.00</span><span class="row-chip">P60</span></span></div>
+        <div class="row" id="rowPaye"><span class="row-lbl-group"><span class="row-lbl">PAYE income</span></span>        <span class="row-slot"><span class="row-val pend">Documents needed</span></span></div>
         <div class="row row-sub" id="rowTaxAtSource"><span class="row-lbl">Tax paid at source</span> <span class="row-slot"><span class="row-val pend">Documents needed</span></span></div>
-        <div class="row" id="rowRental"><span class="row-lbl">Rental income</span>      <span class="row-slot"><span class="row-val pend">Documents needed</span></span></div>
-        <div class="row" id="rowMortgage"><span class="row-lbl">Mortgage interest</span> <span class="row-slot"><span class="row-val pend">Documents needed</span></span></div>
+        <div class="row" id="rowRental"><span class="row-lbl-group"><span class="row-lbl">Rental income</span></span>      <span class="row-slot"><span class="row-val pend">Documents needed</span></span></div>
+        <div class="row" id="rowMortgage"><span class="row-lbl-group"><span class="row-lbl">Mortgage interest</span></span> <span class="row-slot"><span class="row-val pend">Documents needed</span></span></div>
+      </div>
+
+      <!-- Applied as a 20% credit rather than a straight deduction, so it
+           gets its own line rather than folding into Deductions found. -->
+      <div class="sb-section" id="sbMortgageRelief" style="display:none">
+        <div class="row"><span class="row-lbl">Mortgage interest relief (20% credit)</span> <span class="row-slot"><span class="row-val" id="mortgageReliefVal"></span></span></div>
       </div>
 
       <div class="sb-section" id="sbDeductions">
@@ -1272,29 +1250,7 @@ nav { display: flex; gap: 2px; margin-left: 40px; }
 const checkedKeys = new Set();   // item keys the AI has marked done
 const fieldState  = {};          // fieldName -> { count, total, lastLabel }
 
-// Seed state to match the pre-populated P60 demo row, so a real PAYE
-// upload afterwards adds to this total rather than silently replacing it.
-checkedKeys.add('paye-p60');
-fieldState['PAYE income'] = { count: 1, total: 43220.00, lastLabel: 'P60' };
-
-// ── Type → checklist mapping ─────────────────────────────────────────────────
-const TYPE_MAP = {
-  'P60':                     { key: 'paye-p60',        label: 'P60' },
-  'P45':                     { key: 'paye-p45',        label: 'P45' },
-  'payslip':                 { key: 'paye-p45',        label: 'Last payslip',              note: 'Satisfied via payslip' },
-  'salary_letter':           { key: 'paye-p45',        label: 'Salary confirmation letter', note: 'Satisfied via salary letter' },
-  'P11D':                    { key: 'paye-p11d',       label: 'P11D' },
-  'rental_income_statement': { key: 'rental-statement',label: 'Rental income records' },
-  'rental_expense_receipt':  { key: 'rental-expenses', label: 'Expense receipt' },
-  'mortgage_statement':      { key: 'rental-mortgage', label: 'Mortgage interest statement' },
-  'bank_statement':          { key: 'rental-statement',label: 'Bank statement' },
-};
-// A group is "done" when any of its required keys are checked
-const GROUP_REQUIRED = {
-  paye:   ['paye-p60', 'paye-p45'],
-  rental: ['rental-statement'],
-};
-// Every item a group can show — used to count "N documents added"
+// Every item a group can show — used to count "N/total" on the column badge
 const GROUP_ITEMS = {
   paye:   ['paye-p60', 'paye-p45', 'paye-p11d'],
   rental: ['rental-statement', 'rental-expenses', 'rental-mortgage'],
@@ -1320,84 +1276,16 @@ const FIELD_ROW_SELECTOR = {
   'Expenses':          '#rowExpenses .row-slot',
 };
 
-// Document types that are inherently ambiguous regardless of how sure the
-// model is — they always go through the "what does this cover?" flow.
-const INHERENTLY_AMBIGUOUS = new Set(['bank_statement', 'rental_expense_receipt']);
-const LOW_CONFIDENCE = 0.7;
-
-function needsUserInput(result) {
-  if (INHERENTLY_AMBIGUOUS.has(result.type)) return true;
-  if (!TYPE_MAP[result.type]) return true;
-  if (typeof result.confidence === 'number' && result.confidence < LOW_CONFIDENCE) return true;
-  return false;
-}
-
-// ── Upload handler ───────────────────────────────────────────────────────────
-async function handleFiles(files) {
-  for (const file of Array.from(files)) {
-    await processFile(file);
-  }
-}
-
-// ── Mock classification (no backend call yet) ───────────────────────────────
-// A fixed array standing in for the real /api/detect response, cycled in
-// upload order. To wire up the real API later: replace the body of
-// mockDetect() with the fetch() call — processFile, resolveDocument, and
-// every history/checklist renderer already expect this exact result shape
-// ({ type, confidence, description, key_figure }), so nothing else changes.
-const MOCK_RESULTS = [
-  { detectedType: 'P60',                     confidence: 'high', description: 'This is a P60 showing gross pay of £43,220.00 for the tax year, with tax already deducted at source.', extractedValue: '£43,220.00' },
-  { detectedType: 'P45',                     confidence: 'high', description: 'This is a P45 from a previous employer, showing pay and tax to the leaving date.', extractedValue: '£18,400.00' },
-  { detectedType: 'mortgage_statement',      confidence: 'high', description: 'This is an annual mortgage interest statement from a lender.', extractedValue: '£2,150.00' },
-  { detectedType: 'rental_income_statement', confidence: 'high', description: 'This looks like a letting agent statement showing rental income received over the year.', extractedValue: '£9,600.00' },
-  { detectedType: 'bank_statement',          confidence: 'low',  description: "This looks like a bank statement, but I can't confidently tell what it's evidence of.", extractedValue: null },
-  { detectedType: 'rental_expense_receipt',  confidence: 'low',  description: "This looks like a receipt, but I can't confidently tell what it's for.", extractedValue: '£64.20' },
-];
-// Starts at 1, not 0 — index 0 (P60) is already reflected in the seeded
-// demo state, so the first real upload shouldn't double-count it.
-let mockUploadIndex = 1;
-function mockDetect(file) {
-  const entry = MOCK_RESULTS[mockUploadIndex % MOCK_RESULTS.length];
-  mockUploadIndex++;
-  return new Promise(resolve => setTimeout(() => resolve({
-    type: entry.detectedType,
-    confidence: entry.confidence === 'high' ? 0.95 : 0.4,
-    description: entry.description,
-    key_figure: entry.extractedValue,
-    tax_year: null,
-  }), 700));
-}
-
-async function processFile(file) {
-  const zone = document.getElementById('uploadZone');
-  zone.classList.add('loading');
-  const card = addUploadingCard(file.name);
-  try {
-    const result = await mockDetect(file);
-
-    if (needsUserInput(result)) {
-      fillPendingCard(card, file.name, result, file);
-      showToast(`${file.name} needs a quick answer — see Document history`, 'info');
-    } else {
-      const mapping = TYPE_MAP[result.type];
-      const restatement = resolveDocument({ fieldName: FIELD_MAP[mapping.key], key: mapping.key, result, file, fileName: file.name });
-      const comment = result.description ? `Got it — ${result.description}` : `Got it — this is your ${mapping.label}.`;
-      fillResolvedCard(card, file.name, comment, restatement, 'matched');
-      showToast(`${mapping.label} detected — checklist updated ✓`, 'success');
-    }
-
-  } catch (err) {
-    console.error(err);
-    card.remove();
-    if (lastExpandedCard === card) lastExpandedCard = null;
-    showToast(err.message || 'Could not analyse document — please try again', 'error');
-  } finally {
-    zone.classList.remove('loading');
-  }
+// A placeholder link standing in for a real uploaded file — this demo is
+// fully scripted (see uploadQueue at the bottom), so no File object ever
+// exists to build a real blob: URL from.
+function mockFileHref(fileName) {
+  const text = `Mock document: ${fileName}\n\nThis is a placeholder for the prototype demo.\nIn the real product, this link opens the actual document you uploaded.`;
+  return 'data:text/plain;base64,' + btoa(unescape(encodeURIComponent(text)));
 }
 
 // ── Checklist helpers ────────────────────────────────────────────────────────
-function markItemDone(key, result, file) {
+function markItemDone(key, { keyFigure, fileName, note } = {}) {
   checkedKeys.add(key);
   const item = document.querySelector(`.tp-item[data-key="${key}"]`);
   if (!item) return;
@@ -1406,25 +1294,24 @@ function markItemDone(key, result, file) {
 
   // Alternate documents (e.g. a payslip standing in for a P45) get a note
   // instead of implying the canonical document type was actually provided.
-  const mapping = TYPE_MAP[result && result.type];
-  if (mapping && mapping.note && !body.querySelector('.tp-note')) {
-    const note = document.createElement('div');
-    note.className = 'tp-note';
-    note.textContent = mapping.note;
-    body.appendChild(note);
+  if (note && !body.querySelector('.tp-note')) {
+    const noteEl = document.createElement('div');
+    noteEl.className = 'tp-note';
+    noteEl.textContent = note;
+    body.appendChild(noteEl);
   }
 
   // Each upload for this item gets its own link — an item can be backed
   // by more than one document (e.g. two payslips standing in for a P45).
-  if (file) {
+  if (fileName) {
     const link = document.createElement('a');
     link.className = 'tp-file';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.href = URL.createObjectURL(file);
-    link.title = file.name;
+    link.href = mockFileHref(fileName);
+    link.title = fileName;
     link.innerHTML = '<svg class="tp-file-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="tp-file-name"></span>';
-    link.querySelector('.tp-file-name').textContent = file.name;
+    link.querySelector('.tp-file-name').textContent = fileName;
     body.appendChild(link);
   }
 }
@@ -1437,14 +1324,39 @@ function updateGroupCount(group) {
   el.textContent = n === 0 ? '' : `${n}/${total}`;
 }
 
-function checkGroupCompletion(group) {
-  const done = GROUP_REQUIRED[group].some(k => checkedKeys.has(k));
-  if (!done) return;
+// Column completion is driven explicitly by the script (a quick-reply
+// answer, or a specific upload step) rather than automatically whenever a
+// required item is checked — PAYE, for instance, stays "in progress" after
+// the P60 lands until the P45 question is actually answered.
+function markColumnComplete(group) {
   const col = document.querySelector(`.tp-col[data-group="${group}"]`);
-  if (col && !col.classList.contains('done')) {
-    col.classList.add('done');
-    if (group === 'paye') showPayeCompleteBanner();
-  }
+  if (!col || col.classList.contains('done')) return;
+  col.classList.add('done');
+  if (group === 'paye') showPayeCompleteBanner();
+}
+
+// Checked only at the script's explicit Step 9 trigger point, not
+// reactively the instant both columns happen to become complete — the
+// narrative holds the nudge back until after the Other-column documents,
+// even though Other itself plays no part in the gate condition.
+function checkClosingNudge() {
+  const payeDone   = document.querySelector('.tp-col[data-group="paye"]')?.classList.contains('done');
+  const rentalDone = document.querySelector('.tp-col[data-group="rental"]')?.classList.contains('done');
+  if (payeDone && rentalDone) showHandoverNudge();
+}
+
+function showHandoverNudge() {
+  if (document.getElementById('handoverNudge')) return;
+  const nudge = document.createElement('div');
+  nudge.id = 'handoverNudge';
+  nudge.className = 'handover-nudge';
+  nudge.innerHTML = `
+    <span>Your tax position looks well documented. Consider handing this over for review.</span>
+    <button type="button" class="handover-nudge-btn">Hand over for review</button>`;
+  document.getElementById('accountantPanel').insertAdjacentElement('afterbegin', nudge);
+  nudge.querySelector('.handover-nudge-btn').onclick = () => {
+    showToast('Handed over — your accountant will be in touch shortly.', 'success');
+  };
 }
 
 function showPayeCompleteBanner() {
@@ -1462,11 +1374,16 @@ function showPayeCompleteBanner() {
   setTimeout(() => banner && banner.remove(), 8000);
 }
 
+// Required items show no badge at all — "upgrading" a conditional item to
+// required just means removing its optional/conditional label to match.
+function upgradeToRequired(key) {
+  const need = document.querySelector(`.tp-item[data-key="${key}"] .tp-need`);
+  if (need) need.remove();
+}
+
 // ── "Other" column ───────────────────────────────────────────────────────────
 // No placeholder items — every row it grows is named by whatever arrived.
-// Not wired to a live trigger yet (no document currently classifies as
-// "other"); this is the landing point the next flow pass will call into.
-function addOtherItem({ label, hint, file }) {
+function addOtherItem({ label, hint, fileName }) {
   const panel = document.getElementById('taxProfilePanel');
   const empty = document.getElementById('otherEmpty');
   if (empty) empty.remove();
@@ -1485,15 +1402,15 @@ function addOtherItem({ label, hint, file }) {
   item.querySelector('.tp-hint').textContent = hint || '';
   item.querySelector('.tp-name').textContent = label;
 
-  if (file) {
+  if (fileName) {
     const link = document.createElement('a');
     link.className = 'tp-file';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.href = URL.createObjectURL(file);
-    link.title = file.name;
+    link.href = mockFileHref(fileName);
+    link.title = fileName;
     link.innerHTML = '<svg class="tp-file-icon" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="tp-file-name"></span>';
-    link.querySelector('.tp-file-name').textContent = file.name;
+    link.querySelector('.tp-file-name').textContent = fileName;
     item.querySelector('.tp-body').appendChild(link);
   }
 
@@ -1505,14 +1422,13 @@ function addOtherItem({ label, hint, file }) {
 // ── Field evidence (tax position) ───────────────────────────────────────────
 // A single place that updates a field's count/total and its sidebar row,
 // so the history panel and the sidebar always agree.
-function recordFieldEvidence(fieldName, result) {
+function recordFieldEvidence(fieldName, { keyFigure, label } = {}) {
   if (!fieldState[fieldName]) fieldState[fieldName] = { count: 0, total: 0, lastLabel: '' };
   const state = fieldState[fieldName];
   state.count += 1;
-  const amount = parseCurrency(result && result.key_figure);
+  const amount = parseCurrency(keyFigure);
   if (amount != null) state.total += amount;
-  const mapping = TYPE_MAP[result && result.type];
-  state.lastLabel = (mapping && mapping.label) || ((result && result.type) ? result.type.replace(/_/g, ' ') : 'Document');
+  if (label) state.lastLabel = label;
   renderFieldRow(fieldName, state);
   return state;
 }
@@ -1528,10 +1444,19 @@ function renderFieldRow(fieldName, state) {
   if (BOUNDED_FIELDS.has(fieldName)) {
     val.textContent = state.total > 0 ? formatCurrency(state.total) : state.lastLabel;
     slot.appendChild(val);
-    const chip = document.createElement('span');
-    chip.className = 'row-chip';
-    chip.textContent = state.lastLabel;
-    slot.appendChild(chip);
+
+    // The source icon sits next to the label, not the value, so .row-slot
+    // holds nothing but the figure and every value in the section lines up
+    // flush right.
+    const lblGroup = slot.closest('.row').querySelector('.row-lbl-group');
+    if (lblGroup && !lblGroup.querySelector('.row-source')) {
+      const source = document.createElement('span');
+      source.className = 'row-source';
+      source.tabIndex = 0;
+      source.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="tp-hint"></span>';
+      lblGroup.appendChild(source);
+    }
+    lblGroup.querySelector('.tp-hint').textContent = `From ${state.lastLabel}`;
   } else {
     const itemsLabel = `${state.count} item${state.count !== 1 ? 's' : ''} recorded`;
     val.textContent = state.total > 0 ? `${formatCurrency(state.total)} · ${itemsLabel}` : itemsLabel;
@@ -1558,9 +1483,7 @@ function formatCurrency(n) {
 }
 
 // "Other reliefs" — one row per document that doesn't fit an existing
-// deduction field (Gift Aid, a pension top-up certificate, etc). Not wired
-// to a live trigger yet, same as addOtherItem(): nothing currently
-// classifies a document this way. Ready for the flow-scripting pass.
+// deduction field (Gift Aid, a pension top-up certificate, etc).
 function addOtherReliefRow(label, amount) {
   const row = document.createElement('div');
   row.className = 'row';
@@ -1571,10 +1494,10 @@ function addOtherReliefRow(label, amount) {
 }
 
 // Estimated position — the one figure on the page flagged as illustrative
-// rather than read straight off a document. No calculation engine exists
-// yet (per PAGE-COMPONENTS.md, a figure must never appear before it can be
-// defended from actual uploads), so nothing calls this today; it's the
-// landing point for whatever produces that estimate once it exists.
+// rather than read straight off a document. No real calculation engine
+// exists (per PAGE-COMPONENTS.md, a figure must never appear before it can
+// be defended from actual uploads) — the script below drives it with the
+// same kind of scripted, defensible values every other figure here uses.
 function setEstimatedPosition(text, { isEstimate = true } = {}) {
   const slot = document.getElementById('estimateSlot');
   const val  = document.getElementById('estimateVal');
@@ -1598,18 +1521,16 @@ function setEstimatedPosition(text, { isEstimate = true } = {}) {
   slot.classList.add('pulse');
 }
 
-// Applies a resolved document to the checklist and its field, and refreshes
-// everything that depends on completion. Only resolved documents ever reach
-// this — pending ones don't touch the checklist, sidebar, or accountant panel.
-function resolveDocument({ fieldName, key, result, file, fileName }) {
-  if (key) markItemDone(key, result, file);
+// Applies a resolved document to the checklist and its field. Column
+// completion is NOT decided here — the script triggers that explicitly at
+// the right narrative beat (see markColumnComplete).
+function resolveDocument({ fieldName, key, keyFigure, fileName, label, note }) {
+  if (key) markItemDone(key, { keyFigure, fileName, note });
   let restatement = '';
   if (fieldName) {
-    recordFieldEvidence(fieldName, result);
+    recordFieldEvidence(fieldName, { keyFigure, label });
     restatement = fieldRestatement(fieldName);
   }
-  checkGroupCompletion('paye');
-  checkGroupCompletion('rental');
   updateGroupCount('paye');
   updateGroupCount('rental');
   updateAccountantStatus();
@@ -1626,15 +1547,18 @@ function historyLog() {
   return log;
 }
 
-// Only one document card stays expanded at a time — appending any new feed
-// item collapses whichever card previously held that spot. Cards that are
-// still uploading or awaiting a quick answer are left alone: collapsing
-// them would either show a spinner that never resolves or bury an
-// unanswered question, so only .resolved cards ever fold up.
-let lastExpandedCard = document.getElementById('seedCard');
+// Only one document card stays expanded at a time — appending a new
+// document card collapses whichever card previously held that spot.
+// Quick-reply turns, momentum lines, and chat messages don't trigger this:
+// the P60 card, for instance, stays visible through its own quick-reply
+// exchange and only collapses once the next upload's card appears. Cards
+// that are still uploading or awaiting a quick answer are left alone too —
+// collapsing them would either show a spinner that never resolves or bury
+// an unanswered question — so only .resolved cards ever fold up.
+let lastExpandedCard = null;
 
 function appendEntry(entry, { isCard = false } = {}) {
-  if (lastExpandedCard && lastExpandedCard !== entry) collapseCard(lastExpandedCard);
+  if (isCard && lastExpandedCard && lastExpandedCard !== entry) collapseCard(lastExpandedCard);
   const log = historyLog();
   log.appendChild(entry);
   log.scrollTop = log.scrollHeight;
@@ -1722,9 +1646,22 @@ function fillResolvedCard(entry, fileName, comment, tagLabel, tagType) {
     <div class="history-result ${tagType !== 'matched' ? tagType : ''}">
       <svg class="history-result-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       <span></span>
+    </div>
+    <div class="history-confirm">
+      <span>Does this look right?</span>
+      <button type="button" class="history-confirm-btn" data-action="yes">Yes</button>
+      <button type="button" class="history-confirm-btn" data-action="no">No</button>
     </div>`;
   entry.querySelector('.history-comment').textContent = comment;
   entry.querySelector('.history-result span').textContent = tagLabel;
+
+  const confirmRow = entry.querySelector('.history-confirm');
+  confirmRow.querySelector('[data-action="yes"]').onclick = () => {
+    confirmRow.innerHTML = '<span class="history-confirm-done">✓ Confirmed</span>';
+  };
+  confirmRow.querySelector('[data-action="no"]').onclick = () => {
+    confirmRow.innerHTML = '<span class="history-confirm-done">Flagged for your accountant to double-check</span>';
+  };
 
   // Reuse the timestamp if this entry already had one (resolving from a
   // pending question) rather than appending a second one.
@@ -1737,126 +1674,17 @@ function fillResolvedCard(entry, fileName, comment, tagLabel, tagType) {
   ts.textContent = relativeTime(Date.now());
 }
 
-// What to ask, and which quick-reply options to offer, for a document the
-// system can't confidently place on its own.
-function questionTextFor(result) {
-  if (result.type === 'bank_statement') {
-    return "This looks like a bank statement, but I can't tell if it covers rental income, an expense, or both. What does it cover?";
-  }
-  if (TYPE_MAP[result.type]) {
-    return `This looks like it might be your ${TYPE_MAP[result.type].label}, but I'm not fully sure. Is that right?`;
-  }
-  return "This looks like a receipt, but I can't tell what it's for. What does this cover?";
-}
-function chipOptionsFor(result) {
-  if (result.type === 'bank_statement') {
-    return [
-      { label: 'Rental income', field: 'Rental income', key: 'rental-statement' },
-      { label: 'Expenses',      field: 'Expenses',      key: 'rental-expenses' },
-      { label: 'Both',          both: true },
-    ];
-  }
-  if (TYPE_MAP[result.type]) {
-    const m = TYPE_MAP[result.type];
-    return [
-      { label: `Yes, it's my ${m.label}`, field: FIELD_MAP[m.key], key: m.key },
-      { label: 'Something else',          field: null, key: null },
-    ];
-  }
-  return [
-    { label: 'Rental expense',          field: 'Expenses', key: 'rental-expenses' },
-    { label: 'Business expense',        field: 'Expenses', key: null },
-    { label: 'Not related to my taxes', field: null, key: null },
-  ];
-}
-
-function fillPendingCard(entry, fileName, result, file) {
-  entry.className = 'history-entry pending';
-  entry.innerHTML = `
-    <div class="history-avatar">${aiAvatarSVG()}</div>
-    <div class="history-content">
-      <div class="history-attachment">${attachmentIconSVG()}<span class="history-attachment-name"></span></div>
-      <div class="history-bubble">
-        <div class="history-comment"></div>
-        <div class="history-chips"></div>
-        <div class="history-freetext">
-          <input type="text" class="history-freetext-input" placeholder="Or describe it in your own words">
-          <button type="button" class="history-freetext-btn">Add</button>
-        </div>
-      </div>
-      <div class="history-timestamp"></div>
-    </div>`;
-  const nameEl = entry.querySelector('.history-attachment-name');
-  nameEl.title = fileName;
-  nameEl.textContent = fileName;
-  entry.querySelector('.history-comment').textContent = questionTextFor(result);
-  entry.querySelector('.history-timestamp').textContent = relativeTime(Date.now());
-
-  const chipRow = entry.querySelector('.history-chips');
-  chipOptionsFor(result).forEach(opt => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'history-chip';
-    btn.textContent = opt.label;
-    btn.onclick = () => handleChipChoice(entry, opt, result, file, fileName);
-    chipRow.appendChild(btn);
-  });
-
-  entry.querySelector('.history-freetext-btn').onclick = () => {
-    const input = entry.querySelector('.history-freetext-input');
-    const text = input.value.trim();
-    if (!text) return;
-    handleFreeTextChoice(entry, text, fileName);
-  };
-}
-
-function handleChipChoice(entry, opt, result, file, fileName) {
-  if (opt.both) {
-    showSplitFollowUp(entry, result, file, fileName);
-    return;
-  }
-  const restatement = resolveDocument({ fieldName: opt.field, key: opt.key, result, file, fileName });
-  fillResolvedCard(entry, fileName, `Got it — logged as ${opt.label}.`, restatement, 'matched');
-}
-
-function showSplitFollowUp(entry, result, file, fileName) {
-  entry.querySelector('.history-chips').remove();
-  entry.querySelector('.history-freetext').remove();
-
-  const follow = document.createElement('div');
-  follow.className = 'history-followup';
-  follow.innerHTML = `
-    <div class="history-followup-label">Roughly what share is rental income vs. expenses?</div>
-    <div class="history-followup-row">
-      <input type="text" class="history-split-input" placeholder="e.g. 70% rental, 30% expenses">
-      <button type="button" class="history-split-btn">Confirm</button>
-    </div>`;
-  entry.querySelector('.history-bubble').appendChild(follow);
-
-  follow.querySelector('.history-split-btn').onclick = () => {
-    const splitText = follow.querySelector('.history-split-input').value.trim() || 'an approximate split';
-    // The split is descriptive only — we don't have a reliable way to divide
-    // one figure across two fields, so no amount is attributed to either.
-    const neutral = { ...result, key_figure: null };
-    const r1 = resolveDocument({ fieldName: 'Rental income', key: 'rental-statement', result: neutral, file, fileName });
-    const r2 = resolveDocument({ fieldName: 'Expenses',      key: null,               result: neutral, file, fileName });
-    fillResolvedCard(entry, fileName, `Got it — logged as both (${splitText}).`, `${r1} · ${r2}`, 'matched');
-  };
-}
-
-function handleFreeTextChoice(entry, text, fileName) {
-  // Free text can't be reliably matched to a field without another AI pass,
-  // so it's logged for the record but doesn't move any field's total here.
-  fillResolvedCard(entry, fileName, `Got it — logged as "${text}".`, 'Not counted toward your tax position yet', 'neutral');
+function addMomentumLine(text) {
+  const entry = document.createElement('p');
+  entry.className = 'history-momentum';
+  entry.textContent = text;
+  appendEntry(entry);
 }
 
 // ── Quick-reply turn: a standalone assistant question, not tied to any
-// uploaded file. Distinct from the ambiguous-document chip flow above:
-// exactly two outlined pill options, and a click resolves into a normal
-// right-aligned user bubble rather than a tag. Not called from anywhere
-// yet — no document in the demo currently triggers a standalone question
-// (that's the P45 / mortgage yes-no logic the next flow pass adds) — this
-// is the reusable mechanic it will call into.
+// uploaded file — an assistant bubble with exactly two outlined pill
+// options; a click resolves into a normal right-aligned user bubble
+// rather than a tag. Used for the P45 and mortgage questions below.
 function addQuickReplyTurn(question, options) {
   const entry = document.createElement('div');
   entry.className = 'history-entry resolved';
@@ -1889,9 +1717,9 @@ function addQuickReplyTurn(question, options) {
 }
 
 // ── Compose box ──────────────────────────────────────────────────────────────
-// No real chat backend yet — sending a message logs it and gets a generic
-// acknowledgment, same "mock now, swap later" approach as mockDetect().
-// The input stays active regardless of any pending quick-reply above it.
+// No real chat backend — sending a message logs it and gets a generic
+// acknowledgment. The input stays active regardless of any pending
+// quick-reply above it.
 function addUserMessage(text) {
   const entry = document.createElement('div');
   entry.className = 'history-entry user';
@@ -1963,4 +1791,160 @@ document.querySelectorAll('.ucard').forEach(card => {
   ['dragenter','dragover'].forEach(ev => card.addEventListener(ev, e => { e.preventDefault(); card.classList.add('drag-over'); }));
   ['dragleave','dragend','drop'].forEach(ev => card.addEventListener(ev, e => { e.preventDefault(); card.classList.remove('drag-over'); }));
 });
+
+// ── Scripted upload queue ────────────────────────────────────────────────────
+// The whole document-upload journey for this demo, fully pre-scripted —
+// no real file handling. Every "Browse files" click (or dropzone click)
+// consumes exactly the next item; quick-reply steps are not consumed by a
+// click — they appear automatically right after the upload that triggers
+// them, and block the next upload until answered.
+const uploadQueue = [
+  { id: 'p60', category: 'paye', checklistKey: 'paye-p60', label: 'P60',
+    filename: 'p60_2024.pdf', keyFigure: '£52,000',
+    summary: "Got it. This is a P60 showing £52,000 gross pay, with tax already deducted at source.",
+    followUp: 'p45-question' },
+
+  { id: 'rental-statement', category: 'rental', checklistKey: 'rental-statement', label: 'Letting agent statement',
+    filename: 'letting_agent_statement.pdf', keyFigure: '£9,600',
+    summary: "This shows rental income of £9,600 for the year.",
+    followUp: 'mortgage-question' },
+
+  { id: 'mortgage-statement', category: 'rental', checklistKey: 'rental-mortgage', label: 'Mortgage statement',
+    filename: 'mortgage_interest_statement.pdf', keyFigure: '£4,200',
+    summary: "£4,200 in mortgage interest this year. This gets applied as a 20% credit rather than a straight deduction — I've added it as a separate line.",
+    completeColumn: 'rental', momentum: 'Your rental income is fully sorted.' },
+
+  { id: 'receipt-1', category: 'rental', checklistKey: 'rental-expenses', label: 'Expense receipt',
+    filename: 'guttering_repair_receipt.pdf', keyFigure: '£180',
+    summary: "£180 for guttering repairs — added as a rental expense.",
+    estimateDelta: -72 },
+
+  { id: 'receipt-2', category: 'rental', checklistKey: 'rental-expenses', label: 'Expense receipt',
+    filename: 'letting_agent_fee_receipt.pdf', keyFigure: '£95',
+    summary: "£95 in letting agent fees — added as a rental expense.",
+    estimateDelta: -38 },
+
+  { id: 'gift-aid', category: 'other', otherLabel: 'Gift Aid donation',
+    filename: 'charity_donation_receipt.pdf', keyFigure: '£100',
+    summary: "This looks like a Gift Aid donation receipt. Given your income this year, this can reduce your bill further — I've added it under Other.",
+    estimateDelta: -20 },
+
+  // Chat/checklist-wise this is treated as an Other document (lilac tag,
+  // second Other-column row) — but unlike Gift Aid, its Tax Position effect
+  // lands on the existing "Pension contributions" row rather than a new
+  // Other-reliefs line, since that field already exists and was just
+  // pending a document.
+  { id: 'pension-topup', category: 'other', otherLabel: 'Pension top-up',
+    filename: 'pension_contribution_certificate.pdf', keyFigure: '£500',
+    summary: "Got it — an additional pension contribution. Same logic as the donation — it's added to your estimate.",
+    taxPositionRow: 'rowPension',
+    estimateDelta: -100, triggersClosingNudge: true },
+];
+
+const quickReplies = {
+  'p45-question': {
+    question: "Did you change jobs partway through the tax year?",
+    options: [
+      { label: 'Yes, I have a P45' },   // not wired — only the 'No' branch matters for this demo
+      { label: 'No, same job all year',
+        followUpText: "That's everything for your employment income. Let's look at your rental property next.",
+        completeColumn: 'paye',
+        momentum: 'Your employment income is fully sorted.' },
+    ],
+  },
+  'mortgage-question': {
+    question: "Do you have a mortgage on this property?",
+    options: [
+      { label: 'Yes, I do',
+        followUpText: "Mortgage interest works differently for landlords — I'll need your annual interest statement too. You can usually get this from your lender's portal.",
+        upgradeChecklistItem: 'rental-mortgage' },
+      { label: "No, I don't" },        // not wired — only the 'Yes' branch matters for this demo
+    ],
+  },
+};
+
+let queueIndex     = 0;
+let scriptBlocked  = false;   // true while an upload is resolving or a quick-reply is pending
+let estimateTotal  = null;    // unset until Step 5 first makes a position calculable
+
+async function advanceScript() {
+  if (scriptBlocked) { showToast('Answer the question above first', 'info'); return; }
+  if (queueIndex >= uploadQueue.length) { showToast('No more documents in this demo', 'info'); return; }
+  scriptBlocked = true;
+  const item = uploadQueue[queueIndex++];
+  await runQueueItem(item);
+  if (!item.followUp) scriptBlocked = false;
+}
+
+async function runQueueItem(item) {
+  const zone = document.getElementById('uploadZone');
+  zone.classList.add('loading');
+  const card = addUploadingCard(item.filename);
+  await new Promise(r => setTimeout(r, 700));
+  zone.classList.remove('loading');
+
+  if (item.category === 'other') {
+    fillResolvedCard(card, item.filename, item.summary, 'Added to Other', 'other');
+    addOtherItem({ label: item.otherLabel, hint: item.summary, fileName: item.filename });
+    // Gift Aid has no existing field to land on, so it grows the dynamic
+    // Other-reliefs list. The pension top-up does have one — the
+    // pre-existing "Pension contributions" row — so it updates that
+    // instead of also appearing in Other reliefs.
+    if (item.taxPositionRow) {
+      setRowValue(item.taxPositionRow, formatCurrency(parseCurrency(item.keyFigure)));
+    } else {
+      addOtherReliefRow(item.otherLabel, parseCurrency(item.keyFigure));
+    }
+  } else {
+    const restatement = resolveDocument({
+      fieldName: FIELD_MAP[item.checklistKey], key: item.checklistKey,
+      keyFigure: item.keyFigure, fileName: item.filename, label: item.label,
+    });
+    fillResolvedCard(card, item.filename, item.summary, restatement, 'matched');
+  }
+
+  // Illustrative side-figures the script drops in at specific points —
+  // not computed, just as clearly scripted as every other keyFigure above.
+  if (item.id === 'p60') setRowValue('rowTaxAtSource', '£8,232');
+  if (item.id === 'mortgage-statement') {
+    document.getElementById('sbMortgageRelief').style.display = '';
+    setRowValue('mortgageReliefVal', formatCurrency(parseCurrency(item.keyFigure)));
+    estimateTotal = 2150;
+    setEstimatedPosition(formatCurrency(estimateTotal));
+  }
+
+  if (item.completeColumn) markColumnComplete(item.completeColumn);
+  if (item.momentum) addMomentumLine(item.momentum);
+  if (item.estimateDelta != null) applyEstimateDelta(item.estimateDelta);
+  if (item.triggersClosingNudge) checkClosingNudge();
+
+  if (item.followUp) runQuickReply(item.followUp);
+}
+
+function runQuickReply(key) {
+  const qr = quickReplies[key];
+  addQuickReplyTurn(qr.question, qr.options.map(opt => ({
+    label: opt.label,
+    onSelect: () => {
+      scriptBlocked = false;
+      if (opt.followUpText) addAiTextReply(opt.followUpText);
+      if (opt.completeColumn) markColumnComplete(opt.completeColumn);
+      if (opt.momentum) addMomentumLine(opt.momentum);
+      if (opt.upgradeChecklistItem) upgradeToRequired(opt.upgradeChecklistItem);
+    },
+  })));
+}
+
+function setRowValue(rowIdOrElId, text) {
+  const val = document.querySelector(`#${rowIdOrElId} .row-val`) || document.getElementById(rowIdOrElId);
+  if (!val) return;
+  val.textContent = text;
+  val.classList.remove('pend');
+}
+
+function applyEstimateDelta(delta) {
+  if (estimateTotal == null) return;   // not shown yet — nothing to move
+  estimateTotal += delta;
+  setEstimatedPosition(formatCurrency(estimateTotal));
+}
 </script>
