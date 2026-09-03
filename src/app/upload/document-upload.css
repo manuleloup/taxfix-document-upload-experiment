@@ -9,52 +9,64 @@
 
 .page {
   max-width: 1240px;
-  margin: var(--space-35) auto var(--space-8);
+  /* The design leaves 96px between the header and the H1. */
+  margin: var(--space-12) auto var(--space-8);
   padding: 0 var(--space-35);
   display: grid;
   grid-template-columns: 3fr 2fr;
   gap: var(--space-35);
 }
+/* 18px above and below the standfirst, per the design's off-grid rhythm. */
 .main-intro {
-  margin-bottom: var(--space-3);
+  margin-bottom: 18px;
 }
 .main-intro p {
-  margin-top: var(--space-1);
-  max-width: 460px;
+  margin-top: 18px;
+  max-width: 576px;
+  /* Full-strength title black, not the softer body grey. */
+  color: var(--heading);
 }
 
-/* ── Documents strip ─────────────────────────────────────────────────── */
+/* ── Documents strip ─────────────────────────────────────────────────────
+   Matches Figma node 7710:11726 "Documents card": a filled surface2 card,
+   20px padding, 14px column gap, and borderless rows (the design separates
+   rows by gap alone — no dividers). */
 .docs-card {
-  padding: var(--space-2);
+  padding: var(--space-25);
   margin-bottom: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-175);
 }
 .docs-head {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-15);
+  align-items: baseline;
+  gap: var(--space-2);
 }
 .docs-list {
   display: flex;
   flex-direction: column;
-  margin-bottom: var(--space-125);
+  gap: var(--space-175);
 }
 .doc-row {
   display: flex;
   align-items: center;
   gap: var(--space-125);
-  padding: var(--space-1) var(--space-025);
-  border-bottom: 1px solid var(--grey-divider);
+  min-height: 24px;
 }
-.docs-list .doc-row:last-of-type {
-  border-bottom: none;
+/* Pushes the confirmation tick to the far edge, as the design's spacer frame
+   does — everything before it stays left-packed. */
+.doc-row-spacer {
+  flex: 1 0 0;
+  min-width: 1px;
 }
 .doc-row svg {
   flex-shrink: 0;
   color: var(--muted);
 }
 .doc-row-name {
-  font-weight: 500;
+  font-weight: 700;
   flex-shrink: 0;
   white-space: nowrap;
 }
@@ -65,27 +77,32 @@
   white-space: nowrap;
 }
 .doc-row-check {
-  margin-left: auto;
   color: var(--confirm);
   flex-shrink: 0;
   display: flex;
 }
+/* Design annotation on this node: "appears only on hover over line". */
 .doc-row-del {
   opacity: 0;
   transition: opacity 150ms;
-}
-.doc-row:hover .doc-row-del {
-  opacity: 1;
-}
-.doc-row-del:hover {
   color: var(--error-main);
 }
+.doc-row:hover .doc-row-del,
+.doc-row-del:focus-visible {
+  opacity: 1;
+}
 
-/* Dropzone — interactive accent is the brand green, not an invented blue. */
+/* Dropzone — 2px dashed primary-action lime at radius 12px, per the design. */
 .dropzone {
-  border: 2px dashed var(--grey-graphics3);
-  border-radius: var(--radius-md);
-  padding: var(--space-25);
+  border: 2px dashed var(--primary-action);
+  border-radius: 12px;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-05);
+  padding: var(--space-175);
   text-align: center;
   cursor: pointer;
   transition: border-color 200ms, background 200ms;
@@ -99,9 +116,10 @@
   border-color: var(--primary-light);
   box-shadow: 0 0 0 4px var(--primary-hover);
 }
-.dz-title {
-  font-weight: 500;
-  margin-bottom: var(--space-05);
+.dz-idle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-05);
 }
 .dz-sub {
   color: var(--muted);
@@ -114,101 +132,124 @@
   padding: var(--space-1) 0;
 }
 
-/* ── Tax picture card ────────────────────────────────────────────────── */
+/* ── Tax position card ───────────────────────────────────────────────────
+   Matches Figma node 7711:11833 "Tax picture card": a tinted
+   secondary/background-light surface (not white), 20px padding, and rows
+   separated by gap rather than rules. Status is carried entirely by the
+   glyph's colour — the design has no filled circular icon backdrops. */
 .picture-card {
-  padding: var(--space-3);
+  padding: var(--space-25);
+  background: var(--secondary-background-light);
+  border: none;
+  /* tf-card clips to its radius; the row overflow menu is positioned outside
+     the card edge (as in the design), so it must not be clipped here. */
+  overflow: visible;
+}
+.picture-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-15);
+  margin-bottom: var(--space-4);
 }
 .picture-head p {
   color: var(--muted);
-  margin-top: var(--space-05);
-  margin-bottom: var(--space-2);
 }
 
-.pic-group-label {
-  display: block;
-  margin: var(--space-2) 0 var(--space-025);
+.pic-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
-.pic-group:first-child .pic-group-label {
-  margin-top: 0;
+.pic-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-175);
 }
-.pic-group + .pic-group {
-  margin-top: var(--space-05);
-  padding-top: var(--space-075);
-  border-top: 1px solid var(--grey-divider);
+.pic-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-15);
 }
 .pic-row {
-  display: grid;
-  grid-template-columns: 26px 1fr auto;
-  gap: var(--space-15);
+  display: flex;
   align-items: flex-start;
-  padding: var(--space-15) 0;
-  border-top: 1px solid var(--grey-divider);
+  gap: var(--space-15);
+  padding: var(--space-1);
+  margin: calc(-1 * var(--space-1));
+  border-radius: var(--radius-md);
+  transition: background 200ms;
 }
-.pic-group-label + .pic-row {
-  border-top: none;
+/* A resolved item turns green — the moment a document or a manual value
+   lands. Uses the brand's lightest green tint so the row reads as done at a
+   glance, with the name and figure in brand green rather than title black. */
+.pic-row.confirmed {
+  background: var(--primary-background-light);
+}
+.pic-row.confirmed .pic-name,
+.pic-row.confirmed .pic-val {
+  color: var(--primary-main);
+}
+/* A removed row collapses to a single line, so it centres rather than
+   top-aligning against a two-line info block. */
+.pic-row.dismissed {
+  align-items: center;
 }
 .pic-icon {
-  width: 26px;
-  height: 26px;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   flex-shrink: 0;
-  margin-top: 1px;
-}
-.pic-row.pending .pic-icon {
-  background: var(--grey-surface1);
-  color: var(--dim);
+  display: flex;
+  width: 24px;
+  height: 24px;
 }
 .pic-row.confirmed .pic-icon {
-  background: var(--primary-background-light);
-  color: var(--confirm);
+  color: var(--primary-light);
+}
+.pic-row.pending .pic-icon {
+  color: var(--muted);
 }
 .pic-row.dismissed .pic-icon {
-  background: var(--grey-surface1);
-  color: var(--dim);
-  opacity: 0.6;
+  color: var(--text-disabled);
+}
+.pic-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-025);
+  min-width: 0;
+}
+.pic-name {
+  font-weight: 700;
 }
 .pic-row.pending .pic-name {
   color: var(--muted);
-  font-weight: 400;
 }
 .pic-row.dismissed .pic-name {
-  color: var(--dim);
-  text-decoration: line-through;
-  text-decoration-color: var(--grey-divider);
-}
-.pic-row.dismissed {
-  opacity: 0.55;
+  color: var(--text-disabled);
 }
 .pic-hint {
   color: var(--muted);
-  margin-top: var(--space-025);
 }
-.pic-row.pending .pic-hint {
-  color: var(--dim);
+/* Mirrors the doc-row spacer: value and controls sit hard right. */
+.pic-spacer {
+  flex: 1 0 0;
+  min-width: 1px;
 }
 .pic-group-empty {
   color: var(--dim);
   font-style: italic;
-  padding: var(--space-1) 0;
 }
 .pic-action {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-075);
-}
-.pic-action-row {
-  display: flex;
   align-items: center;
-  gap: var(--space-125);
+  gap: var(--space-15);
+  flex-shrink: 0;
 }
 .pic-val {
   font-weight: 700;
   white-space: nowrap;
   color: var(--heading);
+}
+.pic-pending-label {
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .pic-overflow-wrap {
@@ -257,18 +298,28 @@
   background: var(--grey-surface2);
 }
 
+/* Provenance lines, indented 12px under the row name. The design renders
+   these in success/light green — document-derived and manually-added alike,
+   distinguished by their leading glyph (file-lines vs. pen-to-square). */
 .pic-entries {
+  display: flex;
+  flex-direction: column;
   margin-top: var(--space-05);
+  padding-left: var(--space-15);
 }
 .pic-entry {
   display: flex;
   align-items: center;
-  gap: var(--space-075);
-  color: var(--confirm);
-  padding: var(--space-025) 0;
+  gap: var(--space-125);
+  min-height: 24px;
+  color: var(--primary-light);
+}
+.pic-entry-amount {
+  font-weight: 500;
+  white-space: nowrap;
 }
 .pic-entry.manual {
-  color: var(--muted);
+  color: var(--primary-light);
 }
 /* Medium-confidence classification — the one accent permitted in this layout. */
 .pic-entry.needs-check {
@@ -334,39 +385,19 @@
   color: var(--heading);
 }
 
+/* No rule above the footer in the design — the 40px gap does the separating. */
 .picture-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-15);
-  margin-top: var(--space-2);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--grey-divider);
+  margin-top: var(--space-5);
 }
 .pf-note {
   color: var(--muted);
 }
-.finish-confirm {
-  margin-top: var(--space-175);
-  padding-top: var(--space-175);
-  border-top: 1px solid var(--grey-divider);
-}
-.finish-confirm-title {
-  font-weight: 500;
-  margin-bottom: var(--space-1);
-}
-.finish-confirm-list {
-  color: var(--muted);
-  margin-bottom: var(--space-15);
-  line-height: 1.7;
-}
-.finish-confirm-row {
-  display: flex;
-  gap: var(--space-1);
-}
-.finish-confirm-row .tf-btn {
-  flex: 1;
-}
+/* The submit-for-review confirmation and the completion notice are dialogs
+   now (see _components/dialog.tsx), not an inline block at the card's foot. */
 
 /* ── Conversation sidebar ────────────────────────────────────────────── */
 .convo-card {

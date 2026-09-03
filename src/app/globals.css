@@ -47,6 +47,11 @@
   --primary-hover: rgba(169, 212, 129, 0.2);
   --primary-contrast: #154618;
 
+  /* Secondary — the Tax Position card's tinted surface in the Figma design
+     (node 7711:11833 fill = Secondary/Background light). */
+  --secondary-background-light: #e8f0ff;
+  --secondary-main: #4c4991;
+
   --error-background-light: #feebe7;
   --error-main: #912003;
   --error-light: #fb5e36;
@@ -96,6 +101,8 @@
   --space-5: 40px;
   --space-6: 48px;
   --space-8: 64px;
+  --space-10: 80px;
+  --space-12: 96px;
 
   /* ── Primitives: radii (xs:2 exists but is deprecated) ──────────────── */
   --radius-none: 0;
@@ -118,7 +125,9 @@
   --font-body: "ABC ROM", "Helvetica Neue", Arial, sans-serif;
 
   /* ── Semantic aliases (components reference these) ──────────────────── */
-  --page-bg: var(--primary-background-light);
+  /* White, per the Figma design (frame 7710:7415) — the cards carry the
+     colour, the page does not. */
+  --page-bg: var(--grey-background);
   --surface: var(--grey-surface3);
   --surface-sunken: var(--grey-surface2);
   --border: var(--grey-divider);
@@ -170,23 +179,18 @@ button {
   cursor: pointer;
 }
 
-/* ── Header (shared chrome, rendered once in layout.tsx) ──────────────── */
+/* ── Header ───────────────────────────────────────────────────────────────
+   The design's header (wordmark, announcement chip, tax-year breadcrumb,
+   account menu) was removed on request — all that remains is the
+   prototype-only reset affordance, which was never part of the design. */
 .header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
   display: flex;
+  justify-content: flex-end;
   align-items: center;
-  padding: var(--space-15) var(--space-35);
-}
-/* Brand rule: the logotype is never reproduced in type — this is the real
-   wordmark asset. Min height 20px, 1x clear space on all sides. */
-.logo-mark {
-  height: 24px;
-  width: auto;
-  display: block;
+  height: 44px;
+  padding: 0 var(--space-3);
 }
 .reset-link {
-  margin-left: auto;
   background: none;
   border: none;
   color: var(--muted);

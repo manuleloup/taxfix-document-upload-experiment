@@ -1,25 +1,17 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+// The design's full header (wordmark, announcement chip, tax-year breadcrumb,
+// account menu) has been removed — the prototype only needs the reset
+// affordance, which isn't part of the design in the first place.
 export default function Header() {
   const router = useRouter();
   return (
-    <header className="header">
-      {/* Brand rule: the logotype is never reproduced in type — this is the
-          real wordmark asset (dark-green on vivid-green, light-bg variant). */}
-      <Image
-        className="logo-mark"
-        src="/brand/Logo_Wordmark_dark_green.jpg"
-        alt="Taxfix"
-        width={820}
-        height={325}
-        priority
-      />
+    <div className="header">
       <button className="reset-link t-caption" onClick={() => router.push("/")}>
-        ↺ Reset prototype
+        ↺ Reset
       </button>
-    </header>
+    </div>
   );
 }

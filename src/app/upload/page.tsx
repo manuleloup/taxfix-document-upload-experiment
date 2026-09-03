@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import "./document-upload.css";
 import {
   CheckIcon,
+  CircleCheckIcon,
   DocIcon,
   LowConfidenceIcon,
   OverflowIcon,
@@ -23,6 +24,7 @@ import {
   type ItemKey,
   type TriggerCode,
 } from "../_lib/classify";
+import Dialog from "../_components/dialog";
 
 // Originally ported from taxfix-no-onboarding.html (a scripted wireframe).
 // Upload is now real: a dropped/selected file is sent to /api/classify and
@@ -152,6 +154,8 @@ export default function UploadPage() {
   const [pendingFollowUp, setPendingFollowUp] = useState<PendingFollowUp | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
+  const [submittedOpen, setSubmittedOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [composeValue, setComposeValue] = useState("");
   const [expenseSelected, setExpenseSelected] = useState<Set<string>>(new Set());
   const [expenseLocked, setExpenseLocked] = useState(false);
@@ -469,10 +473,7 @@ export default function UploadPage() {
     const unresolved = allKeys.filter((k) => itemStatus(items[k]) === "pending");
     if (unresolved.length === 0) {
       setFinishConfirmOpen(false);
-      addMsg({
-        from: "assist",
-        text: "Great — everything's sorted. In the real product this would take you through to your tax position summary.",
-      });
+      setSubmittedOpen(true);
       return;
     }
     setFinishConfirmOpen(true);
@@ -483,11 +484,10 @@ export default function UploadPage() {
     return (
       <div className={`pic-entry doc ${tier === "medium" ? "needs-check" : ""}`} key={idx}>
         <span className="pic-entry-icon" style={{ display: "flex" }}>
-          {tier === "medium" ? <LowConfidenceIcon /> : <DocIcon />}
+          {tier === "medium" ? <LowConfidenceIcon size={12} /> : <DocIcon size={12} />}
         </span>
-        <span className="t-caption pic-entry-label">
-          {entry.formatted} — {entry.source}
-        </span>
+        <span className="t-caption pic-entry-amount">{entry.formatted}</span>
+        <span className="t-caption pic-entry-label">{entry.source}</span>
       </div>
     );
   }
@@ -525,7 +525,8 @@ export default function UploadPage() {
           <button className="pic-entry-edit" title="Edit this value" onClick={() => startEditManual(key)}>
             <PencilIcon />
           </button>
-          <span className="t-caption pic-entry-label">{it.manualEntry.formatted} — Entered by you</span>
+          <span className="t-caption pic-entry-amount">{it.manualEntry.formatted}</span>
+          <span className="t-caption pic-entry-label">Added by you</span>
           <button className="pic-entry-del" title="Delete this value" onClick={() => deleteManualEntry(key)}>
             <TrashIcon />
           </button>
@@ -549,8 +550,12 @@ export default function UploadPage() {
     } else {
       const open = openMenu === key;
       action = (
-        <div className="pic-action-row">
-          {status === "confirmed" && <div className="t-h5 pic-val">{itemTotal(it)}</div>}
+        <>
+          {status === "confirmed" ? (
+            <div className="t-h5 pic-val">{itemTotal(it)}</div>
+          ) : (
+            <div className="t-body pic-pending-label">Pending</div>
+          )}
           <div className="pic-overflow-wrap">
             <button
               className={`tf-iconbtn tf-iconbtn--small pic-overflow-btn ${open ? "open" : ""}`}
@@ -585,7 +590,7 @@ export default function UploadPage() {
               </button>
             </div>
           </div>
-        </div>
+        </>
       );
     }
 
@@ -619,11 +624,12 @@ export default function UploadPage() {
     return (
       <div className={`pic-row ${status}`} key={key}>
         <div className="pic-icon">{statusIcon(status)}</div>
-        <div>
-          <div className="t-h6 pic-name">{it.name}</div>
+        <div className="pic-info">
+          <div className="t-body pic-name">{it.name}</div>
           {status !== "dismissed" && <div className="t-caption pic-hint">{it.hint}</div>}
           {entriesHtml}
         </div>
+        <div className="pic-spacer" />
         <div className="pic-action">{action}</div>
       </div>
     );
@@ -637,30 +643,31 @@ export default function UploadPage() {
       <div className="page">
         <main>
           <div className="main-intro">
-            <h1 className="t-h1-hero">Upload your documents. See your tax position.</h1>
-            <p>
-              Drop in whatever you have. We&rsquo;ll work out what it tells us — and ask you the odd quick question
-              for anything a document can&rsquo;t answer on its own.
+            <h1 className="t-h3">Upload your documents to see your tax position</h1>
+            <p className="t-body">
+              Drop in whatever you have. We will work out what it tells us — and ask the odd quick question for
+              anything a document cannot answer on its own.
             </p>
           </div>
 
-          <div className="tf-card tf-card--outlined docs-card">
+          <div className="tf-card tf-card--filled docs-card">
             <div className="docs-head">
-              <span className="t-overline">Your documents</span>
-              <span className="t-caption t-muted docs-count">{documents.length} added</span>
+              <h2 className="t-h5">Your documents</h2>
+              <span className="t-bodySmall t-muted docs-count">{documents.length} added</span>
             </div>
             <div className="docs-list">
               {shownDocs.map((d) => (
                 <div className="doc-row" key={d.id}>
-                  <DocIcon />
-                  <span className="t-bodySmall doc-row-name">{d.label}</span>
-                  <span className="t-caption doc-row-org">{d.org}</span>
-                  <span className="doc-row-check">
-                    <CheckIcon />
-                  </span>
-                  <button className="tf-iconbtn tf-iconbtn--small tf-iconbtn--neutral doc-row-del" title="Remove this document" onClick={() => removeDocument(d.id)}>
+                  <DocIcon size={20} />
+                  <span className="t-body doc-row-name">{d.label}</span>
+                  <span className="t-bodySmall doc-row-org">{d.org}</span>
+                  <button className="tf-iconbtn tf-iconbtn--small doc-row-del" title="Remove this document" onClick={() => setPendingDelete(d.id)}>
                     <TrashIcon />
                   </button>
+                  <span className="doc-row-spacer" />
+                  <span className="doc-row-check">
+                    <CircleCheckIcon size={20} />
+                  </span>
                 </div>
               ))}
               {docsRest > 0 && (
@@ -710,23 +717,23 @@ export default function UploadPage() {
               ) : (
                 <div className="dz-idle">
                   <div className="t-bodySmall dz-title">Drag a document here, or click to add one</div>
-                  <div className="t-caption dz-sub">PDF, JPG or PNG — add as many as you have, any order</div>
+                  <div className="t-bodySmall dz-sub">PDF, JPG or PNG — add as many as you have, any order</div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="tf-card tf-card--outlined picture-card">
+          <div className="tf-card picture-card">
             <div className="picture-head">
-              <h2 className="t-h3">What we can see so far</h2>
-              <p>Every figure below comes from a document you gave us, or a question you answered.</p>
+              <h2 className="t-h5">Your Tax Position so far</h2>
+              <p className="t-bodySmall">Every figure below comes from a document you gave us, or a question you answered.</p>
             </div>
-            <div>
+            <div className="pic-groups">
               {GROUPS.map((group) => (
                 <div className="pic-group" key={group.label}>
                   <div className="t-overline pic-group-label">{group.label}</div>
                   {group.keys.length ? (
-                    group.keys.map((key) => renderRow(key))
+                    <div className="pic-rows">{group.keys.map((key) => renderRow(key))}</div>
                   ) : (
                     <div className="t-caption pic-group-empty">{group.empty}</div>
                   )}
@@ -734,38 +741,13 @@ export default function UploadPage() {
               ))}
             </div>
             <div className="picture-footer">
-              <span className="t-caption pf-note">
+              <span className="t-bodySmall pf-note">
                 {resolvedCount} of {allKeys.length} sorted
               </span>
               <button className="tf-btn tf-btn--primary tf-btn--large t-button" onClick={attemptFinish}>
                 Submit for review
               </button>
             </div>
-            {finishConfirmOpen && (
-              <div className="finish-confirm">
-                <div className="t-bodySmall finish-confirm-title">A few things are still unresolved:</div>
-                <div className="t-caption finish-confirm-list">
-                  {unresolvedNames.map((n) => (
-                    <div key={n}>• {n}</div>
-                  ))}
-                </div>
-                <div className="finish-confirm-row">
-                  <button className="tf-btn tf-btn--secondary tf-btn--medium t-buttonSmall" onClick={() => setFinishConfirmOpen(false)}>Go back</button>
-                  <button
-                    className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall"
-                    onClick={() => {
-                      setFinishConfirmOpen(false);
-                      addMsg({
-                        from: "assist",
-                        text: "Okay — continuing with what you've given us so far. Your accountant will flag anything still missing before filing.",
-                      });
-                    }}
-                  >
-                    Continue anyway
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </main>
 
@@ -846,6 +828,92 @@ export default function UploadPage() {
           </div>
         </aside>
       </div>
+
+      {finishConfirmOpen && (
+        <Dialog
+          title="A few things are still unresolved"
+          onClose={() => setFinishConfirmOpen(false)}
+          actions={
+            <>
+              <button
+                className="tf-btn tf-btn--secondary tf-btn--medium t-buttonSmall"
+                onClick={() => setFinishConfirmOpen(false)}
+              >
+                Go back
+              </button>
+              <button
+                className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall"
+                onClick={() => {
+                  setFinishConfirmOpen(false);
+                  setSubmittedOpen(true);
+                }}
+              >
+                Continue anyway
+              </button>
+            </>
+          }
+        >
+          <p className="t-bodySmall">
+            You can still submit — your accountant will flag anything missing before filing.
+          </p>
+          <ul className="t-bodySmall tf-dialog-list">
+            {unresolvedNames.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        </Dialog>
+      )}
+
+      {submittedOpen && (
+        <Dialog
+          title="Sent for review"
+          onClose={() => setSubmittedOpen(false)}
+          actions={
+            <button
+              className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall"
+              onClick={() => setSubmittedOpen(false)}
+            >
+              Done
+            </button>
+          }
+        >
+          <p className="t-bodySmall">
+            One of our accountants will check your documents and this conversation, then email you. In the
+            real product this would take you through to your tax position summary.
+          </p>
+        </Dialog>
+      )}
+
+      {pendingDelete !== null && (
+        <Dialog
+          title="Remove this document?"
+          onClose={() => setPendingDelete(null)}
+          actions={
+            <>
+              <button
+                className="tf-btn tf-btn--secondary tf-btn--medium t-buttonSmall"
+                onClick={() => setPendingDelete(null)}
+              >
+                Keep it
+              </button>
+              <button
+                className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall"
+                onClick={() => {
+                  removeDocument(pendingDelete);
+                  setPendingDelete(null);
+                }}
+              >
+                Remove
+              </button>
+            </>
+          }
+        >
+          <p className="t-bodySmall">
+            Anything it added to your tax position will be removed too. This is the only way to take out a
+            figure that came from a document, so nothing gets out of sync with what you uploaded.
+          </p>
+        </Dialog>
+      )}
     </div>
   );
 }

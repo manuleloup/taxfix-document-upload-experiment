@@ -309,6 +309,59 @@
   cursor: default;
 }
 
+/* ── Dialog + Backdrop ────────────────────────────────────────────────────
+   Approximated: the real Dialog's spec wasn't recoverable from the bundle,
+   so this follows the Card conventions (surface3, radius lg, elevation 4). */
+.tf-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--common-pressed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3);
+}
+.tf-dialog {
+  background: var(--grey-surface3);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-4);
+  padding: var(--space-3);
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  outline: none;
+}
+.tf-dialog-body {
+  color: var(--muted);
+}
+.tf-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-15);
+}
+.tf-dialog-list {
+  margin: var(--space-15) 0 0;
+  padding-left: var(--space-25);
+  color: var(--muted);
+}
+.tf-dialog-list li {
+  margin-bottom: var(--space-05);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .tf-dialog {
+    animation: tf-dialog-in 120ms ease-out;
+  }
+  @keyframes tf-dialog-in {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+}
+
 /* ── Divider — 1px grey.divider ──────────────────────────────────────── */
 .tf-divider {
   border: none;
