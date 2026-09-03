@@ -8,8 +8,7 @@ only) for the underlying hypothesis, flow, and stack decisions.
 ## Current build (this branch)
 
 A Next.js (App Router, TypeScript) rebuild, replacing the earlier static
-HTML/Express prototype. Layout and flow reference:
-`taxfix-no-onboarding.html`.
+HTML/Express prototype.
 
 - `src/app/` — pages and layouts
 - Styling target: Taxfix's real component library (`@taxfix/ds-components`)
@@ -26,9 +25,15 @@ npm run dev      # Next.js app, http://localhost:3000
 npm run build    # production build
 ```
 
-## Earlier prototype (superseded)
+## About the two HTML reference files
 
-`taxfix-step1.html` is the original self-contained static HTML mockup
-(accordion checklist, drag-and-drop upload, accountant sidebar) — open it
-directly in a browser, no build step needed. Kept for reference; the active
-build going forward is the Next.js app above.
+Neither of these is the UI to ship — both are wireframes that inform what
+gets built, not the target visual design.
+
+- **`taxfix-no-onboarding.html`** — the current flow/structure reference.
+  Its layout, interaction patterns, and copy are what the Next.js app is
+  being rebuilt from (see `src/app/page.tsx`), but its visual styling is a
+  placeholder (generic palette, IBM Plex Sans) standing in until real
+  Taxfix branded components (`@taxfix/ds-components`) are available.
+- **`taxfix-step1.html`** — an older, superseded prototype. Kept for
+  history only; not a reference for the current build.
