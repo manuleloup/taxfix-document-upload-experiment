@@ -175,7 +175,9 @@
   align-items: flex-start;
   gap: var(--space-15);
   padding: var(--space-1);
-  margin: calc(-1 * var(--space-1));
+  /* Horizontal bleed only — pulling the vertical margin in too would eat
+     the 12px row gap and fuse adjacent resolved rows into one green slab. */
+  margin: 0 calc(-1 * var(--space-1));
   border-radius: var(--radius-md);
   transition: background 200ms;
 }

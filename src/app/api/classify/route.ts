@@ -1,8 +1,18 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { ITEM_META, UNRESOLVED_RESULT, type ClassifyResult } from "@/app/_lib/classify";
+import { MOCK_DOCUMENTS } from "./mock-documents";
 
 const ai = new Anthropic(); // reads ANTHROPIC_API_KEY from env
+
+const MODEL = "claude-opus-5";
+
+/** Set CLASSIFY_MOCK=1 in .env to click through the flow with no API key
+ *  and no spend. Which canned document you get is chosen by the `n` the
+ *  client sends (its current document count), so the sequence is
+ *  deterministic and a page reload starts again from the first — no
+ *  server-side counter to get out of step. */
+const MOCK = process.env.CLASSIFY_MOCK === "1";
 
 const ITEM_KEY_LIST = Object.entries(ITEM_META)
   .map(([key, { name, hint }]) => `- "${key}": ${name} — ${hint}`)
@@ -61,6 +71,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Unsupported file type: ${file.type}` }, { status: 400 });
   }
 
+  // Mock mode short-circuits here — after the file-type gate, so that still
+  // behaves normally, but before any spend. A small delay stands in for the
+  // real call's latency so the reading state is actually visible.
+  if (MOCK) {
+    const n = Number(new URL(request.url).searchParams.get("n") ?? 0);
+    const mock = MOCK_DOCUMENTS[(Number.isFinite(n) ? Math.max(0, n) : 0) % MOCK_DOCUMENTS.length];
+    await new Promise((r) => setTimeout(r, 700));
+    console.log(`[classify:mock] ${file.name} → ${mock.documentLabel || "unresolved"}`);
+    return NextResponse.json(mock);
+  }
+
   const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
 
   const docBlock = isPdf
@@ -78,18 +99,21 @@ export async function POST(request: Request) {
       };
 
   try {
+    // No beta header: base64 PDF input is generally available. Passing
+    // `betas` here would be sent as an unknown top-level body field (only
+    // `client.beta.messages.*` lifts it into the anthropic-beta header) and
+    // the API rejects the request with a 400.
     const msg = await ai.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 1024,
+      model: MODEL,
+      max_tokens: 4096,
       system: SYSTEM,
       messages: [{ role: "user", content: [docBlock, { type: "text", text: PROMPT }] }],
-      // Include PDF beta flag — harmless for non-PDF calls; needed on some model versions
-      betas: ["pdfs-2024-09-25"],
-    } as Anthropic.MessageCreateParamsNonStreaming);
+    });
 
-    const block = msg.content[0];
-    if (block.type !== "text") {
-      throw new Error("Unexpected response content type from model");
+    // Find the text block rather than assuming it's first.
+    const block = msg.content.find((b) => b.type === "text");
+    if (!block || block.type !== "text") {
+      throw new Error("No text block in model response");
     }
 
     const raw = block.text

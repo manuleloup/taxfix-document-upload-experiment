@@ -161,6 +161,9 @@ export default function UploadPage() {
   const [expenseLocked, setExpenseLocked] = useState(false);
 
   const docIdRef = useRef(0);
+  // Upload sequence number, sent to the classifier only so CLASSIFY_MOCK can
+  // return a deterministic script. Resets on reload; ignored in real mode.
+  const uploadSeqRef = useRef(0);
   const msgIdRef = useRef(0);
   const logRef = useRef<HTMLDivElement>(null);
   const manualInputRef = useRef<HTMLInputElement>(null);
@@ -247,7 +250,8 @@ export default function UploadPage() {
     try {
       const form = new FormData();
       form.append("file", file);
-      const res = await fetch("/api/classify", { method: "POST", body: form });
+      const seq = uploadSeqRef.current++;
+      const res = await fetch(`/api/classify?n=${seq}`, { method: "POST", body: form });
       if (!res.ok) {
         throw new Error(`Upload failed (${res.status})`);
       }
