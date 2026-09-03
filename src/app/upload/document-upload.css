@@ -1,63 +1,8 @@
-/* Ported from taxfix-no-onboarding.html, with tokens swapped for real
-   Taxfix values where confirmed (see other_resources/DESIGN-SYSTEM.md):
-   --confirm/--green-dark use the real brand green (#154618), radii use
-   the real scale (sm:4 / md:6 / lg:8 vs. the prototype's 8/12/16), and
-   heading/body fonts are the real ABC ROM / Circular Std pairing (via
-   stand-in Google Fonts — see layout.tsx). --blue/--amber are still the
-   prototype's own placeholder accents; no confirmed real equivalent yet. */
+/* Ported from taxfix-no-onboarding.html. Design tokens, the reset, and
+   header rules now live in globals.css (shared with the landing page) —
+   see that file's header comment for what's real vs. placeholder. */
 
-:root {
-  --font-heading: var(--font-heading-stand-in), Georgia, serif;
-  --font-body:    var(--font-body-stand-in), 'Helvetica Neue', sans-serif;
-  --bg:           #FFFFFF;
-  --surface:      #FFFFFF;
-  --surface-2:    #F5F0EB;
-  --border:       #E2D9D2;
-  --border-soft:  #EEE8E2;
-  --text:         #1C1917;
-  --muted:        #57534E;
-  --dim:          #78716C;
-  --green-dark:   #154618;
-  --blue:         #4C6FEF;
-  --blue-bg:      #E8EEFF;
-  --blue-br:      #C3D0FA;
-  --amber:        #B5760A;
-  --amber-bg:     #FFF3DE;
-  --amber-br:     #F0C87A;
-  --grey-bg:      #F1EFEC;
-  --confirm:      #154618;
-  --confirm-bg:   #E7F0EA;
-  --sh:    0 1px 4px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.04);
-  --sh-md: 0 6px 20px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.05);
-  --r-sm: 4px; --r: 6px; --r-lg: 8px;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg:#12100E; --surface:#181613; --surface-2:#211E1A; --border:#332E28; --border-soft:#26221D;
-    --text:#F2EDE7; --muted:#B4ABA1; --dim:#7C7469;
-    --green-dark:#7FBE9B;
-    --blue:#8AA0FF; --blue-bg:#1B2140; --blue-br:#2E386B;
-    --amber:#F2B450; --amber-bg:#2A1F0C; --amber-br:#4A3714;
-    --grey-bg:#221F1B;
-    --confirm:#7FBE9B; --confirm-bg:#16261D;
-    --sh:0 1px 4px rgba(0,0,0,.3),0 2px 8px rgba(0,0,0,.2); --sh-md:0 6px 20px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25);
-  }
-}
-.doc-upload-app * { box-sizing: border-box; margin:0; padding:0; }
-.doc-upload-app { font-family: var(--font-body); background: var(--surface-2); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
-.doc-upload-app button { font-family: var(--font-body); cursor: pointer; }
-
-.header {
-  background: var(--bg); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; padding: 14px 28px;
-}
-.logo { font-family: var(--font-heading); font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
-.logo-note { margin-left: 12px; font-size: 12px; color: var(--muted); background: var(--grey-bg); border: 1px solid var(--border); padding: 3px 9px; border-radius: 20px; }
-.reset-link {
-  margin-left: auto; background: none; border: none; font-size: 12px; font-weight: 600; color: var(--dim);
-  text-decoration: underline; text-underline-offset: 2px; padding: 0; flex-shrink: 0;
-}
-.reset-link:hover { color: var(--text); }
+.doc-upload-app { min-height: 100vh; }
 
 .page {
   max-width: 1240px; margin: 28px auto 60px; padding: 0 28px;
@@ -171,6 +116,8 @@
   font-weight: 500; padding: 2px 0;
 }
 .pic-entry.manual { color: var(--muted); }
+/* Medium-confidence classification — committed, but worth a glance. */
+.pic-entry.needs-check { color: var(--amber); }
 .pic-entry svg.pic-entry-icon { flex-shrink: 0; }
 .pic-entry-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pic-entry-edit {
