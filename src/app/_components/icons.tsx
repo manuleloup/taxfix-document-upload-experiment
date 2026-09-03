@@ -6,8 +6,7 @@
 // state drives it — brand green when resolved, muted when pending, disabled
 // when removed). Each keeps its own exported viewBox; `size` scales it.
 //
-// The ones marked "approximated" have no export yet and are still
-// hand-drawn — see the note at the bottom for what's outstanding.
+// Only the chat send glyph is still hand-drawn, pending its own design.
 
 type IconProps = { size?: number };
 
@@ -92,50 +91,64 @@ export function ChevronDownIcon({ size = 13 }: IconProps) {
   );
 }
 
-/* ── approximated: no export yet (see note below) ───────────────────────── */
-
-export function CheckIcon({ size = 13 }: IconProps) {
+/* ── real: check.svg ────────────────────────────────────────────────────── */
+export function CheckIcon({ size = 16 }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="20 6 9 17 4 12" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M21.1406 5.74219L20.5938 6.48438L10.2812 20.8594L9.61719 21.7578L8.83594 20.9766L3.52344 15.6641L2.85938 15L4.1875 13.6719L4.85156 14.3359L9.38281 18.8672L19.0703 5.39062L19.6172 4.64844L21.1406 5.74219Z"
+        fill="currentColor"
+      />
     </svg>
   );
 }
 
-export function XIcon({ size = 11 }: IconProps) {
+/* ── real: xmark-cross-close.svg ────────────────────────────────────────── */
+export function XIcon({ size = 16 }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M4.25 5.28125L3.71875 4.75L4.75 3.6875L5.28125 4.21875L10 8.9375L14.7188 4.21875L15.25 3.6875L16.3125 4.75L15.7812 5.28125L11.0625 10L15.7812 14.7188L16.3125 15.25L15.25 16.3125L14.7188 15.7812L10 11.0625L5.28125 15.7812L4.75 16.3125L3.71875 15.25L4.25 14.7188L8.96875 10L4.25 5.28125Z"
+        fill="currentColor"
+      />
     </svg>
   );
 }
 
-export function OverflowIcon({ size = 14 }: IconProps) {
+/* ── real: ellipsis-more.svg ─────────────────────────────────────────────
+   Kept available, but the row's more-options control uses ChevronDownIcon
+   instead — it reads more clearly as "opens a menu". */
+export function EllipsisIcon({ size = 20 }: IconProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <circle cx="5" cy="12" r="1.8" />
-      <circle cx="12" cy="12" r="1.8" />
-      <circle cx="19" cy="12" r="1.8" />
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3.25 14.375V10.625H7V14.375H3.25ZM10.125 14.375V10.625H13.875V14.375H10.125ZM17 10.625H20.75V14.375H17V10.625Z"
+        fill="currentColor"
+      />
     </svg>
   );
 }
 
+/* ── real: triangle-exclamation-warning-alert.svg ───────────────────────── */
+export function LowConfidenceIcon({ size = 16 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M1.5 17L2.3125 15.5L9.15625 3.0625L10 1.5L10.8438 3.0625L17.6875 15.5L18.5 17H1.5ZM10 4.625L4.03125 15.5H15.9688L10 4.625ZM9.25 8.25V8H10.75V12H9.25V8.25ZM10.75 14.75H9.25V13.25H10.75V14.75Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+/* ── approximated: awaiting its own design ──────────────────────────────── */
+
+// Chat send — a dedicated send button is being designed; swap this then.
 export function SendIcon({ size = 15 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <line x1="22" y1="2" x2="11" y2="13" />
       <polygon points="22 2 15 22 11 13 2 9 22 2" />
-    </svg>
-  );
-}
-
-export function LowConfidenceIcon({ size = 14 }: IconProps) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 9v4" />
-      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-      <circle cx="12" cy="17" r="0.6" fill="currentColor" />
     </svg>
   );
 }
@@ -147,9 +160,4 @@ export function statusIcon(status: "pending" | "confirmed" | "dismissed") {
   return <CircleCheckIcon />;
 }
 
-// STILL HAND-DRAWN — exports needed to finish the set:
-//   check           (tick in "Matched to …" and the save-value button)
-//   xmark           ("Remove section" in the row menu)
-//   ellipsis        (the row's more-options button)
-//   paper-plane     (chat send)
-//   triangle-exclamation (the "worth a check" flag on medium-confidence rows)
+// STILL HAND-DRAWN: only the chat send glyph, pending its design.

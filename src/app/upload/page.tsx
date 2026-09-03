@@ -7,7 +7,7 @@ import {
   CircleCheckIcon,
   DocIcon,
   LowConfidenceIcon,
-  OverflowIcon,
+  ChevronDownIcon,
   PencilIcon,
   PlusIcon,
   SendIcon,
@@ -569,7 +569,7 @@ export default function UploadPage() {
                 setOpenMenu(open ? null : key);
               }}
             >
-              <OverflowIcon />
+              <ChevronDownIcon />
             </button>
             <div className={`pic-overflow-menu ${open ? "open" : ""}`}>
               <button
