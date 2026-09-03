@@ -1,24 +1,11 @@
 import type { Metadata } from "next";
-import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import "./typography.css";
+import "./ds.css";
 import Header from "./_components/header";
 
-// Stand-ins for Taxfix's real, licensed fonts (ABC ROM / Circular Std
-// Medium — see other_resources/DESIGN-SYSTEM.md) until @taxfix/ds-fonts
-// is installable. DM Serif Display echoes ABC ROM's display-serif
-// character for headings; Plus Jakarta Sans stands in for Circular
-// Std's geometric-sans body text.
-const headingFont = DM_Serif_Display({
-  weight: "400",
-  subsets: ["latin"],
-  variable: "--font-heading-stand-in",
-});
-
-const bodyFont = Plus_Jakarta_Sans({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
-  variable: "--font-body-stand-in",
-});
+// Type is the real licensed ABC ROM (bundled in docs/brand/, served from
+// public/fonts/) — declared via @font-face in globals.css. No stand-ins.
 
 export const metadata: Metadata = {
   title: "Taxfix — Document Upload Onboarding",
@@ -28,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${headingFont.variable} ${bodyFont.variable}`}>
+    <html lang="en">
       <body>
         <Header />
         {children}

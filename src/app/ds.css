@@ -1,0 +1,339 @@
+/* CSS approximations of Taxfix DS components.
+   Specs extracted verbatim from the design-system Storybook bundles; class
+   and variant names mirror the real components so the mapping is greppable.
+   Not the real package — @taxfix/ds-components is react-native-web and not
+   viable here (see other_resources/DESIGN-SYSTEM.md).
+
+   Note on units: DS bare numbers are space units (x8). borderWidth is NOT
+   space-scaled — it's raw px (hence Button 2px, Checkbox 1.5px). */
+
+/* ── Button ───────────────────────────────────────────────────────────────
+   Hover/pressed composite OVER the resting fill via an ::after overlay
+   (the real component stacks translucent Boxes), rather than swapping the
+   background colour. */
+.tf-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border: none;
+  user-select: none;
+  cursor: pointer;
+  text-align: center;
+}
+.tf-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--common-hover);
+  opacity: 0;
+  transition: opacity 150ms linear;
+  pointer-events: none;
+}
+.tf-btn:hover:not(:disabled)::after {
+  opacity: 1;
+}
+.tf-btn:active:not(:disabled)::after {
+  background: var(--common-pressed);
+  opacity: 1;
+}
+
+/* Sizes */
+.tf-btn--large {
+  height: 48px;
+  padding: 0 var(--space-25);
+  border-radius: var(--radius-button-large);
+}
+.tf-btn--medium {
+  height: 36px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-button-medium);
+}
+
+/* Variants */
+.tf-btn--primary {
+  background: var(--primary-action);
+  color: var(--primary-contrast);
+}
+.tf-btn--secondary {
+  background: var(--primary-secondary-action);
+  color: var(--primary-main);
+}
+.tf-btn--tertiary {
+  background: transparent;
+  color: var(--primary-main);
+}
+.tf-btn--tertiary-outlined {
+  background: transparent;
+  color: var(--primary-main);
+  border: 2px solid var(--primary-secondary-action);
+}
+
+.tf-btn:disabled {
+  cursor: not-allowed;
+  color: var(--text-disabled);
+}
+.tf-btn--primary:disabled {
+  background: var(--common-disabled1);
+}
+.tf-btn--secondary:disabled {
+  background: var(--common-disabled2);
+}
+.tf-btn--tertiary-outlined:disabled {
+  border-color: var(--common-disabled2);
+}
+
+/* ── IconButton — 24/36/48 square, always circular ───────────────────── */
+.tf-iconbtn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--primary-main);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.tf-iconbtn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--common-hover);
+  opacity: 0;
+  transition: opacity 150ms linear;
+  pointer-events: none;
+}
+.tf-iconbtn:hover:not(:disabled)::after {
+  opacity: 1;
+}
+.tf-iconbtn:active:not(:disabled)::after {
+  background: var(--common-pressed);
+  opacity: 1;
+}
+.tf-iconbtn--small {
+  width: 24px;
+  height: 24px;
+  padding: var(--space-075);
+}
+.tf-iconbtn--medium {
+  width: 36px;
+  height: 36px;
+  padding: var(--space-1);
+}
+.tf-iconbtn--large {
+  width: 48px;
+  height: 48px;
+  padding: var(--space-15);
+}
+.tf-iconbtn--neutral {
+  color: var(--muted);
+}
+.tf-iconbtn:disabled {
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+/* ── Card — radius lg(16), no default padding ────────────────────────── */
+.tf-card {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin: 0;
+}
+.tf-card--filled {
+  background: var(--grey-surface2);
+}
+.tf-card--outlined {
+  background: var(--grey-surface3);
+  border: 1px solid var(--grey-divider);
+}
+.tf-card--elevated {
+  background: var(--grey-surface3);
+  box-shadow: var(--shadow-1);
+}
+.tf-card--elevated:hover {
+  box-shadow: var(--shadow-2);
+}
+/* Selected: 1px primary.light, negative margin so layout doesn't shift. */
+.tf-card.is-selected {
+  border: 1px solid var(--primary-light);
+  margin: -1px;
+}
+.tf-card:focus-visible {
+  outline: 2px solid #668cff;
+}
+
+/* ── TextField — 46px input, 76px wrapper, floating label ────────────── */
+.tf-field {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-height: 76px;
+  padding-top: var(--space-1);
+}
+.tf-field input {
+  width: 100%;
+  height: 46px;
+  padding: 13px var(--space-1);
+  border: 1px solid var(--grey-graphics2);
+  border-radius: var(--radius-sm);
+  background: var(--grey-background);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 20px;
+}
+.tf-field input:hover,
+.tf-field input:focus {
+  border-color: var(--grey-graphics1);
+  outline: none;
+}
+.tf-field input:disabled {
+  border-color: var(--common-disabled1);
+  color: var(--text-disabled);
+  opacity: 1;
+}
+.tf-field.is-invalid input {
+  border-color: var(--error-main);
+}
+/* Floating label: body -> caption, translateY 15px -> -8px, on an opaque chip */
+.tf-field-label {
+  position: absolute;
+  left: var(--space-15);
+  top: var(--space-1);
+  pointer-events: none;
+  background: var(--grey-background);
+  padding: 0 var(--space-05);
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 20px;
+  transform: translateY(15px);
+  transition: transform 100ms linear, font-size 100ms linear;
+  z-index: 1;
+}
+.tf-field input:focus + .tf-field-label,
+.tf-field input:not(:placeholder-shown) + .tf-field-label {
+  transform: translateY(-8px);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-primary);
+}
+.tf-field-helper {
+  margin-top: var(--space-1);
+  color: var(--text-secondary);
+}
+.tf-field.is-invalid .tf-field-helper {
+  color: var(--error-main);
+}
+
+/* ── Checkbox — 20x20, 1.5px border, radius sm(4), filled when checked ── */
+.tf-checkbox {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--grey-graphics2);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  display: inline-block;
+}
+.tf-checkbox:checked {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+}
+/* Checked glyph: a tick on the filled square. */
+.tf-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23fff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='15 6.5 8.5 14 5 10.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.tf-checkbox:disabled {
+  border-color: var(--common-disabled1);
+  cursor: not-allowed;
+}
+.tf-checkbox:disabled:checked {
+  background: var(--common-disabled1);
+}
+
+/* ── Chip — pill, 32/24px, bg <color>.secondaryAction ────────────────── */
+.tf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-05);
+  border: none;
+  border-radius: var(--radius-full);
+  padding-left: var(--space-05);
+  padding-right: var(--space-1);
+  background: var(--primary-secondary-action);
+  color: var(--primary-main);
+  cursor: pointer;
+  transition: background 150ms linear;
+}
+.tf-chip--medium {
+  height: 32px;
+  padding-left: var(--space-15);
+  padding-right: var(--space-15);
+}
+.tf-chip--small {
+  height: 24px;
+  padding-left: var(--space-1);
+  padding-right: var(--space-1);
+}
+/* The real Chip has no selected state — this is the DS's selectable-row
+   treatment: resting grey.surface2, selected common.active. */
+.tf-chip--selectable {
+  background: var(--grey-surface2);
+  color: var(--text-primary);
+}
+.tf-chip--selectable:hover:not(:disabled) {
+  background: var(--grey-surface1);
+}
+.tf-chip--selectable.is-selected {
+  background: var(--common-active);
+  color: var(--primary-main);
+}
+.tf-chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Divider — 1px grey.divider ──────────────────────────────────────── */
+.tf-divider {
+  border: none;
+  height: 1px;
+  width: 100%;
+  background: var(--grey-divider);
+}
+
+/* ── CircularProgress — medium 20px, stroke 3, track graphics10 ───────── */
+.tf-spinner {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 3px solid var(--grey-graphics10);
+  border-top-color: var(--primary-light);
+  border-radius: var(--radius-full);
+  animation: tf-spin 2000ms linear infinite;
+}
+@keyframes tf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tf-spinner {
+    animation-duration: 6000ms;
+  }
+}

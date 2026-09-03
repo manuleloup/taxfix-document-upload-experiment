@@ -1,0 +1,198 @@
+/* Taxfix typography variants — real values from theme `taxfix-global`.
+   One class per DS variant. Sizes are px, responsive at the real
+   breakpoints (sm 640, lg 1200). Heading letter-spacing is -0.01em.
+   Each variant carries the DS's own default colour.
+
+   Deviation from the DS table, per docs/brand/taxfix-brand-identity/SKILL.md:
+   - `caption` uses ABC ROM Regular, not Circular (brand assigns captions to
+     ABC ROM; no Circular file is bundled).
+   - `.t-h1-hero` adds Heavy 900 for page-level headlines ("Headlines: ABC ROM
+     Heavy"), which the DS's Bold-700 h1 doesn't cover. */
+
+.t-h1,
+.t-h1-hero,
+.t-h2,
+.t-h3,
+.t-h4,
+.t-h5,
+.t-h6 {
+  color: var(--heading);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+.t-h1-hero,
+.t-h1 {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 700;
+}
+.t-h1-hero {
+  font-weight: 900;
+}
+@media (min-width: 640px) {
+  .t-h1-hero,
+  .t-h1 {
+    font-size: 40px;
+    line-height: 52px;
+  }
+}
+@media (min-width: 1200px) {
+  .t-h1-hero,
+  .t-h1 {
+    font-size: 48px;
+    line-height: 60px;
+  }
+}
+
+.t-h2 {
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 700;
+}
+@media (min-width: 640px) {
+  .t-h2 {
+    font-size: 32px;
+    line-height: 40px;
+  }
+}
+@media (min-width: 1200px) {
+  .t-h2 {
+    font-size: 40px;
+    line-height: 52px;
+  }
+}
+
+.t-h3 {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 700;
+}
+@media (min-width: 640px) {
+  .t-h3 {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}
+@media (min-width: 1200px) {
+  .t-h3 {
+    font-size: 28px;
+    line-height: 36px;
+  }
+}
+
+.t-h4 {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+}
+@media (min-width: 640px) {
+  .t-h4 {
+    font-size: 20px;
+    line-height: 28px;
+  }
+}
+
+.t-h5 {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+.t-h6 {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.t-bodyLarge {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+@media (min-width: 640px) {
+  .t-bodyLarge {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}
+@media (min-width: 1200px) {
+  .t-bodyLarge {
+    font-size: 28px;
+    line-height: 36px;
+  }
+}
+
+.t-body {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.t-bodyLong {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.t-bodySmall {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.t-caption {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.t-overline {
+  font-size: 10px;
+  line-height: 16px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+@media (min-width: 1200px) {
+  .t-overline {
+    font-size: 12px;
+  }
+}
+
+.t-link,
+.t-button {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--primary-main);
+}
+.t-linkSmall,
+.t-buttonSmall {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--primary-main);
+}
+.t-buttonCaption {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--primary-main);
+}
+
+/* Weight utility — brand uses ABC ROM Heavy for headlines; pair with any
+   heading variant when the h1-hero metrics are too large for the container. */
+.t-heavy {
+  font-weight: 900;
+}
+
+/* Muted / de-emphasised variants — colour only, metrics unchanged. */
+.t-muted {
+  color: var(--muted);
+}
+.t-dim {
+  color: var(--dim);
+}

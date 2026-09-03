@@ -485,7 +485,7 @@ export default function UploadPage() {
         <span className="pic-entry-icon" style={{ display: "flex" }}>
           {tier === "medium" ? <LowConfidenceIcon /> : <DocIcon />}
         </span>
-        <span className="pic-entry-label">
+        <span className="t-caption pic-entry-label">
           {entry.formatted} — {entry.source}
         </span>
       </div>
@@ -525,7 +525,7 @@ export default function UploadPage() {
           <button className="pic-entry-edit" title="Edit this value" onClick={() => startEditManual(key)}>
             <PencilIcon />
           </button>
-          <span className="pic-entry-label">{it.manualEntry.formatted} — Entered by you</span>
+          <span className="t-caption pic-entry-label">{it.manualEntry.formatted} — Entered by you</span>
           <button className="pic-entry-del" title="Delete this value" onClick={() => deleteManualEntry(key)}>
             <TrashIcon />
           </button>
@@ -542,7 +542,7 @@ export default function UploadPage() {
     let action: React.ReactNode;
     if (status === "dismissed") {
       action = (
-        <button className="pic-toggle reactivate" title="Add this back" onClick={() => reactivate(key)}>
+        <button className="tf-iconbtn tf-iconbtn--small pic-toggle" title="Add this back" onClick={() => reactivate(key)}>
           <PlusIcon />
         </button>
       );
@@ -550,10 +550,10 @@ export default function UploadPage() {
       const open = openMenu === key;
       action = (
         <div className="pic-action-row">
-          {status === "confirmed" && <div className="pic-val">{itemTotal(it)}</div>}
+          {status === "confirmed" && <div className="t-h5 pic-val">{itemTotal(it)}</div>}
           <div className="pic-overflow-wrap">
             <button
-              className={`pic-overflow-btn ${open ? "open" : ""}`}
+              className={`tf-iconbtn tf-iconbtn--small pic-overflow-btn ${open ? "open" : ""}`}
               title="More options"
               onClick={(e) => {
                 e.stopPropagation();
@@ -564,7 +564,7 @@ export default function UploadPage() {
             </button>
             <div className={`pic-overflow-menu ${open ? "open" : ""}`}>
               <button
-                className="pic-overflow-item"
+                className="t-bodySmall pic-overflow-item"
                 onClick={(e) => {
                   e.stopPropagation();
                   startEditManual(key);
@@ -574,7 +574,7 @@ export default function UploadPage() {
                 <span>Add a value manually</span>
               </button>
               <button
-                className="pic-overflow-item"
+                className="t-bodySmall pic-overflow-item"
                 onClick={(e) => {
                   e.stopPropagation();
                   dismiss(key);
@@ -602,12 +602,12 @@ export default function UploadPage() {
           <div className="pic-entries">
             {shown}
             {rest > 0 && (
-              <button className="pic-more-toggle" onClick={() => toggleExpand(key)}>
+              <button className="t-caption pic-more-toggle" onClick={() => toggleExpand(key)}>
                 Show {rest} more
               </button>
             )}
             {expanded && allLines.length > 3 && (
-              <button className="pic-more-toggle" onClick={() => toggleExpand(key)}>
+              <button className="t-caption pic-more-toggle" onClick={() => toggleExpand(key)}>
                 Show less
               </button>
             )}
@@ -620,8 +620,8 @@ export default function UploadPage() {
       <div className={`pic-row ${status}`} key={key}>
         <div className="pic-icon">{statusIcon(status)}</div>
         <div>
-          <div className="pic-name">{it.name}</div>
-          {status !== "dismissed" && <div className="pic-hint">{it.hint}</div>}
+          <div className="t-h6 pic-name">{it.name}</div>
+          {status !== "dismissed" && <div className="t-caption pic-hint">{it.hint}</div>}
           {entriesHtml}
         </div>
         <div className="pic-action">{action}</div>
@@ -637,39 +637,39 @@ export default function UploadPage() {
       <div className="page">
         <main>
           <div className="main-intro">
-            <h1>Upload your documents to see your tax position</h1>
+            <h1 className="t-h1-hero">Upload your documents. See your tax position.</h1>
             <p>
               Drop in whatever you have. We&rsquo;ll work out what it tells us — and ask you the odd quick question
               for anything a document can&rsquo;t answer on its own.
             </p>
           </div>
 
-          <div className="docs-card">
+          <div className="tf-card tf-card--outlined docs-card">
             <div className="docs-head">
-              <span className="docs-eyebrow">Your documents</span>
-              <span className="docs-count">{documents.length} added</span>
+              <span className="t-overline">Your documents</span>
+              <span className="t-caption t-muted docs-count">{documents.length} added</span>
             </div>
             <div className="docs-list">
               {shownDocs.map((d) => (
                 <div className="doc-row" key={d.id}>
                   <DocIcon />
-                  <span className="doc-row-name">{d.label}</span>
-                  <span className="doc-row-org">{d.org}</span>
+                  <span className="t-bodySmall doc-row-name">{d.label}</span>
+                  <span className="t-caption doc-row-org">{d.org}</span>
                   <span className="doc-row-check">
                     <CheckIcon />
                   </span>
-                  <button className="doc-row-del" title="Remove this document" onClick={() => removeDocument(d.id)}>
+                  <button className="tf-iconbtn tf-iconbtn--small tf-iconbtn--neutral doc-row-del" title="Remove this document" onClick={() => removeDocument(d.id)}>
                     <TrashIcon />
                   </button>
                 </div>
               ))}
               {docsRest > 0 && (
-                <button className="pic-more-toggle" onClick={() => setExpandedDocs(true)}>
+                <button className="t-caption pic-more-toggle" onClick={() => setExpandedDocs(true)}>
                   Show {docsRest} more
                 </button>
               )}
               {expandedDocs && documents.length > 3 && (
-                <button className="pic-more-toggle" onClick={() => setExpandedDocs(false)}>
+                <button className="t-caption pic-more-toggle" onClick={() => setExpandedDocs(false)}>
                   Show less
                 </button>
               )}
@@ -701,7 +701,7 @@ export default function UploadPage() {
               />
               {dropzoneLoading ? (
                 <div className="dz-loading">
-                  <div className="spinner" />
+                  <div className="tf-spinner" />
                   <span>
                     Reading {uploadProgress && uploadProgress.total > 1 ? `${uploadProgress.current} of ${uploadProgress.total}` : "document"}
                     …
@@ -709,50 +709,50 @@ export default function UploadPage() {
                 </div>
               ) : (
                 <div className="dz-idle">
-                  <div className="dz-title">Drag a document here, or click to add one</div>
-                  <div className="dz-sub">PDF, JPG or PNG — add as many as you have, any order</div>
+                  <div className="t-bodySmall dz-title">Drag a document here, or click to add one</div>
+                  <div className="t-caption dz-sub">PDF, JPG or PNG — add as many as you have, any order</div>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="picture-card">
+          <div className="tf-card tf-card--outlined picture-card">
             <div className="picture-head">
-              <h2>What we can see so far</h2>
+              <h2 className="t-h3">What we can see so far</h2>
               <p>Every figure below comes from a document you gave us, or a question you answered.</p>
             </div>
             <div>
               {GROUPS.map((group) => (
                 <div className="pic-group" key={group.label}>
-                  <div className="pic-group-label">{group.label}</div>
+                  <div className="t-overline pic-group-label">{group.label}</div>
                   {group.keys.length ? (
                     group.keys.map((key) => renderRow(key))
                   ) : (
-                    <div className="pic-group-empty">{group.empty}</div>
+                    <div className="t-caption pic-group-empty">{group.empty}</div>
                   )}
                 </div>
               ))}
             </div>
             <div className="picture-footer">
-              <span className="pf-note">
+              <span className="t-caption pf-note">
                 {resolvedCount} of {allKeys.length} sorted
               </span>
-              <button className="btn-primary" onClick={attemptFinish}>
+              <button className="tf-btn tf-btn--primary tf-btn--large t-button" onClick={attemptFinish}>
                 Submit for review
               </button>
             </div>
             {finishConfirmOpen && (
               <div className="finish-confirm">
-                <div className="finish-confirm-title">A few things are still unresolved:</div>
-                <div className="finish-confirm-list">
+                <div className="t-bodySmall finish-confirm-title">A few things are still unresolved:</div>
+                <div className="t-caption finish-confirm-list">
                   {unresolvedNames.map((n) => (
                     <div key={n}>• {n}</div>
                   ))}
                 </div>
                 <div className="finish-confirm-row">
-                  <button onClick={() => setFinishConfirmOpen(false)}>Go back</button>
+                  <button className="tf-btn tf-btn--secondary tf-btn--medium t-buttonSmall" onClick={() => setFinishConfirmOpen(false)}>Go back</button>
                   <button
-                    className="go"
+                    className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall"
                     onClick={() => {
                       setFinishConfirmOpen(false);
                       addMsg({
@@ -769,24 +769,24 @@ export default function UploadPage() {
           </div>
         </main>
 
-        <aside className="convo-card">
-          <div className="convo-title">Conversation</div>
+        <aside className="tf-card tf-card--outlined convo-card">
+          <div className="t-overline convo-title">Conversation</div>
           <div className="convo-log" ref={logRef}>
             {messages.map((m) => (
               <div className={`msg ${m.from}`} key={m.id}>
                 {m.attach && (
                   <>
-                    <div className="msg-attach">
+                    <div className="t-caption msg-attach">
                       <DocIcon />
                       <span>{m.attach}</span>
                     </div>
                     <br />
                   </>
                 )}
-                <div className="msg-bubble">
+                <div className="t-bodySmall msg-bubble">
                   {m.text}
                   {m.result && (
-                    <div className="msg-result">
+                    <div className="t-caption msg-result">
                       <CheckIcon size={12} />
                       <span>{m.result}</span>
                     </div>
@@ -795,7 +795,7 @@ export default function UploadPage() {
                 {m.chips && (
                   <div className="msg-chips">
                     {m.chips.map((c, i) => (
-                      <button key={i} className="msg-chip" disabled={m.chipsDisabled} onClick={() => answerChip(m.id, c)}>
+                      <button key={i} className="tf-chip tf-chip--medium tf-chip--selectable t-caption" disabled={m.chipsDisabled} onClick={() => answerChip(m.id, c)}>
                         {c.label}
                       </button>
                     ))}
@@ -807,20 +807,20 @@ export default function UploadPage() {
                       {EXPENSE_OPTIONS.map((o) => (
                         <button
                           key={o}
-                          className={`msg-chip ${expenseSelected.has(o) ? "selected" : ""}`}
+                          className={`tf-chip tf-chip--medium tf-chip--selectable t-caption ${expenseSelected.has(o) ? "is-selected" : ""}`}
                           disabled={expenseLocked}
                           onClick={() => toggleExpenseChip(o)}
                         >
                           {o}
                         </button>
                       ))}
-                      <button className="msg-chip msg-chip-none" disabled={expenseLocked} onClick={() => finishExpenseChips(true)}>
+                      <button className="tf-chip tf-chip--medium tf-chip--selectable t-caption" disabled={expenseLocked} onClick={() => finishExpenseChips(true)}>
                         None of these
                       </button>
                     </div>
                     {expenseSelected.size > 0 && !expenseLocked && (
                       <div className="msg-chips">
-                        <button className="msg-chip msg-chip-confirm" onClick={() => finishExpenseChips(false)}>
+                        <button className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall" onClick={() => finishExpenseChips(false)}>
                           Add these
                         </button>
                       </div>
@@ -840,7 +840,7 @@ export default function UploadPage() {
                 if (e.key === "Enter") sendComposeMessage();
               }}
             />
-            <button aria-label="Send" onClick={sendComposeMessage}>
+            <button aria-label="Send" className="tf-iconbtn tf-iconbtn--medium" onClick={sendComposeMessage}>
               <SendIcon />
             </button>
           </div>

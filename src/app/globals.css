@@ -1,63 +1,139 @@
-/* Site-wide tokens, reset, and header — shared by every route (landing,
-   upload). Tokens swapped for real Taxfix values where confirmed (see
-   other_resources/DESIGN-SYSTEM.md): --confirm/--green-dark use the real
-   brand green (#154618), radii use the real scale (sm:4 / md:6 / lg:8 vs.
-   the original wireframe's 8/12/16), heading/body fonts are the real ABC
-   ROM / Circular Std pairing (via stand-in Google Fonts — see layout.tsx).
-   --blue/--amber are still placeholder accents; no confirmed real
-   equivalent yet. */
+/* Taxfix design tokens — real values.
+   Palette/foundations: theme `taxfix-global` (extracted from the design-system
+   Storybook; cross-checked against other_resources/DESIGN-SYSTEM.md).
+   Fonts: the real licensed ABC ROM files, bundled in docs/brand/.
+   Brand rules applied from docs/brand/taxfix-brand-identity/SKILL.md. */
+
+/* ── Fonts (real, no stand-ins) ─────────────────────────────────────────── */
+@font-face {
+  font-family: "ABC ROM";
+  src: url("/fonts/ABCROM-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ABC ROM";
+  src: url("/fonts/ABCROM-Medium.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ABC ROM";
+  src: url("/fonts/ABCROM-Bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ABC ROM";
+  src: url("/fonts/ABCROM-Heavy.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
-  --font-heading: var(--font-heading-stand-in), Georgia, serif;
-  --font-body: var(--font-body-stand-in), "Helvetica Neue", sans-serif;
-  --bg: #ffffff;
-  --surface: #ffffff;
-  --surface-2: #f5f0eb;
-  --border: #e2d9d2;
-  --border-soft: #eee8e2;
-  --text: #1c1917;
-  --muted: #57534e;
-  --dim: #78716c;
-  --green-dark: #154618;
-  --blue: #4c6fef;
-  --blue-bg: #e8eeff;
-  --blue-br: #c3d0fa;
-  --amber: #b5760a;
-  --amber-bg: #fff3de;
-  --amber-br: #f0c87a;
-  --grey-bg: #f1efec;
-  --confirm: #154618;
-  --confirm-bg: #e7f0ea;
-  --sh: 0 1px 4px rgba(0, 0, 0, 0.07), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --sh-md: 0 6px 20px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
-  --r-sm: 4px;
-  --r: 6px;
-  --r-lg: 8px;
+  /* ── Primitives: colours ──────────────────────────────────────────────
+     primary and success are the same green — the brand has no separate
+     success hue. There is no `warning` and no `info` group. */
+  --primary-background-light: #ecffc7;
+  --primary-background: #cef5a4;
+  --primary-main: #154618;
+  --primary-light: #36893b;
+  --primary-action: #a0d766;
+  --primary-secondary-action: rgba(169, 212, 129, 0.4);
+  --primary-hover: rgba(169, 212, 129, 0.2);
+  --primary-contrast: #154618;
+
+  --error-background-light: #feebe7;
+  --error-main: #912003;
+  --error-light: #fb5e36;
+  --error-action: #fbb3a2;
+
+  /* The one permitted accent for this layout (brand: max one per layout).
+     Used for the medium-confidence "worth a check" state. */
+  --accent3-background-light: #ffefd3;
+  --accent3-main: #66541a;
+  --accent3-light: #f8a21a;
+
+  --text-title: #0c0b0a;
+  --text-primary: rgba(12, 11, 10, 0.8);
+  --text-secondary: rgba(12, 11, 10, 0.65);
+  --text-disabled: rgba(12, 11, 10, 0.56);
+  --text-contrast: #ffffff;
+
+  --grey-background: #ffffff;
+  --grey-surface1: #f2efed;
+  --grey-surface2: #f9f7f5;
+  --grey-surface3: #ffffff;
+  --grey-divider: rgba(12, 11, 10, 0.12);
+  --grey-graphics1: #0c0b0a;
+  --grey-graphics2: #96928e;
+  --grey-graphics3: #e4e1dd;
+  --grey-graphics10: rgba(12, 11, 10, 0.1);
+
+  --common-active: rgba(160, 215, 102, 0.2);
+  --common-hover: rgba(12, 11, 10, 0.1);
+  --common-pressed: rgba(12, 11, 10, 0.2);
+  --common-disabled1: #e4e1dd;
+  --common-disabled2: #f2efed;
+
+  /* ── Primitives: spacing — 1 unit = 8px, 0.25 steps ─────────────────── */
+  --space-025: 2px;
+  --space-05: 4px;
+  --space-075: 6px;
+  --space-1: 8px;
+  --space-125: 10px;
+  --space-15: 12px;
+  --space-175: 14px;
+  --space-2: 16px;
+  --space-25: 20px;
+  --space-3: 24px;
+  --space-35: 28px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+  --space-8: 64px;
+
+  /* ── Primitives: radii (xs:2 exists but is deprecated) ──────────────── */
+  --radius-none: 0;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-xxl: 48px;
+  --radius-full: 999px;
+  --radius-button-medium: 8px;
+  --radius-button-large: 10px;
+
+  /* ── Primitives: elevation ──────────────────────────────────────────── */
+  --shadow-1: 0px 0px 2px rgba(0, 0, 0, 0.08), 1px 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-2: 0px 0px 2px rgba(0, 0, 0, 0.08), 2px 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-3: 0px 0px 2px rgba(0, 0, 0, 0.08), 2px 4px 24px rgba(0, 0, 0, 0.08);
+  --shadow-4: 0px 0px 2px rgba(0, 0, 0, 0.08), 4px 8px 40px rgba(0, 0, 0, 0.08);
+
+  /* ── Primitives: type ───────────────────────────────────────────────── */
+  --font-body: "ABC ROM", "Helvetica Neue", Arial, sans-serif;
+
+  /* ── Semantic aliases (components reference these) ──────────────────── */
+  --page-bg: var(--primary-background-light);
+  --surface: var(--grey-surface3);
+  --surface-sunken: var(--grey-surface2);
+  --border: var(--grey-divider);
+  --border-strong: var(--grey-graphics2);
+  --text: var(--text-primary);
+  --heading: var(--text-title);
+  --muted: var(--text-secondary);
+  --dim: var(--text-disabled);
+  --confirm: var(--primary-main);
+  --confirm-bg: var(--primary-background-light);
+  --attention: var(--accent3-main);
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #12100e;
-    --surface: #181613;
-    --surface-2: #211e1a;
-    --border: #332e28;
-    --border-soft: #26221d;
-    --text: #f2ede7;
-    --muted: #b4aba1;
-    --dim: #7c7469;
-    --green-dark: #7fbe9b;
-    --blue: #8aa0ff;
-    --blue-bg: #1b2140;
-    --blue-br: #2e386b;
-    --amber: #f2b450;
-    --amber-bg: #2a1f0c;
-    --amber-br: #4a3714;
-    --grey-bg: #221f1b;
-    --confirm: #7fbe9b;
-    --confirm-bg: #16261d;
-    --sh: 0 1px 4px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
-    --sh-md: 0 6px 20px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
-  }
-}
+
+/* Breakpoints (reference — real DS scale):
+   xs 0 · sm 640 · md 920 · lg 1200 · xl 1440 · xxl 1768 */
 
 * {
   box-sizing: border-box;
@@ -66,6 +142,11 @@
 }
 html {
   height: 100%;
+  /* Light-only for now: the previous dark mode used invented values that
+     matched nothing in the real system, so it was removed rather than left
+     wrong. Reinstate once `taxfix-global-dark` tokens are pulled. Declared
+     explicitly so UA form controls don't render dark on a light page. */
+  color-scheme: light;
 }
 html,
 body {
@@ -75,7 +156,7 @@ body {
 body {
   min-height: 100%;
   font-family: var(--font-body);
-  background: var(--surface-2);
+  background: var(--page-bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -91,30 +172,29 @@ button {
 
 /* ── Header (shared chrome, rendered once in layout.tsx) ──────────────── */
 .header {
-  background: var(--bg);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  padding: 14px 28px;
+  padding: var(--space-15) var(--space-35);
 }
-.logo {
-  font-family: var(--font-heading);
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: -0.3px;
+/* Brand rule: the logotype is never reproduced in type — this is the real
+   wordmark asset. Min height 20px, 1x clear space on all sides. */
+.logo-mark {
+  height: 24px;
+  width: auto;
+  display: block;
 }
 .reset-link {
   margin-left: auto;
   background: none;
   border: none;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--dim);
+  color: var(--muted);
   text-decoration: underline;
   text-underline-offset: 2px;
   padding: 0;
   flex-shrink: 0;
 }
 .reset-link:hover {
-  color: var(--text);
+  color: var(--heading);
 }
