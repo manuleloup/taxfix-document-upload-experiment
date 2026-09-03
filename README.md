@@ -1,23 +1,34 @@
 # Taxfix Document Upload Experiment
 
-A self-contained HTML prototype for the Taxfix **Step 1 — Upload your documents** screen.
+Document-upload onboarding experiment for Taxfix: collect documents instead
+of a questionnaire, build a tax picture live via an AI-guided chat, and hand
+it to an accountant for review. See `other_resources/` (gitignored, local
+only) for the underlying hypothesis, flow, and stack decisions.
 
-## What it is
+## Current build (this branch)
 
-An interactive mockup exploring how to guide users through document collection before calculating their tax bill. It combines:
+A Next.js (App Router, TypeScript) rebuild, replacing the earlier static
+HTML/Express prototype. Layout and flow reference:
+`taxfix-no-onboarding.html`.
 
-- **Accordion document checklist** — income-source groups (PAYE employment, Rental income) with per-document line items and checkboxes, so users know exactly what to upload
-- **Drag-and-drop upload zone** — a single drop target at the bottom; any document can be dropped and the system matches it to the right category automatically
-- **Accountant sidebar** — dedicated accountant card (photo, credentials, bio) with "Send a message" and "Schedule a call" CTAs, plus a live summary of income, deductions, and estimated tax due
+- `src/app/` — pages and layouts
+- Styling target: Taxfix's real component library (`@taxfix/ds-components`)
+  rather than hand-rolled CSS — see `other_resources/DESIGN-SYSTEM.md` for
+  access details and current blockers (npm auth to Taxfix's private
+  registry isn't set up on this machine yet).
+- `server.js` (legacy) — the original Express + Claude document-detection
+  backend, kept for reference while that logic is ported to a Next.js route
+  handler. Run it standalone via `npm run legacy:server` if needed.
 
-## Design
+```
+npm install
+npm run dev      # Next.js app, http://localhost:3000
+npm run build    # production build
+```
 
-Built to the Taxfix brand design system:
+## Earlier prototype (superseded)
 
-- **Typefaces**: DM Serif Display (headings) + Source Serif 4 (body) — stand-ins for the ROM typeface
-- **Palette**: Ever-Green (`#ADEE68` lime / `#36893B` dark / `#154618` very dark), Effortless Lilac (`#BC73F2`), off-white neutrals
-- **Theme-aware**: full light and dark mode via CSS custom properties
-
-## Usage
-
-Open `taxfix-step1.html` directly in a browser — no build step, no dependencies, no server needed. Everything is self-contained (fonts load from Google Fonts; the accountant photo is embedded as a base64 data URI).
+`taxfix-step1.html` is the original self-contained static HTML mockup
+(accordion checklist, drag-and-drop upload, accountant sidebar) — open it
+directly in a browser, no build step needed. Kept for reference; the active
+build going forward is the Next.js app above.

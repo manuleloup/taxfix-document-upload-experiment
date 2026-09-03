@@ -1,16 +1,31 @@
 {
   "name": "taxfix-document-upload-experiment",
   "version": "0.1.0",
-  "description": "Taxfix document upload UI experiment — self-contained prototype",
+  "description": "Taxfix document upload onboarding experiment — Next.js app",
+  "private": true,
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "legacy:server": "node server.js"
   },
   "dependencies": {
+    "next": "16.3.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "@anthropic-ai/sdk": "^0.55.0",
     "dotenv": "^16.4.7",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.4",
+    "typescript": "^5"
   }
 }
