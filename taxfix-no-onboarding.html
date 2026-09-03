@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taxfix — no onboarding</title>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap">
+
+<style>
+:root {
+  --font-heading: 'IBM Plex Sans', 'Helvetica Neue', sans-serif;
+  --font-body:    'IBM Plex Sans', 'Helvetica Neue', sans-serif;
+  --bg:           #FFFFFF;
+  --surface:      #FFFFFF;
+  --surface-2:    #F5F0EB;
+  --border:       #E2D9D2;
+  --border-soft:  #EEE8E2;
+  --text:         #1C1917;
+  --muted:        #57534E;
+  --dim:          #78716C;
+  --green-dark:   #292524;
+  --green-bg:     #F5F5F4;
+  --green-br:     #D6D3D1;
+  --blue:         #4C6FEF;
+  --blue-bg:      #E8EEFF;
+  --blue-br:      #C3D0FA;
+  --amber:        #B5760A;
+  --amber-bg:     #FFF3DE;
+  --amber-br:     #F0C87A;
+  --grey-bg:      #F1EFEC;
+  --confirm:      #1F8A4C;
+  --confirm-bg:   #E3F5E9;
+  --sh:    0 1px 4px rgba(0,0,0,.07), 0 2px 8px rgba(0,0,0,.04);
+  --sh-md: 0 6px 20px rgba(0,0,0,.1), 0 2px 6px rgba(0,0,0,.05);
+  --r-sm: 8px; --r: 12px; --r-lg: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#12100E; --surface:#181613; --surface-2:#211E1A; --border:#332E28; --border-soft:#26221D;
+    --text:#F2EDE7; --muted:#B4ABA1; --dim:#7C7469;
+    --green-dark:#E7E5E4; --green-bg:#2A2622; --green-br:#44403C;
+    --blue:#8AA0FF; --blue-bg:#1B2140; --blue-br:#2E386B;
+    --amber:#F2B450; --amber-bg:#2A1F0C; --amber-br:#4A3714;
+    --grey-bg:#221F1B;
+    --confirm:#4ADE80; --confirm-bg:#123822;
+    --sh:0 1px 4px rgba(0,0,0,.3),0 2px 8px rgba(0,0,0,.2); --sh-md:0 6px 20px rgba(0,0,0,.4),0 2px 6px rgba(0,0,0,.25);
+  }
+}
+* { box-sizing: border-box; margin:0; padding:0; }
+html { font-size: 14px; }
+body { font-family: var(--font-body); background: var(--surface-2); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+button { font-family: var(--font-body); cursor: pointer; }
+
+.header {
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 14px 28px;
+}
+.logo { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+.logo-note { margin-left: 12px; font-size: 12px; color: var(--muted); background: var(--grey-bg); border: 1px solid var(--border); padding: 3px 9px; border-radius: 20px; }
+.reset-link {
+  margin-left: auto; background: none; border: none; font-size: 12px; font-weight: 600; color: var(--dim);
+  text-decoration: underline; text-underline-offset: 2px; padding: 0; flex-shrink: 0;
+}
+.reset-link:hover { color: var(--text); }
+
+.page {
+  max-width: 1240px; margin: 28px auto 60px; padding: 0 28px;
+  display: grid; grid-template-columns: 3fr 2fr; gap: 28px;
+}
+.main-intro { margin-bottom: 22px; }
+.main-intro h1 { font-size: 23px; font-weight: 600; letter-spacing: -0.3px; margin-bottom: 6px; }
+.main-intro p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 460px; }
+
+/* ── Documents strip ─────────────────────── */
+.docs-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 16px; margin-bottom: 16px;
+}
+.docs-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.docs-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--dim); }
+.docs-count { font-size: 12px; color: var(--muted); }
+/* A flat list of compact, single-line rows rather than a grid of cards —
+   this has to read fine whether there are 3 documents or 30, and a grid
+   of two-line cards stops working well well before 30. Capped at three
+   visible with the same expand pattern used for tax-picture entries, so
+   the whole page uses one "show more" idiom, not several. */
+.docs-list { display: flex; flex-direction: column; margin-bottom: 10px; }
+.doc-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 2px; font-size: 12.5px; border-bottom: 1px solid var(--border-soft);
+}
+.docs-list .doc-row:last-of-type { border-bottom: none; }
+.doc-row svg { flex-shrink: 0; color: var(--dim); }
+.doc-row-name { font-weight: 600; flex-shrink: 0; white-space: nowrap; }
+.doc-row-org { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-row-check { margin-left: auto; color: var(--confirm); flex-shrink: 0; display: flex; }
+.doc-row-del {
+  border: none; background: none; color: var(--dim); flex-shrink: 0; padding: 0; display: flex;
+  opacity: 0; transition: opacity .15s, color .15s;
+}
+.doc-row:hover .doc-row-del { opacity: 1; }
+.doc-row-del:hover { color: #A32D2D; }
+.dropzone {
+  border: 2px dashed var(--border); border-radius: var(--r);
+  padding: 18px; text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s;
+}
+.dropzone:hover, .dropzone.drag { border-color: var(--blue); background: var(--blue-bg); }
+.dropzone.hint { border-color: var(--blue); box-shadow: 0 0 0 4px var(--blue-bg); }
+.dz-title { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.dz-sub { font-size: 11.5px; color: var(--muted); }
+.dz-proto { font-size: 11px; color: var(--muted); font-style: italic; margin-top: 6px; }
+.dz-loading { display: none; align-items: center; justify-content: center; gap: 8px; padding: 8px 0; }
+.dropzone.loading .dz-idle { display: none; }
+.dropzone.loading .dz-loading { display: flex; }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.add-more-btn {
+  grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1.5px dashed var(--border); border-radius: var(--r-sm); padding: 8px; font-size: 12px; font-weight: 600; color: var(--muted);
+  background: none; transition: border-color .15s, color .15s;
+}
+.add-more-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+/* ── Tax picture card ─────────────────────── */
+.picture-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg); padding: 20px; }
+.picture-head h2 { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
+.picture-head p { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
+
+.pic-group-label { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; color: var(--dim); margin: 14px 0 2px; }
+.pic-group:first-child .pic-group-label { margin-top: 0; }
+.pic-group + .pic-group { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); }
+.pic-row {
+  display: grid; grid-template-columns: 26px 1fr auto; gap: 12px; align-items: flex-start;
+  padding: 12px 0; border-top: 1px solid var(--border-soft);
+}
+.pic-group-label + .pic-row { border-top: none; }
+.pic-icon {
+  width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+/* Pending: quiet and grey, no amber — nothing to flag urgently, just not
+   answered yet. Confirmed: the one place a genuine green appears, so it
+   reads as a distinct "done" signal rather than the neutral palette used
+   everywhere else. Dismissed: faded almost out of the list entirely. */
+.pic-row.pending .pic-icon { background: var(--grey-bg); color: var(--dim); }
+.pic-row.confirmed .pic-icon { background: var(--confirm-bg); color: var(--confirm); }
+.pic-row.dismissed .pic-icon { background: var(--grey-bg); color: var(--dim); opacity: .6; }
+.pic-name { font-size: 14.5px; font-weight: 600; color: var(--text); }
+.pic-row.pending .pic-name { color: var(--dim); font-weight: 500; }
+.pic-row.dismissed .pic-name { color: var(--dim); text-decoration: line-through; text-decoration-color: var(--border); }
+.pic-row.dismissed { opacity: .55; }
+.pic-hint { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.pic-row.pending .pic-hint { color: var(--dim); }
+.pic-group-empty { font-size: 12px; color: var(--dim); font-style: italic; padding: 8px 0; line-height: 1.5; }
+.pic-source { font-size: 11.5px; color: var(--confirm); margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; }
+.pic-source svg { flex-shrink: 0; }
+.pic-action { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+.pic-action-row { display: flex; align-items: center; gap: 9px; }
+.pic-val { font-size: 15px; font-weight: 600; white-space: nowrap; }
+/* Small round icon toggle: a cross to dismiss, a plus to bring an item
+   back — replaces the old text link/tag pair so the repeated "Waiting" /
+   "Doesn't apply to me" wording doesn't clutter every row. */
+.pic-toggle {
+  width: 21px; height: 21px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--dim); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: border-color .15s, color .15s;
+}
+.pic-toggle:hover { border-color: var(--text); color: var(--text); }
+.pic-toggle.reactivate:hover { border-color: var(--confirm); color: var(--confirm); }
+
+/* A pending row's two rare actions (add a value, remove the section)
+   collapse behind one hover-revealed overflow trigger, rather than two
+   permanently visible icons — quieter until the row is actually being
+   looked at. */
+.pic-overflow-wrap { position: relative; }
+.pic-overflow-btn {
+  width: 21px; height: 21px; border-radius: 50%; border: 1px solid var(--border);
+  background: var(--surface); color: var(--dim); display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; opacity: 0; transition: opacity .15s, border-color .15s, color .15s;
+}
+.pic-row:hover .pic-overflow-btn, .pic-overflow-btn.open { opacity: 1; }
+.pic-overflow-btn:hover { border-color: var(--text); color: var(--text); }
+.pic-overflow-menu {
+  position: absolute; top: 26px; right: 0; z-index: 10; display: none;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  box-shadow: var(--sh-md); min-width: 180px; padding: 4px;
+}
+.pic-overflow-menu.open { display: block; }
+.pic-overflow-item {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  padding: 7px 9px; border-radius: 6px; border: none; background: none;
+  font-size: 12.5px; font-weight: 500; color: var(--text);
+}
+.pic-overflow-item svg { flex-shrink: 0; color: var(--dim); }
+.pic-overflow-item:hover { background: var(--grey-bg); }
+
+/* One line per contributing entry. Document-sourced lines are read-only
+   here — provenance only; removing one happens on the document itself in
+   "Your documents" above, not on this line, so there's one place that
+   manages documents rather than two. The single manual value is the
+   exception: this list is the only place it lives, so it's editable and
+   deletable right here, in place — click it (or its pencil) to turn the
+   line into an inline input with a checkmark to save. Capped at three
+   lines, with the rest behind a small expand toggle. */
+.pic-entries { margin-top: 4px; }
+.pic-entry {
+  display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--confirm);
+  font-weight: 500; padding: 2px 0;
+}
+.pic-entry.manual { color: var(--muted); }
+.pic-entry svg.pic-entry-icon { flex-shrink: 0; }
+.pic-entry-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pic-entry-edit {
+  border: none; background: none; color: var(--dim); flex-shrink: 0; padding: 0; display: flex;
+}
+.pic-entry-edit:hover { color: var(--text); }
+.pic-entry-del {
+  border: none; background: none; color: var(--dim); flex-shrink: 0; padding: 0;
+  display: flex; opacity: 0; transition: opacity .15s, color .15s;
+}
+.pic-entry:hover .pic-entry-del { opacity: 1; }
+.pic-entry-del:hover { color: var(--text); }
+.pic-entry.editing { gap: 6px; }
+.pic-entry-input {
+  flex: 1; max-width: 130px; font-size: 11.5px; padding: 3px 8px; border: 1px solid var(--blue-br);
+  border-radius: 6px; background: var(--surface); color: var(--text);
+}
+.pic-entry-input:focus { outline: none; border-color: var(--blue); }
+.pic-entry-save {
+  border: none; background: none; color: var(--confirm); flex-shrink: 0; padding: 0; display: flex;
+}
+.pic-entry-save:hover { opacity: .7; }
+.pic-more-toggle {
+  font-size: 11px; font-weight: 600; color: var(--dim); background: none; border: none; padding: 2px 0 0;
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.pic-more-toggle:hover { color: var(--text); }
+
+.picture-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-soft);
+}
+.pf-note { font-size: 12px; color: var(--muted); }
+.btn-primary {
+  font-size: 13px; font-weight: 700; padding: 10px 18px; border-radius: var(--r-sm); border: none;
+  background: var(--text); color: var(--bg); flex-shrink: 0; cursor: pointer;
+}
+.btn-primary:hover { opacity: .85; }
+.finish-confirm {
+  display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-soft);
+}
+.finish-confirm-title { font-size: 12.5px; font-weight: 600; margin-bottom: 8px; }
+.finish-confirm-list { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.7; }
+.finish-confirm-row { display: flex; gap: 8px; }
+.finish-confirm-row button {
+  flex: 1; font-size: 12px; font-weight: 600; padding: 9px; border-radius: var(--r-sm); border: 1px solid var(--border);
+  background: var(--surface); color: var(--text);
+}
+.finish-confirm-row button.go { font-weight: 700; background: var(--text); color: var(--bg); border: none; }
+
+/* ── Conversation sidebar ─────────────────── */
+.convo-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+  padding: 16px; display: flex; flex-direction: column; height: calc(100vh - 140px); position: sticky; top: 24px;
+}
+.convo-title { font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--dim); margin-bottom: 12px; }
+.convo-log { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.msg { max-width: 88%; }
+.msg-bubble { padding: 10px 13px; border-radius: 4px 14px 14px 14px; font-size: 12.5px; line-height: 1.5; background: var(--grey-bg); color: var(--text); }
+.msg.assist { align-self: flex-start; }
+.msg.user { align-self: flex-end; }
+.msg.user .msg-bubble { background: var(--text); color: var(--bg); border-radius: 14px 4px 14px 14px; }
+.msg-attach {
+  display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px 3px 7px; margin-bottom: 6px;
+}
+.msg-attach svg { flex-shrink: 0; color: var(--dim); }
+.msg-result { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--green-dark); margin-top: 7px; }
+.msg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.msg-chip {
+  font-size: 11.5px; font-weight: 600; padding: 6px 13px; border-radius: 20px;
+  border: 1px solid var(--blue-br); background: var(--surface); color: var(--blue); transition: background .15s, color .15s;
+}
+.msg-chip:hover { background: var(--blue); color: #fff; }
+.msg-chip:disabled { opacity: .4; cursor: default; }
+.msg-chip.selected { background: var(--blue); color: #fff; }
+.msg-chip-none { color: var(--dim); }
+/* Deliberately not another pill — solid fill and squarer corners so it
+   reads as a commit action, not one more option among the choices above
+   it. */
+.msg-chip-confirm {
+  background: var(--text); color: var(--bg); border: none; border-radius: var(--r-sm);
+  padding: 9px 18px; font-weight: 700; font-size: 12.5px;
+}
+.msg-chip-confirm:hover { opacity: .85; }
+.compose { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-soft); }
+.compose input {
+  flex: 1; font-size: 12.5px; padding: 9px 14px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); color: var(--text);
+}
+.compose input:focus { outline: none; border-color: var(--blue); }
+.compose button {
+  width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--text); color: var(--bg);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+@media (max-width: 880px) { .page { grid-template-columns: 1fr; } .convo-card { height: auto; position: static; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <span class="logo">taxfix</span>
+  <span class="logo-note">Prototype — document upload only, no onboarding questionnaire</span>
+  <button class="reset-link" onclick="location.reload()">↺ Reset prototype</button>
+</header>
+
+<div class="page">
+  <main>
+    <div class="main-intro">
+      <h1>Upload your documents to see your tax position</h1>
+      <p>Drop in whatever you have. We'll work out what it tells us — and ask you the odd quick question for anything a document can't answer on its own.</p>
+    </div>
+
+    <div class="docs-card">
+      <div class="docs-head">
+        <span class="docs-eyebrow">Your documents</span>
+        <span class="docs-count" id="docsCount">0 added</span>
+      </div>
+      <div class="docs-list" id="docsList"></div>
+      <div class="dropzone" id="dropzone" onclick="addSampleDoc()">
+        <div class="dz-idle">
+          <div class="dz-title">Drag a document here, or click to add one</div>
+          <div class="dz-sub">PDF, JPG or PNG — add as many as you have, any order</div>
+          <div class="dz-proto">Prototype: click anywhere here to add the next sample document</div>
+        </div>
+        <div class="dz-loading"><div class="spinner"></div><span>Reading document…</span></div>
+      </div>
+    </div>
+
+    <div class="picture-card">
+      <div class="picture-head">
+        <h2>What we can see so far</h2>
+        <p>Every figure below comes from a document you gave us, or a question you answered.</p>
+      </div>
+      <div id="pictureRows"></div>
+      <div class="picture-footer">
+        <span class="pf-note" id="pfNote">0 of 3 sorted</span>
+        <button class="btn-primary" id="doneBtn" onclick="attemptFinish()">Submit for review</button>
+      </div>
+      <div class="finish-confirm" id="finishConfirm">
+        <div class="finish-confirm-title">A few things are still unresolved:</div>
+        <div class="finish-confirm-list" id="finishConfirmList"></div>
+        <div class="finish-confirm-row">
+          <button onclick="finishGoBack()">Go back</button>
+          <button class="go" onclick="finishContinueAnyway()">Continue anyway</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="convo-card">
+    <div class="convo-title">Conversation</div>
+    <div class="convo-log" id="convoLog"></div>
+    <div class="compose">
+      <input type="text" placeholder="Ask a question about your documents…">
+      <button aria-label="Send"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+    </div>
+  </aside>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+// The full set of categories is shown from the start — three of them have a
+// sample document behind them in this build, the rest start pending with no
+// document coming, so the "doesn't apply to me" dismissal is the only way
+// to resolve them here, on purpose: it's the mechanism this pass is meant
+// to demonstrate, not a gap in the sample data.
+// Each item can hold several document-sourced entries (several receipts,
+// say) plus at most one manual entry — adding a manual value a second time
+// replaces it rather than stacking, since there's only ever one "your own
+// figure" per item, however many documents back it up.
+function newItem(name, hint) {
+  return { name, hint, dismissed: false, docEntries: [], manualEntry: null };
+}
+const ITEMS = {
+  employment:     newItem('Employment income',       'Salary, wages — from your P60 or payslips'),
+  property:       newItem('Property income',         'Rent from letting a property'),
+  savings:        newItem('Savings interest',        'Interest from banks and building societies'),
+  selfEmployment: newItem('Self-employment income',  'Freelance, contracting or gig work'),
+  dividends:      newItem('Dividend income',         'Shares and funds'),
+  capitalGains:   newItem('Capital gains',           'Sold shares, crypto, property or other assets'),
+  foreignIncome:  newItem('Foreign income',          'Income or gains from outside the UK'),
+  pension:        newItem('Pension contributions',   'Payments into a pension, via employer or yourself'),
+  charity:        newItem('Charity donations',       'Gift Aid donations to charity'),
+  studentLoan:    newItem('Student loan repayments', 'Repayments deducted via PAYE or made directly'),
+  benefits:       newItem('Benefits received',       'Child Benefit, State Pension, JSA and similar'),
+};
+function itemStatus(key) {
+  const it = ITEMS[key];
+  if (it.dismissed) return 'dismissed';
+  return (it.docEntries.length > 0 || it.manualEntry) ? 'confirmed' : 'pending';
+}
+function parseMoney(str) {
+  return parseFloat(String(str).replace(/[£,]/g, '')) || 0;
+}
+function formatMoney(num) {
+  return `£${num.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+function itemTotal(key) {
+  const it = ITEMS[key];
+  const sum = it.docEntries.reduce((s, e) => s + e.value, 0) + (it.manualEntry ? it.manualEntry.value : 0);
+  return formatMoney(sum);
+}
+const GROUPS = [
+  { label: 'Income', keys: ['employment', 'property', 'savings', 'selfEmployment', 'dividends', 'capitalGains', 'foreignIncome'] },
+  // Always shown, but starts empty — expense types are conditional on
+  // which income source they come from, so nothing is pre-listed here.
+  // Rows arrive tagged with the income source they belong to, rather than
+  // sitting anonymously in a generic deductions bucket.
+  { label: 'Expenses', keys: [], empty: "Nothing yet — this fills in once you've told us about costs tied to an income source, like a property or self-employed work." },
+  { label: 'Deductions & benefits', keys: ['pension', 'charity', 'studentLoan', 'benefits'] },
+];
+const ALL_KEYS = GROUPS.flatMap(g => g.keys);
+
+// One sample document per item, cycled in order on each click/drop.
+const SAMPLE_DOCS = [
+  { itemKey: 'employment', file: 'p60_VantageRetail.pdf', org: 'Vantage Retail Ltd', label: 'P60 2024–25',
+    value: '£52,000.00',
+    aiLine: "Read your P60: gross pay of £52,000.00 for the tax year, with £9,200.00 tax already deducted. It also shows pension contributions of £1,200.00 and student loan repayments of £1,050.00 through your employer — I've logged both.",
+    matched: 'Matched to Employment income',
+    extraResolves: [
+      { key: 'pension', value: '£1,200.00', source: 'P60 2024–25 — Vantage Retail Ltd' },
+      { key: 'studentLoan', value: '£1,050.00', source: 'P60 2024–25 — Vantage Retail Ltd' },
+    ]},
+  { itemKey: 'property', file: 'letting_statement_AshbyRd.pdf', org: '14 Ashby Road', label: 'Letting statement',
+    value: '£9,600.00',
+    aiLine: "Read your letting statement for 14 Ashby Road: rental income of £9,600.00 for the year.",
+    matched: 'Matched to Property income',
+    followUp: { text: 'Do you own this property jointly with someone else?', chips: [
+      { label: 'No, just me', reply: "Got it — I'll count all of it as yours." },
+      { label: 'Yes, jointly', reply: "Noted. I'll flag this for your accountant to confirm the split." },
+    ]}},
+  { itemKey: 'savings', file: 'interest_certificate_Northbrook.pdf', org: 'Northbrook Bank', label: 'Interest certificate',
+    value: '£740.00',
+    aiLine: "Read your interest certificate from Northbrook Bank: savings interest of £740.00 for the year.",
+    matched: 'Matched to Savings interest' },
+];
+// Not offered from the start — only pushed onto SAMPLE_DOCS once the user
+// says, via the expense question below, that a mortgage is one of their
+// property costs. The dropzone then simply has one more document to cycle
+// through; no separate upload widget needed.
+const MORTGAGE_DOC = { itemKey: 'propertyExpenses', file: 'mortgage_statement_AshbyRd.pdf', org: 'Northbrook Bank', label: 'Mortgage interest statement',
+  value: '£2,150.00',
+  aiLine: "Read your mortgage interest statement for 14 Ashby Road: £2,150.00 of mortgage interest paid this year.",
+  matched: 'Matched to Property expenses' };
+let sampleIndex = 0;
+
+// Every processed document gets an id. It's what lets a row's entries
+// trace back to a document, and — the other direction — what lets
+// deleting a document cascade to every row it fed, in one place, rather
+// than each row needing its own delete control on top.
+let docIdCounter = 0;
+let DOCUMENTS = [];
+let EXPANDED_DOCS = false;
+
+// ── Rendering ──────────────────────────────────────────────────────
+function iconFor(status) {
+  if (status === 'confirmed') return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  if (status === 'dismissed') return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="12" x2="18" y2="12"/></svg>';
+  return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 0c0 1.5-2 1.7-2 3.3"/><circle cx="12" cy="16.5" r="0.6" fill="currentColor"/></svg>';
+}
+function docIcon() {
+  return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+}
+
+function xIcon() {
+  return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+}
+function pencilIcon() {
+  return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4z"/></svg>';
+}
+function plusIcon() {
+  return '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+}
+
+const EXPANDED_ROWS = new Set();
+
+function trashIcon() {
+  return '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>';
+}
+function checkIcon() {
+  return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+}
+function overflowIcon() {
+  return '<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+}
+
+// Which pending row's overflow menu is open — at most one at a time.
+let OPEN_MENU = null;
+function toggleRowMenu(e, key) {
+  e.stopPropagation();
+  OPEN_MENU = OPEN_MENU === key ? null : key;
+  renderPicture();
+}
+function chooseAddManual(e, key) {
+  e.stopPropagation();
+  OPEN_MENU = null;
+  startEditManual(key);
+}
+function chooseRemoveSection(e, key) {
+  e.stopPropagation();
+  OPEN_MENU = null;
+  dismiss(key);
+}
+document.addEventListener('click', () => {
+  if (OPEN_MENU) { OPEN_MENU = null; renderPicture(); }
+});
+
+// Which row's manual value is currently mid-edit (or mid-add) — at most
+// meaningfully one at a time in practice, but tracked as a set so opening
+// one doesn't require closing another.
+const EDITING_MANUAL = new Set();
+
+// Document-sourced lines: read-only provenance, no delete here — that
+// lives on the document itself, in "Your documents" above.
+function renderDocEntryLine(entry) {
+  return `<div class="pic-entry doc">
+    <span class="pic-entry-icon" style="display:flex">${docIcon()}</span>
+    <span class="pic-entry-label">${entry.formatted} — ${entry.source}</span>
+  </div>`;
+}
+// The manual slot: display line (pencil to edit, trash to delete), inline
+// edit line (input + checkmark), or — when there's nothing there yet — an
+// "add" trigger that turns into the same edit line.
+function renderManualLine(key) {
+  const it = ITEMS[key];
+  if (EDITING_MANUAL.has(key)) {
+    const current = it.manualEntry ? it.manualEntry.value : '';
+    return `<div class="pic-entry manual editing">
+      <span class="pic-entry-icon" style="display:flex">£</span>
+      <input type="text" inputmode="decimal" class="pic-entry-input" id="manualEdit-${key}" value="${current === '' ? '' : current}" placeholder="0.00">
+      <button class="pic-entry-save" title="Save" onclick="saveManualValue('${key}')">${checkIcon()}</button>
+    </div>`;
+  }
+  if (it.manualEntry) {
+    return `<div class="pic-entry manual">
+      <button class="pic-entry-edit" title="Edit this value" onclick="startEditManual('${key}')">${pencilIcon()}</button>
+      <span class="pic-entry-label">${it.manualEntry.formatted} — Entered by you</span>
+      <button class="pic-entry-del" title="Delete this value" onclick="deleteManualEntry('${key}')">${trashIcon()}</button>
+    </div>`;
+  }
+  // No manual entry, and not currently adding one — nothing to show here.
+  // The trigger to add one now lives in the action column, next to the
+  // value itself, so a row with nothing manual in it doesn't spend a
+  // whole line saying so.
+  return '';
+}
+
+function renderRow(key) {
+  const it = ITEMS[key];
+  const status = itemStatus(key);
+
+  // One overflow trigger, in the same spot, for the whole life of a row
+  // that isn't dismissed — pending or confirmed. It doesn't relocate and
+  // its two items don't change once a value's been added: "Add a value
+  // manually" still opens the same inline editor (which serves as "edit"
+  // once one already exists), so there's nothing to swap in or out. The
+  // total, when there is one, sits to its left.
+  let action = '';
+  if (status === 'dismissed') {
+    action = `<button class="pic-toggle reactivate" title="Add this back" onclick="reactivate('${key}')">${plusIcon()}</button>`;
+  } else {
+    const open = OPEN_MENU === key;
+    action = `<div class="pic-action-row">
+      ${status === 'confirmed' ? `<div class="pic-val">${itemTotal(key)}</div>` : ''}
+      <div class="pic-overflow-wrap">
+        <button class="pic-overflow-btn ${open ? 'open' : ''}" title="More options" onclick="toggleRowMenu(event, '${key}')">${overflowIcon()}</button>
+        <div class="pic-overflow-menu ${open ? 'open' : ''}">
+          <button class="pic-overflow-item" onclick="chooseAddManual(event, '${key}')">${plusIcon()}<span>Add a value manually</span></button>
+          <button class="pic-overflow-item" onclick="chooseRemoveSection(event, '${key}')">${xIcon()}<span>Remove section</span></button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Document lines, plus the manual slot's own line — but only once it
+  // exists or is being added right now. An untouched row has no entries
+  // at all, so it renders with no extra height beyond the hint text.
+  let entriesHtml = '';
+  if (status !== 'dismissed') {
+    const lines = it.docEntries.map(renderDocEntryLine);
+    const manualLine = renderManualLine(key);
+    if (manualLine) lines.push(manualLine);
+    if (lines.length) {
+      const expanded = EXPANDED_ROWS.has(key);
+      const shown = expanded ? lines : lines.slice(0, 3);
+      const rest = lines.length - shown.length;
+      entriesHtml = `<div class="pic-entries">${shown.join('')}
+        ${rest > 0 ? `<button class="pic-more-toggle" onclick="toggleExpand('${key}')">Show ${rest} more</button>` : ''}
+        ${expanded && lines.length > 3 ? `<button class="pic-more-toggle" onclick="toggleExpand('${key}')">Show less</button>` : ''}
+      </div>`;
+    }
+  }
+
+  return `<div class="pic-row ${status}" data-key="${key}">
+    <div class="pic-icon">${iconFor(status)}</div>
+    <div>
+      <div class="pic-name">${it.name}</div>
+      ${status !== 'dismissed' ? `<div class="pic-hint">${it.hint}</div>` : ''}
+      ${entriesHtml}
+    </div>
+    <div class="pic-action">${action}</div>
+  </div>`;
+}
+
+function startEditManual(key) {
+  EDITING_MANUAL.add(key);
+  renderPicture();
+  const input = document.getElementById(`manualEdit-${key}`);
+  if (input) {
+    input.focus();
+    input.select();
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveManualValue(key);
+      if (e.key === 'Escape') { EDITING_MANUAL.delete(key); renderPicture(); }
+    });
+  }
+}
+function saveManualValue(key) {
+  const input = document.getElementById(`manualEdit-${key}`);
+  const raw = input ? input.value.trim() : '';
+  EDITING_MANUAL.delete(key);
+  if (!raw) { renderPicture(); return; }
+  const amount = parseFloat(raw.replace(/[£,]/g, ''));
+  if (!isNaN(amount)) {
+    ITEMS[key].manualEntry = { value: amount, formatted: formatMoney(amount) };
+  }
+  renderPicture();
+}
+
+function toggleExpand(key) {
+  if (EXPANDED_ROWS.has(key)) EXPANDED_ROWS.delete(key); else EXPANDED_ROWS.add(key);
+  renderPicture();
+}
+
+function renderPicture() {
+  const wrap = document.getElementById('pictureRows');
+  wrap.innerHTML = GROUPS.map(group => {
+    const body = group.keys.length
+      ? group.keys.map(renderRow).join('')
+      : `<div class="pic-group-empty">${group.empty}</div>`;
+    return `
+    <div class="pic-group">
+      <div class="pic-group-label">${group.label}</div>
+      ${body}
+    </div>`;
+  }).join('');
+
+  const resolved = ALL_KEYS.filter(k => itemStatus(k) !== 'pending').length;
+  document.getElementById('pfNote').textContent = `${resolved} of ${ALL_KEYS.length} sorted`;
+}
+
+// "This looks right to me" is always clickable — gaps are handled with a
+// confirmation once clicked, not by disabling the button beforehand.
+function attemptFinish() {
+  const unresolved = ALL_KEYS.filter(k => itemStatus(k) === 'pending');
+  if (unresolved.length === 0) {
+    document.getElementById('finishConfirm').style.display = 'none';
+    addMsg({ from: 'assist', text: "Great — everything's sorted. In the real product this would take you through to your tax position summary." });
+    return;
+  }
+  document.getElementById('finishConfirmList').innerHTML = unresolved.map(k => `<div>• ${ITEMS[k].name}</div>`).join('');
+  document.getElementById('finishConfirm').style.display = 'block';
+}
+function finishGoBack() {
+  document.getElementById('finishConfirm').style.display = 'none';
+}
+function finishContinueAnyway() {
+  document.getElementById('finishConfirm').style.display = 'none';
+  addMsg({ from: 'assist', text: "Okay — continuing with what you've given us so far. Your accountant will flag anything still missing before filing." });
+}
+
+function addMsg({ from, attach, text, result, chips }) {
+  const log = document.getElementById('convoLog');
+  const div = document.createElement('div');
+  div.className = `msg ${from}`;
+  div.innerHTML = `
+    ${attach ? `<div class="msg-attach">${docIcon()}<span>${attach}</span></div><br>` : ''}
+    <div class="msg-bubble">
+      ${text}
+      ${result ? `<div class="msg-result"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg><span>${result}</span></div>` : ''}
+    </div>
+    ${chips ? `<div class="msg-chips">${chips.map((c,i) => `<button class="msg-chip" onclick="answerChip(this,${i})">${c.label}</button>`).join('')}</div>` : ''}
+  `;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+// ── Document handling ──────────────────────────────────────────────
+let pendingFollowUp = null;
+
+// Renders "Your documents" from state, same pattern as the tax picture:
+// capped at three rows with a "Show N more" toggle so this scales from a
+// handful of documents to dozens without the card growing without limit.
+function renderDocuments() {
+  const wrap = document.getElementById('docsList');
+  const shown = EXPANDED_DOCS ? DOCUMENTS : DOCUMENTS.slice(0, 3);
+  const rest = DOCUMENTS.length - shown.length;
+  wrap.innerHTML = shown.map(d => `<div class="doc-row">
+      ${docIcon()}
+      <span class="doc-row-name">${d.label}</span>
+      <span class="doc-row-org">${d.org}</span>
+      <span class="doc-row-check">${checkIcon()}</span>
+      <button class="doc-row-del" title="Remove this document" onclick="removeDocument(${d.id})">${trashIcon()}</button>
+    </div>`).join('')
+    + (rest > 0 ? `<button class="pic-more-toggle" onclick="toggleDocsExpand()">Show ${rest} more</button>` : '')
+    + (EXPANDED_DOCS && DOCUMENTS.length > 3 ? `<button class="pic-more-toggle" onclick="toggleDocsExpand()">Show less</button>` : '');
+  document.getElementById('docsCount').textContent = `${DOCUMENTS.length} added`;
+}
+function toggleDocsExpand() { EXPANDED_DOCS = !EXPANDED_DOCS; renderDocuments(); }
+
+function pushDocument(doc) {
+  const id = ++docIdCounter;
+  DOCUMENTS.push({ id, label: doc.label, org: doc.org, source: `${doc.label} — ${doc.org}` });
+  renderDocuments();
+  return id;
+}
+// Removing a document is the one place deletion happens for document-
+// sourced figures — it cascades to every row that document fed (a P60
+// removed here clears Employment, Pension and Student loan together),
+// rather than each row needing its own delete control on top of this.
+function removeDocument(id) {
+  const doc = DOCUMENTS.find(d => d.id === id);
+  if (!doc) return;
+  DOCUMENTS = DOCUMENTS.filter(d => d.id !== id);
+  Object.keys(ITEMS).forEach(key => {
+    ITEMS[key].docEntries = ITEMS[key].docEntries.filter(e => e.docId !== id);
+  });
+  renderDocuments();
+  renderPicture();
+  addMsg({ from: 'assist', text: `Removed ${doc.label} — I've taken out anything it added to your picture. Document-sourced values can only be removed this way, so nothing gets out of sync with what you've actually uploaded.` });
+}
+
+function addSampleDoc() {
+  if (sampleIndex >= SAMPLE_DOCS.length) return;
+  const zone = document.getElementById('dropzone');
+  zone.classList.add('loading');
+  const doc = SAMPLE_DOCS[sampleIndex];
+  setTimeout(() => {
+    zone.classList.remove('loading');
+    sampleIndex++;
+    const docId = pushDocument(doc);
+
+    if (sampleIndex >= SAMPLE_DOCS.length) {
+      zone.querySelector('.dz-title').textContent = "That's every sample document";
+      zone.querySelector('.dz-sub').textContent = "In the real product, you could keep adding more here.";
+      zone.querySelector('.dz-proto').style.display = 'none';
+      zone.style.cursor = 'default';
+      zone.onclick = null;
+    }
+
+    // conversation message
+    addMsg({ from: 'assist', attach: doc.file, text: doc.aiLine, result: doc.matched });
+
+    if (doc.followUp) {
+      pendingFollowUp = { itemKey: doc.itemKey, value: doc.value, source: `${doc.label} — ${doc.org}`, docId };
+      setTimeout(() => {
+        addMsg({ from: 'assist', text: doc.followUp.text, chips: doc.followUp.chips });
+      }, 350);
+    } else {
+      addDocEntry(doc.itemKey, doc.value, `${doc.label} — ${doc.org}`, docId);
+    }
+
+    // A document can confirm more than one row at once — a P60 carries
+    // pension/student-loan fields alongside the main pay figure. These
+    // resolve into the same list, under Deductions & benefits, rather than
+    // a separate panel: one mechanism (pending/confirmed/dismissed rows)
+    // for every category, not two different UI patterns doing similar jobs.
+    // They share this document's id, so removing the P60 above clears all
+    // three together.
+    if (doc.extraResolves) {
+      doc.extraResolves.forEach(f => addDocEntry(f.key, f.value, f.source, docId));
+    }
+  }, 800);
+}
+
+function addDocEntry(key, formattedValue, source, docId) {
+  ITEMS[key].docEntries.push({ value: parseMoney(formattedValue), formatted: formattedValue, source, docId });
+  renderPicture();
+}
+function deleteManualEntry(key) {
+  ITEMS[key].manualEntry = null;
+  renderPicture();
+}
+
+function answerChip(btnEl, idx) {
+  const doc = SAMPLE_DOCS.find(d => d.followUp && d.itemKey === pendingFollowUp.itemKey);
+  const chip = doc.followUp.chips[idx];
+  // lock the chips in that message
+  btnEl.closest('.msg-chips').querySelectorAll('button').forEach(b => b.disabled = true);
+  addMsg({ from: 'user', text: chip.label });
+  setTimeout(() => addMsg({ from: 'assist', text: chip.reply }), 300);
+  addDocEntry(pendingFollowUp.itemKey, pendingFollowUp.value, pendingFollowUp.source, pendingFollowUp.docId);
+  const wasProperty = pendingFollowUp.itemKey === 'property';
+  pendingFollowUp = null;
+  if (wasProperty) setTimeout(addExpenseQuestion, 700);
+}
+
+// ── Property expenses — a second, chained question after the property
+// item is confirmed. Multi-select, since more than one cost can apply at
+// once, unlike the single-choice questions above.
+function addExpenseQuestion() {
+  const options = ['Mortgage interest', 'Repairs or maintenance', 'Landlord insurance', 'Management fees', 'Travel to the property'];
+  const log = document.getElementById('convoLog');
+  const div = document.createElement('div');
+  div.className = 'msg assist';
+  div.innerHTML = `
+    <div class="msg-bubble">Any costs on this property — mortgage interest, repairs, insurance, management fees, or travel to the property?</div>
+    <div class="msg-chips" id="expenseChips">
+      ${options.map(o => `<button class="msg-chip" data-val="${o}" onclick="toggleExpenseChip(this)">${o}</button>`).join('')}
+      <button class="msg-chip msg-chip-none" onclick="finishExpenseChips(true)">None of these</button>
+    </div>
+    <div class="msg-chips" id="expenseConfirmWrap" style="display:none;">
+      <button class="msg-chip msg-chip-confirm" onclick="finishExpenseChips(false)">Add these</button>
+    </div>
+  `;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+}
+function toggleExpenseChip(btn) {
+  btn.classList.toggle('selected');
+  const any = document.querySelectorAll('#expenseChips .msg-chip.selected').length > 0;
+  document.getElementById('expenseConfirmWrap').style.display = any ? 'flex' : 'none';
+}
+function finishExpenseChips(none) {
+  const chipsWrap = document.getElementById('expenseChips');
+  const selected = none ? [] : Array.from(chipsWrap.querySelectorAll('.msg-chip.selected')).map(b => b.dataset.val);
+  chipsWrap.querySelectorAll('button').forEach(b => b.disabled = true);
+  document.getElementById('expenseConfirmWrap').style.display = 'none';
+
+  if (none || selected.length === 0) {
+    addMsg({ from: 'user', text: 'No costs to add' });
+    setTimeout(() => addMsg({ from: 'assist', text: "Got it — I'll leave property expenses out of your picture." }), 300);
+    return;
+  }
+
+  addMsg({ from: 'user', text: selected.join(', ') });
+  setTimeout(() => {
+    // A new row appears in the list only now — nothing pre-lists property
+    // expenses before this question is answered.
+    if (!ITEMS.propertyExpenses) {
+      ITEMS.propertyExpenses = newItem('Property expenses', selected.join(' · '));
+      GROUPS[1].keys.push('propertyExpenses');
+      ALL_KEYS.push('propertyExpenses');
+    }
+    renderPicture();
+
+    let followText = `Noted — ${selected.join(', ').toLowerCase()}. `;
+    if (selected.includes('Mortgage interest')) {
+      followText += "If you've got your mortgage interest statement, drop it into the upload area on the left and I'll match it automatically.";
+      SAMPLE_DOCS.push(MORTGAGE_DOC);
+      reopenDropzone();
+      highlightDropzone();
+    } else {
+      followText += "Add any receipts for these to the upload area on the left whenever you have them.";
+    }
+    addMsg({ from: 'assist', text: followText });
+  }, 300);
+}
+function reopenDropzone() {
+  const zone = document.getElementById('dropzone');
+  zone.querySelector('.dz-title').textContent = 'Drag a document here, or click to add one';
+  zone.querySelector('.dz-sub').textContent = "We'll match it to the right category automatically";
+  const proto = zone.querySelector('.dz-proto');
+  proto.textContent = 'Prototype: click anywhere here to add the mortgage interest statement';
+  proto.style.display = '';
+  zone.style.cursor = 'pointer';
+  zone.onclick = addSampleDoc;
+}
+function highlightDropzone() {
+  const zone = document.getElementById('dropzone');
+  zone.classList.add('hint');
+  setTimeout(() => zone.classList.remove('hint'), 2400);
+}
+
+function dismiss(key) {
+  ITEMS[key].dismissed = true;
+  renderPicture();
+  addMsg({ from: 'user', text: `${ITEMS[key].name} doesn't apply to me` });
+  setTimeout(() => addMsg({ from: 'assist', text: `Got it — I'll leave ${ITEMS[key].name.toLowerCase()} out of your picture. Tap the + next to it any time if that changes.` }), 300);
+}
+function reactivate(key) {
+  ITEMS[key].dismissed = false;
+  renderPicture();
+  addMsg({ from: 'user', text: `Actually, add ${ITEMS[key].name.toLowerCase()} back` });
+  setTimeout(() => addMsg({ from: 'assist', text: `No problem — ${ITEMS[key].name.toLowerCase()} is back on your list.` }), 300);
+}
+
+// drag-and-drop just triggers the same sample flow, for the prototype
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); addSampleDoc(); });
+
+// ── Compose box — free-text questions only now. Adding or editing a
+// manual value used to be routed through here as a chat exchange; it's
+// now inline on the row itself (see startEditManual/saveManualValue), so
+// this box goes back to its one job: answering whatever the user types
+// with a generic acknowledgement. No real language model behind this
+// prototype — it's a fixed reply, not an attempt at NLU.
+const composeInput = document.querySelector('.compose input');
+const composeBtn = document.querySelector('.compose button');
+
+function sendComposeMessage() {
+  const text = composeInput.value.trim();
+  if (!text) return;
+  addMsg({ from: 'user', text });
+  composeInput.value = '';
+  setTimeout(() => addMsg({ from: 'assist', text: "Thanks — I've noted that and will flag it for your accountant to check." }), 300);
+}
+composeBtn.addEventListener('click', sendComposeMessage);
+composeInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendComposeMessage(); });
+
+// ── Init ───────────────────────────────────────────────────────────
+addMsg({ from: 'assist', text: "Drop your documents in on the left, in any order. I'll read them and build your picture as we go — I'll only ask you something if a document can't answer it on its own." });
+renderDocuments();
+renderPicture();
+</script>
+</body>
+</html>
