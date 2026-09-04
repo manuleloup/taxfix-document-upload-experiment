@@ -79,6 +79,26 @@ const DEDUCTION_KEYS = ["pension", "charity", "studentLoan", "benefits"];
 const EXPENSES_EMPTY_TEXT =
   "Nothing yet — this fills in once you've told us about costs tied to an income source, like a property or self-employed work.";
 
+/** Content hash of a dropped file, used to spot a file that has already been
+ *  added this session. Matches on bytes, never the filename: a renamed copy
+ *  is still the same document, and two unrelated documents can share a name.
+ *
+ *  Returns null when hashing isn't possible — crypto.subtle only exists in a
+ *  secure context, so it's absent if the dev server is opened over plain HTTP
+ *  on a LAN address rather than localhost. Callers then just skip the check
+ *  and upload as normal, rather than blocking the upload outright. */
+async function fileContentHash(file: File): Promise<string | null> {
+  if (!globalThis.crypto?.subtle) return null;
+  try {
+    const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+    return Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  } catch {
+    return null;
+  }
+}
+
 function parseMoney(str: string): number {
   return parseFloat(String(str).replace(/[£,]/g, "")) || 0;
 }
@@ -108,6 +128,9 @@ interface DocumentRow {
   label: string;
   org: string;
   source: string;
+  /** SHA-256 of the uploaded file, for spotting byte-identical re-uploads.
+   *  "" when the browser couldn't hash it — see fileContentHash. */
+  hash: string;
   // The rest is what chat sends as this document's written summary, so a
   // question can usually be answered without re-reading the original file.
   taxYear: string | null;
@@ -181,6 +204,14 @@ export default function UploadPage() {
     if (!sessionIdRef.current) sessionIdRef.current = crypto.randomUUID();
     return sessionIdRef.current;
   }
+
+  // hash → label of the document it belongs to. Mirrors the `hash` field on
+  // the rows in `documents`, which stays the source of truth; this index
+  // exists because handleFiles awaits each upload in turn, so a `documents`
+  // value captured from render would still be stale on the next iteration —
+  // two identical files in one drop would slip through. Updated in the two
+  // places rows are added and removed.
+  const docHashesRef = useRef<Map<string, string>>(new Map());
 
   const docIdRef = useRef(0);
   // Upload sequence number, sent to the classifier only so CLASSIFY_MOCK can
@@ -268,6 +299,23 @@ export default function UploadPage() {
 
   async function handleFileUpload(file: File) {
     setDropzoneLoading(true);
+
+    // A byte-identical re-upload is a no-op: no classify call (so no spend),
+    // no second row, and nothing added to the Tax Position twice. Only exact
+    // duplicates are caught — the same document re-scanned to different bytes,
+    // and the P60/P45/payslip overlap, are separate problems.
+    const hash = await fileContentHash(file);
+    const duplicateOf = hash ? docHashesRef.current.get(hash) : undefined;
+    if (duplicateOf) {
+      setDropzoneLoading(false);
+      addMsg({
+        from: "assist",
+        attach: file.name,
+        text: `That's the same file as ${duplicateOf}, which you've already added — I've left your picture as it is.`,
+      });
+      return;
+    }
+
     // Allocated before the upload so the server can file the stored original
     // under the same id this document keeps in the Tax Position and in chat.
     // An unreadable document burns an id — harmless, they're internal.
@@ -307,11 +355,15 @@ export default function UploadPage() {
         label,
         org: result.org,
         source,
+        hash: hash ?? "",
         taxYear: result.taxYear,
         description: result.description,
         fields: result.resolvedFields.map((f) => ({ label: f.label, value: f.value })),
       },
     ]);
+    // Registered only once the document is actually on the list, so a failed
+    // or unreadable upload doesn't block a retry of the same file.
+    if (hash) docHashesRef.current.set(hash, label);
 
     const matchedNames = result.resolvedFields.map((f) => itemName(f.key)).join(", ");
     addMsg({ from: "assist", attach: file.name, text: result.description, result: `Matched to ${matchedNames}` });
@@ -373,6 +425,8 @@ export default function UploadPage() {
     const doc = documents.find((d) => d.id === id);
     if (!doc) return;
     setDocuments((prev) => prev.filter((d) => d.id !== id));
+    // Removing a document makes it uploadable again.
+    if (doc.hash) docHashesRef.current.delete(doc.hash);
     setItems((prev) => {
       const next: Record<string, Item> = { ...prev };
       for (const key of Object.keys(next)) {
