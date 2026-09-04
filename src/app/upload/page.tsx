@@ -108,6 +108,11 @@ interface DocumentRow {
   label: string;
   org: string;
   source: string;
+  // The rest is what chat sends as this document's written summary, so a
+  // question can usually be answered without re-reading the original file.
+  taxYear: string | null;
+  description: string;
+  fields: { label: string; value: string }[];
 }
 
 interface ChipOption {
@@ -126,6 +131,10 @@ interface ChatMessage {
   chips?: ChipOption[];
   chipsDisabled?: boolean;
   isExpenseQuestion?: boolean;
+  /** Set only on real free-text exchanges. The scripted status lines, chip
+   *  questions and upload confirmations that also live in this log are UI
+   *  narration, not conversation, and aren't sent to the model as history. */
+  conversational?: boolean;
 }
 
 interface PendingFollowUp {
@@ -157,8 +166,21 @@ export default function UploadPage() {
   const [submittedOpen, setSubmittedOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [composeValue, setComposeValue] = useState("");
+  const [chatLoading, setChatLoading] = useState(false);
   const [expenseSelected, setExpenseSelected] = useState<Set<string>>(new Set());
   const [expenseLocked, setExpenseLocked] = useState(false);
+
+  // Names the server-side folder holding this session's uploaded files, so
+  // one browser session's documents stay separate from another's. Generated
+  // lazily on first use rather than during render: it's only ever needed
+  // from an event handler, and a value generated during SSR wouldn't match
+  // the one the client generates. A reload starts a fresh session, which is
+  // also when docIdRef restarts from 1.
+  const sessionIdRef = useRef<string | null>(null);
+  function sessionId(): string {
+    if (!sessionIdRef.current) sessionIdRef.current = crypto.randomUUID();
+    return sessionIdRef.current;
+  }
 
   const docIdRef = useRef(0);
   // Upload sequence number, sent to the classifier only so CLASSIFY_MOCK can
@@ -200,7 +222,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
-  }, [messages]);
+  }, [messages, chatLoading]);
 
   useEffect(() => {
     if (editingManualKey && manualInputRef.current) {
@@ -246,10 +268,18 @@ export default function UploadPage() {
 
   async function handleFileUpload(file: File) {
     setDropzoneLoading(true);
+    // Allocated before the upload so the server can file the stored original
+    // under the same id this document keeps in the Tax Position and in chat.
+    // An unreadable document burns an id — harmless, they're internal.
+    docIdRef.current += 1;
+    const docId = docIdRef.current;
+
     let result: ClassifyResult;
     try {
       const form = new FormData();
       form.append("file", file);
+      form.append("sessionId", sessionId());
+      form.append("docId", String(docId));
       const seq = uploadSeqRef.current++;
       const res = await fetch(`/api/classify?n=${seq}`, { method: "POST", body: form });
       if (!res.ok) {
@@ -268,11 +298,20 @@ export default function UploadPage() {
       return;
     }
 
-    docIdRef.current += 1;
-    const docId = docIdRef.current;
     const label = result.documentLabel || file.name;
     const source = result.org ? `${label} — ${result.org}` : label;
-    setDocuments((prev) => [...prev, { id: docId, label, org: result.org, source }]);
+    setDocuments((prev) => [
+      ...prev,
+      {
+        id: docId,
+        label,
+        org: result.org,
+        source,
+        taxYear: result.taxYear,
+        description: result.description,
+        fields: result.resolvedFields.map((f) => ({ label: f.label, value: f.value })),
+      },
+    ]);
 
     const matchedNames = result.resolvedFields.map((f) => itemName(f.key)).join(", ");
     addMsg({ from: "assist", attach: file.name, text: result.description, result: `Matched to ${matchedNames}` });
@@ -465,12 +504,65 @@ export default function UploadPage() {
     }, 300);
   }
 
-  function sendComposeMessage() {
+  /** What the model sees of the Tax Position: every line, whether or not it
+   *  has a figure, so it can answer "what's left?" as well as "what's in?". */
+  function positionLines() {
+    return allKeys.map((key) => {
+      const status = itemStatus(items[key]);
+      return {
+        name: items[key].name,
+        status,
+        total: status === "confirmed" ? itemTotal(items[key]) : null,
+      };
+    });
+  }
+
+  async function sendComposeMessage() {
     const text = composeValue.trim();
-    if (!text) return;
-    addMsg({ from: "user", text });
+    if (!text || chatLoading) return;
+
+    // Captured before the new turn is appended — it goes up as `message`.
+    const history = messages
+      .filter((m) => m.conversational)
+      .map((m) => ({ role: m.from === "user" ? ("user" as const) : ("assistant" as const), text: m.text }));
+
+    addMsg({ from: "user", text, conversational: true });
     setComposeValue("");
-    setTimeout(() => addMsg({ from: "assist", text: "Thanks — I've noted that and will flag it for your accountant to check." }), 300);
+    setChatLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId: sessionId(),
+          message: text,
+          history,
+          // Summaries only. The originals stay on the server, and the model
+          // re-reads one by id via get_document if a question needs it.
+          documents: documents.map((d) => ({
+            docId: d.id,
+            label: d.label,
+            org: d.org,
+            taxYear: d.taxYear,
+            description: d.description,
+            fields: d.fields,
+          })),
+          position: positionLines(),
+        }),
+      });
+      if (!res.ok) throw new Error(`Chat failed (${res.status})`);
+      const data: { reply?: string } = await res.json();
+      if (!data.reply?.trim()) throw new Error("Empty reply");
+      addMsg({ from: "assist", text: data.reply, conversational: true });
+    } catch {
+      addMsg({
+        from: "assist",
+        text: "Something went wrong answering that — give it another go in a moment.",
+      });
+    } finally {
+      setChatLoading(false);
+    }
   }
 
   function attemptFinish() {
@@ -815,18 +907,33 @@ export default function UploadPage() {
                 )}
               </div>
             ))}
+            {chatLoading && (
+              <div className="msg assist" aria-live="polite">
+                <div className="msg-bubble msg-typing">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+            )}
           </div>
           <div className="compose">
             <input
               type="text"
               placeholder="Ask a question about your documents…"
               value={composeValue}
+              disabled={chatLoading}
               onChange={(e) => setComposeValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") sendComposeMessage();
               }}
             />
-            <button aria-label="Send" className="tf-iconbtn tf-iconbtn--medium" onClick={sendComposeMessage}>
+            <button
+              aria-label="Send"
+              className="tf-iconbtn tf-iconbtn--medium"
+              disabled={chatLoading}
+              onClick={sendComposeMessage}
+            >
               <SendIcon />
             </button>
           </div>
