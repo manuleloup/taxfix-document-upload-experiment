@@ -18,7 +18,7 @@ import {
   CONFIDENCE_HIGH,
   CONFIDENCE_LOW,
   ITEM_META,
-  isExpenseKey,
+  isTriggeredKey,
   isOverlapKey,
   type ClassifyResult,
   type ItemKey,
@@ -68,18 +68,15 @@ const INITIAL_ITEMS: Record<string, Item> = Object.fromEntries(
   Object.entries(ITEM_META).map(([key, { name, hint }]) => [key, newItem(name, hint)])
 );
 
-const INCOME_KEYS = [
-  "employment",
-  "property",
-  "savings",
-  "selfEmployment",
-  "dividends",
-  "capitalGains",
-  "foreignIncome",
-];
-const DEDUCTION_KEYS = ["pension", "charity", "studentLoan", "benefits"];
-const EXPENSES_EMPTY_TEXT =
-  "Nothing yet — this fills in once you've told us about costs tied to an income source, like a property or self-employed work.";
+// Which rows sit above each group's own "Show more", and in what order.
+// This split is editorial — the categories most people have — so it is
+// written out here rather than derived from ITEM_META's group field, which
+// says where a category belongs, not how prominent it is.
+const INCOME_PRIMARY = ["employment", "property", "savings"];
+const INCOME_SECONDARY = ["selfEmployment", "dividends", "otherIncome", "capitalGains", "foreignIncome"];
+const TAX_PAID_KEYS = ["incomeTaxDeducted"];
+const DEDUCTION_PRIMARY = ["pension", "studentLoan"];
+const DEDUCTION_SECONDARY = ["charity", "benefits"];
 
 /** Content hash of a dropped file, used to spot a file that has already been
  *  added this session. Matches on bytes, never the filename: a renamed copy
@@ -218,7 +215,14 @@ interface PendingFollowUp {
 
 export default function UploadPage() {
   const [items, setItems] = useState<Record<string, Item>>(INITIAL_ITEMS);
-  const [expenseKeys, setExpenseKeys] = useState<string[]>([]);
+  // Categories in the "triggered" group that something has since put a
+  // figure into, in the order they were revealed.
+  const [revealedKeys, setRevealedKeys] = useState<string[]>([]);
+  // One flag per collapsible group. Kept separate so expanding Income
+  // leaves Deductions & reliefs exactly as it was, and so a category
+  // revealing itself mid-session disturbs neither.
+  const [incomeExpanded, setIncomeExpanded] = useState(false);
+  const [deductionsExpanded, setDeductionsExpanded] = useState(false);
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
   const [expandedDocs, setExpandedDocs] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -272,14 +276,53 @@ export default function UploadPage() {
   const manualInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const GROUPS: { label: string; keys: string[]; empty?: string }[] = [
-    { label: "Income", keys: INCOME_KEYS },
-    { label: "Expenses", keys: expenseKeys, empty: EXPENSES_EMPTY_TEXT },
-    { label: "Deductions & benefits", keys: DEDUCTION_KEYS },
+  const GROUPS: {
+    label: string;
+    primary: string[];
+    secondary: string[];
+    expanded: boolean;
+    toggle?: () => void;
+  }[] = [
+    {
+      label: "Income",
+      primary: INCOME_PRIMARY,
+      secondary: INCOME_SECONDARY,
+      expanded: incomeExpanded,
+      toggle: () => setIncomeExpanded((v) => !v),
+    },
+    { label: "Tax already paid", primary: TAX_PAID_KEYS, secondary: [], expanded: false },
+    {
+      label: "Deductions & reliefs",
+      primary: DEDUCTION_PRIMARY,
+      secondary: DEDUCTION_SECONDARY,
+      expanded: deductionsExpanded,
+      toggle: () => setDeductionsExpanded((v) => !v),
+    },
+    // Renders only once something has been filed under one of these.
+    { label: "Also included", primary: revealedKeys, secondary: [], expanded: false },
   ];
-  const allKeys = [...INCOME_KEYS, ...expenseKeys, ...DEDUCTION_KEYS];
-  const resolvedCount = allKeys.filter((k) => itemStatus(items[k]) !== "pending").length;
-  const unresolvedNames = allKeys
+
+  /** Rows actually on screen right now. The footer counts against this, not
+   *  against every category that exists: a category still folded away behind
+   *  "Show more", or one never revealed, would otherwise read as work
+   *  outstanding when there is nothing there to do. */
+  const visibleKeys = GROUPS.flatMap((g) => [...g.primary, ...(g.expanded ? g.secondary : [])]);
+
+  /** What the chat model is told about, which is not the same list. A group
+   *  folded shut is a UI state, not a fact about the return — the model
+   *  should still answer "what's left?" with the categories behind it. An
+   *  unrevealed triggered category is different: nothing has suggested the
+   *  person has one, so naming it would invent a gap. */
+  const positionKeys = [
+    ...INCOME_PRIMARY,
+    ...INCOME_SECONDARY,
+    ...TAX_PAID_KEYS,
+    ...DEDUCTION_PRIMARY,
+    ...DEDUCTION_SECONDARY,
+    ...revealedKeys,
+  ];
+  const resolvedCount = visibleKeys.filter((k) => itemStatus(items[k]) !== "pending").length;
+  const unresolvedNames = visibleKeys
     .filter((k) => itemStatus(items[k]) === "pending")
     .map((k) => items[k].name);
 
@@ -350,14 +393,27 @@ export default function UploadPage() {
     }));
   }
 
-  /** Commits a resolved field. Every category now has a row in INITIAL_ITEMS,
-   *  but an expense row stays hidden until something belongs in it — so a
-   *  mortgage-interest statement arriving before the expense-chip flow ran
-   *  reveals the row itself. */
-  function applyResolvedField(key: ItemKey, value: string, confidence: number, source: string, docId: number) {
-    if (isExpenseKey(key)) {
-      setExpenseKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
+  /** Puts a category on screen so a figure committed into it is actually
+   *  seen. A row can be hidden two ways: a triggered category hasn't been
+   *  revealed yet, or a secondary one is folded behind its group's "Show
+   *  more". Either way, filing a figure into a row nobody can see reads as
+   *  nothing having happened — the chat says "Matched to Dividend income"
+   *  and the page doesn't move, footer included. */
+  function revealCategory(key: ItemKey) {
+    if (isTriggeredKey(key)) {
+      setRevealedKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
+      return;
     }
+    if (INCOME_SECONDARY.includes(key)) setIncomeExpanded(true);
+    else if (DEDUCTION_SECONDARY.includes(key)) setDeductionsExpanded(true);
+  }
+
+  /** Commits a resolved field. Every category has a row in INITIAL_ITEMS,
+   *  but a triggered row stays hidden until something belongs in it — so a
+   *  mortgage-interest statement arriving before the expense-chip flow ran,
+   *  or a P11D landing in benefitsInKind, reveals the row itself. */
+  function applyResolvedField(key: ItemKey, value: string, confidence: number, source: string, docId: number) {
+    revealCategory(key);
     addDocEntry(key, value, source, docId, confidence);
   }
 
@@ -841,7 +897,7 @@ export default function UploadPage() {
         ...prev,
         propertyExpenses: { ...prev.propertyExpenses, hint: selected.join(" · ") },
       }));
-      setExpenseKeys((prev) => (prev.includes("propertyExpenses") ? prev : [...prev, "propertyExpenses"]));
+      setRevealedKeys((prev) => (prev.includes("propertyExpenses") ? prev : [...prev, "propertyExpenses"]));
 
       let followText = `Noted — ${selected.join(", ").toLowerCase()}. `;
       if (selected.includes("Mortgage interest")) {
@@ -856,10 +912,11 @@ export default function UploadPage() {
     }, 300);
   }
 
-  /** What the model sees of the Tax Position: every line, whether or not it
-   *  has a figure, so it can answer "what's left?" as well as "what's in?". */
+  /** What the model sees of the Tax Position: every line it should know
+   *  about, whether or not it has a figure, so it can answer "what's left?"
+   *  as well as "what's in?". */
   function positionLines() {
-    return allKeys.map((key) => {
+    return positionKeys.map((key) => {
       const status = itemStatus(items[key]);
       return {
         name: items[key].name,
@@ -918,7 +975,7 @@ export default function UploadPage() {
   }
 
   function attemptFinish() {
-    const unresolved = allKeys.filter((k) => itemStatus(items[k]) === "pending");
+    const unresolved = visibleKeys.filter((k) => itemStatus(items[k]) === "pending");
     if (unresolved.length === 0) {
       setFinishConfirmOpen(false);
       setSubmittedOpen(true);
@@ -1172,20 +1229,25 @@ export default function UploadPage() {
               <p className="t-bodySmall">Every figure below comes from a document you gave us, or a question you answered.</p>
             </div>
             <div className="pic-groups">
-              {GROUPS.map((group) => (
-                <div className="pic-group" key={group.label}>
-                  <div className="t-overline pic-group-label">{group.label}</div>
-                  {group.keys.length ? (
-                    <div className="pic-rows">{group.keys.map((key) => renderRow(key))}</div>
-                  ) : (
-                    <div className="t-caption pic-group-empty">{group.empty}</div>
-                  )}
-                </div>
-              ))}
+              {GROUPS.map((group) => {
+                const rows = [...group.primary, ...(group.expanded ? group.secondary : [])];
+                if (!rows.length) return null;
+                return (
+                  <div className="pic-group" key={group.label}>
+                    <div className="t-overline pic-group-label">{group.label}</div>
+                    <div className="pic-rows">{rows.map((key) => renderRow(key))}</div>
+                    {group.secondary.length > 0 && (
+                      <button className="t-caption pic-more-toggle" onClick={group.toggle}>
+                        {group.expanded ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <div className="picture-footer">
               <span className="t-bodySmall pf-note">
-                {resolvedCount} of {allKeys.length} sorted
+                {resolvedCount} of {visibleKeys.length} sorted
               </span>
               <button className="tf-btn tf-btn--primary tf-btn--large t-button" onClick={attemptFinish}>
                 Submit for review

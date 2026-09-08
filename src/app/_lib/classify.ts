@@ -8,55 +8,107 @@ export type ItemKey =
   | "savings"
   | "selfEmployment"
   | "dividends"
+  | "otherIncome"
   | "capitalGains"
   | "foreignIncome"
+  | "incomeTaxDeducted"
   | "pension"
   | "charity"
   | "studentLoan"
   | "benefits"
   | "propertyExpenses"
-  | "selfEmploymentExpenses";
+  | "selfEmploymentExpenses"
+  | "benefitsInKind"
+  | "limitedCompanyDirector";
 
-// Single source of truth for item name/hint — used both to build the
-// upload page's INITIAL_ITEMS and, via ITEM_KEY_LIST in prompts.ts, to tell
-// the model what each key means.
+/** Which block of the Tax Position a category belongs to.
+ *
+ *  "triggered" is not a place on the page so much as a rule: those rows are
+ *  not rendered at all until a document or an answer puts something in them.
+ *  It replaces the old hand-kept EXPENSE_KEYS list — lazy reveal was never
+ *  really about expenses, it was about categories most people don't have. */
+export type ItemGroup = "income" | "taxPaid" | "deductions" | "triggered";
+
+// Single source of truth for item name/hint/group — used to build the upload
+// page's INITIAL_ITEMS and its group lists, and, via ITEM_KEY_LIST in
+// prompts.ts, to tell the model what each key means.
 //
-// Every key belongs here, expenses included. The expense keys were once left
+// Every key belongs here, including the triggered ones. They were once left
 // out because their rows are only *shown* once something needs them, but that
 // also kept them out of the prompt's category list — so a document carrying a
 // cost had no valid destination and the model put it under income instead
 // (seen with a mortgage interest statement and a letting agent's deducted
-// fee). Lazy display is handled by expenseKeys in the upload page; it is not a
-// reason to hide a category from the model.
-export const ITEM_META: Record<ItemKey, { name: string; hint: string }> = {
-  employment: { name: "Employment income", hint: "Salary, wages — from your P60 or payslips" },
-  property: { name: "Property income", hint: "Rent from letting a property" },
-  savings: { name: "Savings interest", hint: "Interest from banks and building societies" },
-  selfEmployment: { name: "Self-employment income", hint: "Freelance, contracting or gig work" },
-  dividends: { name: "Dividend income", hint: "Shares and funds" },
-  capitalGains: { name: "Capital gains", hint: "Sold shares, crypto, property or other assets" },
-  foreignIncome: { name: "Foreign income", hint: "Income or gains from outside the UK" },
-  pension: { name: "Pension contributions", hint: "Payments into a pension, via employer or yourself" },
-  charity: { name: "Charity donations", hint: "Gift Aid donations to charity" },
-  studentLoan: { name: "Student loan repayments", hint: "Repayments deducted via PAYE or made directly" },
-  benefits: { name: "Benefits received", hint: "Child Benefit, State Pension, JSA and similar" },
+// fee). Lazy display is a display concern; it is never a reason to hide a
+// category from the model.
+export const ITEM_META: Record<ItemKey, { name: string; hint: string; group: ItemGroup }> = {
+  employment: { name: "Employment income", hint: "Salary, wages — from your P60 or payslips", group: "income" },
+  property: { name: "Property income", hint: "Rent from letting a property", group: "income" },
+  savings: { name: "Savings interest", hint: "Interest from banks and building societies", group: "income" },
+  selfEmployment: { name: "Self-employment income", hint: "Freelance, contracting or gig work", group: "income" },
+  dividends: { name: "Dividend income", hint: "Shares and funds", group: "income" },
+  otherIncome: {
+    name: "Other income",
+    hint: "Casual income, tips, commissions, anything else",
+    group: "income",
+  },
+  capitalGains: { name: "Capital gains", hint: "Sold shares, crypto, property or other assets", group: "income" },
+  foreignIncome: { name: "Foreign income", hint: "Income or gains from outside the UK", group: "income" },
+  incomeTaxDeducted: {
+    name: "Income tax already deducted",
+    hint: "PAYE tax withheld — from your P60, P45 or payslips",
+    group: "taxPaid",
+  },
+  pension: {
+    name: "Pension contributions",
+    hint: "Payments into a pension, via employer or yourself",
+    group: "deductions",
+  },
+  charity: { name: "Charity donations", hint: "Gift Aid donations to charity", group: "deductions" },
+  studentLoan: {
+    name: "Student loan repayments",
+    hint: "Repayments deducted via PAYE or made directly",
+    group: "deductions",
+  },
+  benefits: {
+    name: "Benefits received",
+    hint: "Child Benefit, State Pension, JSA and similar",
+    group: "deductions",
+  },
   propertyExpenses: {
     name: "Property expenses",
     hint: "Costs of letting — mortgage interest, repairs, agent fees",
+    group: "triggered",
   },
   selfEmploymentExpenses: {
     name: "Self-employment expenses",
     hint: "Costs of your freelance, contracting or gig work",
+    group: "triggered",
+  },
+  benefitsInKind: {
+    name: "Benefits in kind (P11D)",
+    hint: "Company car, private medical insurance and similar employer-provided benefits",
+    group: "triggered",
+  },
+  limitedCompanyDirector: {
+    name: "Limited company director",
+    hint: "Director's loan account, or dividends from your own company",
+    group: "triggered",
   },
 };
 
-/** Categories that sit in the Expenses group rather than Income or
- *  Deductions, and whose rows appear only once a document or an answer puts
- *  something in them. */
-export const EXPENSE_KEYS: ItemKey[] = ["propertyExpenses", "selfEmploymentExpenses"];
+const KEYS = Object.keys(ITEM_META) as ItemKey[];
 
-export function isExpenseKey(key: ItemKey): boolean {
-  return EXPENSE_KEYS.includes(key);
+export function keysInGroup(group: ItemGroup): ItemKey[] {
+  return KEYS.filter((k) => ITEM_META[k].group === group);
+}
+
+/** Categories whose rows appear only once a document or an answer puts
+ *  something in them. Derived from the group rather than hand-listed, so a
+ *  new triggered category needs no second edit here. */
+export const TRIGGERED_KEYS: ItemKey[] = keysInGroup("triggered");
+
+export function isTriggeredKey(key: ItemKey): boolean {
+  return ITEM_META[key].group === "triggered";
 }
 
 export type ConfidenceTier = "high" | "medium" | "low";
@@ -101,7 +153,16 @@ export interface ClassifyResult {
 // Everything else commits exactly as before, and this says nothing about the
 // same document scanned twice to different bytes — that's the content-hash
 // check in the upload page.
-export const OVERLAP_KEYS: ItemKey[] = ["employment", "pension", "studentLoan"];
+// incomeTaxDeducted belongs here for the same reason as employment: PAYE tax
+// on a P60 is cumulative for the year, and the same tax appears again on a
+// payslip's year-to-date column and on a P45. Leaving it out would let a
+// taxpayer claim the same tax as paid twice.
+export const OVERLAP_KEYS: ItemKey[] = [
+  "employment",
+  "incomeTaxDeducted",
+  "pension",
+  "studentLoan",
+];
 
 export function isOverlapKey(key: ItemKey): boolean {
   return OVERLAP_KEYS.includes(key);

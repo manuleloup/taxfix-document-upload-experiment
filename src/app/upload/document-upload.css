@@ -234,6 +234,8 @@
   flex: 1 0 0;
   min-width: 1px;
 }
+/* Unused since groups render nothing at all when they have no rows — kept
+   only if an empty-state message comes back. */
 .pic-group-empty {
   color: var(--dim);
   font-style: italic;
