@@ -7,13 +7,6 @@ const ITEM_KEY_LIST = Object.entries(ITEM_META)
   .map(([key, { name, hint }]) => `- "${key}": ${name} — ${hint}`)
   .join("\n");
 
-const TRIGGER_LIST = `- "none": no follow-up needed
-- "joint_ownership": a property/rental document, and joint ownership isn't stated
-- "self_employment_subtype": a self-employment document, and the kind of work isn't clear
-- "bank_statement_purpose": a bank statement or similarly ambiguous evidence document
-- "cis_arrears": a CIS (Construction Industry Scheme) statement
-- "capital_gains_asset_type": a capital-gains document where the asset type is ambiguous`;
-
 export const CLASSIFY_SYSTEM = `You are a document-reading assistant for a UK tax filing product (Taxfix). You read one uploaded document at a time and extract facts for a taxpayer's Self Assessment return.
 
 Rules:
@@ -35,20 +28,15 @@ export const CLASSIFY_PROMPT = `Examine this document and return ONLY a valid JS
   "taxYear": <"2023-24" style if visible, else null>,
   "description": <1-2 sentence plain-English summary of what you read, for a chat message>,
   "resolvedFields": [ { "key": <one of the item keys below>, "value": <a monetary amount, "£1,234.56" style>, "confidence": <0.0-1.0>, "label": <short field label, e.g. "gross pay"> }, ... ],
-  "trigger": <one of the trigger codes below>,
-  "followUpItemKey": <the item key the trigger applies to, or null if trigger is "none">,
   "unresolved": <true only if you cannot classify this file at all, e.g. it's unreadable or clearly not a tax document>
 }
 
-Item keys (use for resolvedFields[].key and followUpItemKey):
+Item keys (use for resolvedFields[].key):
 ${ITEM_KEY_LIST}
-
-Trigger codes (use for "trigger"):
-${TRIGGER_LIST}
 
 Every resolvedFields entry must be a monetary amount. If the document states something relevant that is not a figure — for example a P45's "student loan deductions to continue: yes" — describe it in "description" and leave it out of resolvedFields. A document can legitimately produce an empty resolvedFields array and still have a useful description.
 
-If unresolved is true, resolvedFields should be an empty array and trigger should be "none".`;
+If unresolved is true, resolvedFields should be an empty array.`;
 
 // ── Overlap check ─────────────────────────────────────────────────────────
 // A separate question from classification, deliberately: classification reads

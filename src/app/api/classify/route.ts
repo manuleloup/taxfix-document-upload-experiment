@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     console.log(
       `[classify] ${file.name} → ${result.documentLabel || "unresolved"} ` +
-        `(${result.resolvedFields.length} field(s), trigger: ${result.trigger}) ` +
+        `(${result.resolvedFields.length} field(s)) ` +
         `${LLM_CONFIG.model}/${LLM_CONFIG.effort} in ${Date.now() - started}ms`
     );
     return NextResponse.json(result);

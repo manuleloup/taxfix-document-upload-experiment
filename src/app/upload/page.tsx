@@ -17,7 +17,6 @@ import {
 import {
   CONFIDENCE_HIGH,
   CONFIDENCE_LOW,
-  FOLLOW_UP_TABLE,
   ITEM_META,
   isExpenseKey,
   isOverlapKey,
@@ -27,7 +26,6 @@ import {
   type OverlapExisting,
   type OverlapVerdict,
   type ResolvedField,
-  type TriggerCode,
 } from "../_lib/classify";
 import Dialog from "../_components/dialog";
 
@@ -205,14 +203,17 @@ interface ChatMessage {
   conversational?: boolean;
 }
 
+/** A figure the model couldn't read cleanly, waiting on "does that look
+ *  right?". The only thing that holds one of these now — trigger-sourced
+ *  questions are gone, so there is no second producer to clobber it. */
 interface PendingFollowUp {
   itemKey: ItemKey;
   value: string;
   source: string;
   docId: number;
-  confidence: number;
-  /** true = this is the low-confidence "does that look right?" gate, not a real ambiguity question. */
-  isConfidenceCheck: boolean;
+  /** Whether this figure's document itemised its own property costs, so the
+   *  property-cost question isn't asked about costs already supplied. */
+  docHadPropertyExpenses: boolean;
 }
 
 export default function UploadPage() {
@@ -616,42 +617,29 @@ export default function UploadPage() {
 
     // Figures that could be money already counted from an earlier document
     // are set aside and judged together, in one check, before anything is
-    // committed. A gated field keeps its existing trigger question instead:
-    // the two questions would collide over pendingFollowUp, and no trigger
-    // targets an overlap category today in any case.
+    // committed.
     const overlapFields: ResolvedField[] = [];
     const plainFields: ResolvedField[] = [];
     for (const field of result.resolvedFields) {
-      const isGated = result.trigger !== "none" && result.followUpItemKey === field.key;
       const couldOverlap =
-        !isGated && isOverlapKey(field.key) && matchingEntries(field.key, result.taxYear).length > 0;
+        isOverlapKey(field.key) && matchingEntries(field.key, result.taxYear).length > 0;
       (couldOverlap ? overlapFields : plainFields).push(field);
     }
 
-    // Only one gated question can be held at a time — fine for the demo
-    // documents this pass targets; a document producing more than one
-    // gated field at once isn't handled yet (deliberately deferred).
+    // A statement that itemises its own costs has already answered the
+    // property-cost question, so it isn't asked again.
+    const docHadPropertyExpenses = result.resolvedFields.some((f) => f.key === "propertyExpenses");
+
     for (const field of plainFields) {
-      const isGated = result.trigger !== "none" && result.followUpItemKey === field.key;
-      if (isGated) {
-        const question = FOLLOW_UP_TABLE[result.trigger as Exclude<TriggerCode, "none">];
+      if (field.confidence < CONFIDENCE_LOW) {
+        // Too unclear to commit unasked — the one remaining thing that holds
+        // a figure back on its own.
         setPendingFollowUp({
           itemKey: field.key,
           value: field.value,
           source,
           docId,
-          confidence: field.confidence,
-          isConfidenceCheck: false,
-        });
-        setTimeout(() => addMsg({ from: "assist", text: question.text, chips: question.options }), 350);
-      } else if (field.confidence < CONFIDENCE_LOW) {
-        setPendingFollowUp({
-          itemKey: field.key,
-          value: field.value,
-          source,
-          docId,
-          confidence: field.confidence,
-          isConfidenceCheck: true,
+          docHadPropertyExpenses,
         });
         setTimeout(
           () =>
@@ -667,6 +655,7 @@ export default function UploadPage() {
         );
       } else {
         applyResolvedField(field.key, field.value, field.confidence, source, docId);
+        maybeAskPropertyExpenses(field.key, docHadPropertyExpenses);
       }
     }
 
@@ -788,6 +777,8 @@ export default function UploadPage() {
     );
   }
 
+  /** Answers the "does that look right?" gate — the only chip question left
+   *  that holds a single figure. */
   function answerChip(msgId: number, chip: ChipOption) {
     if (!pendingFollowUp) return;
     setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, chipsDisabled: true } : m)));
@@ -802,9 +793,17 @@ export default function UploadPage() {
       return;
     }
 
-    const confidence = followUp.isConfidenceCheck ? 1 : followUp.confidence;
-    applyResolvedField(followUp.itemKey, followUp.value, confidence, followUp.source, followUp.docId);
-    if (followUp.itemKey === "property") setTimeout(() => addExpenseQuestion(), 700);
+    // Confirmed by the person, so the figure is no longer a shaky reading.
+    applyResolvedField(followUp.itemKey, followUp.value, 1, followUp.source, followUp.docId);
+    maybeAskPropertyExpenses(followUp.itemKey, followUp.docHadPropertyExpenses);
+  }
+
+  /** Asks about property costs once a property income figure has actually
+   *  landed — but not when the document already itemised those costs, which
+   *  a letting agent's statement typically does. */
+  function maybeAskPropertyExpenses(key: ItemKey, docHadPropertyExpenses: boolean) {
+    if (key !== "property" || docHadPropertyExpenses) return;
+    setTimeout(() => addExpenseQuestion(), 700);
   }
 
   function addExpenseQuestion() {

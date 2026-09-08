@@ -79,68 +79,6 @@ export interface ResolvedField {
   label: string;
 }
 
-export type TriggerCode =
-  | "none"
-  | "joint_ownership"
-  | "self_employment_subtype"
-  | "bank_statement_purpose"
-  | "cis_arrears"
-  | "capital_gains_asset_type";
-
-export interface FollowUpQuestion {
-  kind: "confirm" | "choice";
-  itemKey: ItemKey;
-  text: string;
-  options: { label: string; reply: string }[];
-}
-
-// Fixed, hand-authored copy — the model only ever picks a TriggerCode, never
-// writes user-facing question/option text itself. Keeps chip copy reviewed
-// and away from anything advice-adjacent.
-export const FOLLOW_UP_TABLE: Record<
-  Exclude<TriggerCode, "none">,
-  Omit<FollowUpQuestion, "itemKey">
-> = {
-  joint_ownership: {
-    kind: "confirm",
-    text: "Do you own this property jointly with someone else?",
-    options: [
-      { label: "No, just me", reply: "Got it — I'll count all of it as yours." },
-      { label: "Yes, jointly", reply: "Noted. I'll flag this for your accountant to confirm the split." },
-    ],
-  },
-  // Typed stubs — no demo document reaches these yet, but the mechanism
-  // must not be hardcoded to a single trigger.
-  self_employment_subtype: {
-    kind: "choice",
-    text: "What kind of self-employed work is this?",
-    options: [
-      { label: "Freelancer", reply: "Got it — freelance work noted." },
-      { label: "CIS contractor", reply: "Got it — I'll flag this as CIS work." },
-      { label: "Courier or driver", reply: "Got it — courier/platform work noted." },
-      { label: "Other", reply: "Got it — noted as self-employment." },
-    ],
-  },
-  bank_statement_purpose: {
-    kind: "choice",
-    text: "What does this statement cover?",
-    options: [{ label: "Not sure yet", reply: "No problem — I'll flag it for your accountant to check." }],
-  },
-  cis_arrears: {
-    kind: "confirm",
-    text: "Are you behind on any tax returns or payments?",
-    options: [
-      { label: "No", reply: "Good to know." },
-      { label: "Yes", reply: "Thanks for flagging that — your accountant will follow up." },
-    ],
-  },
-  capital_gains_asset_type: {
-    kind: "choice",
-    text: "What did you sell?",
-    options: [{ label: "Not sure yet", reply: "No problem — I'll flag it for your accountant to check." }],
-  },
-};
-
 export interface ClassifyResult {
   documentLabel: string;
   org: string;
@@ -149,8 +87,6 @@ export interface ClassifyResult {
   description: string;
   /** 0..n — 0 for evidence-only docs (e.g. an unclear bank statement). */
   resolvedFields: ResolvedField[];
-  trigger: TriggerCode;
-  followUpItemKey: ItemKey | null;
   /** true = couldn't classify this file at all. */
   unresolved: boolean;
 }
@@ -224,7 +160,5 @@ export const UNRESOLVED_RESULT: ClassifyResult = {
   taxYear: null,
   description: "Couldn't read that document clearly — try a clearer scan or photo.",
   resolvedFields: [],
-  trigger: "none",
-  followUpItemKey: null,
   unresolved: true,
 };

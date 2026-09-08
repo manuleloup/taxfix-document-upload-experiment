@@ -5,12 +5,13 @@ import type { ClassifyResult } from "@/app/_lib/classify";
 // endpoint can produce, so the flow can be reviewed without an API key:
 //
 //   1. P60           — multi-field, all high confidence
-//   2. Letting stmt  — a trigger, so the value waits on a follow-up question
-//                      (answering it also kicks off the property-expense chain)
+//   2. Letting stmt  — property income commits straight away, and because the
+//                      statement itemises no costs, the property-expense
+//                      question follows
 //   3. Interest cert — single field, high confidence
 //   4. Payslip       — one low-confidence field, so the "does that look
 //                      right?" confirm gate fires instead of auto-committing
-//   5. Receipt photo — medium confidence, commits but flags "worth a check"
+//   5. Receipt photo — mid-range confidence; commits with no extra prompt
 //   6. Blurry photo  — unresolved: nothing added, graceful message only
 export const MOCK_DOCUMENTS: ClassifyResult[] = [
   {
@@ -24,8 +25,6 @@ export const MOCK_DOCUMENTS: ClassifyResult[] = [
       { key: "pension", value: "£1,200.00", confidence: 0.93, label: "pension contributions" },
       { key: "studentLoan", value: "£1,050.00", confidence: 0.91, label: "student loan repayments" },
     ],
-    trigger: "none",
-    followUpItemKey: null,
     unresolved: false,
   },
   {
@@ -34,8 +33,6 @@ export const MOCK_DOCUMENTS: ClassifyResult[] = [
     taxYear: "2024-25",
     description: "Read your letting statement for 14 Ashby Road: rental income of £9,600.00 for the year.",
     resolvedFields: [{ key: "property", value: "£9,600.00", confidence: 0.95, label: "rental income" }],
-    trigger: "joint_ownership",
-    followUpItemKey: "property",
     unresolved: false,
   },
   {
@@ -44,8 +41,6 @@ export const MOCK_DOCUMENTS: ClassifyResult[] = [
     taxYear: "2024-25",
     description: "Read your interest certificate from Northbrook Bank: savings interest of £740.00 for the year.",
     resolvedFields: [{ key: "savings", value: "£740.00", confidence: 0.96, label: "savings interest" }],
-    trigger: "none",
-    followUpItemKey: null,
     unresolved: false,
   },
   {
@@ -55,8 +50,6 @@ export const MOCK_DOCUMENTS: ClassifyResult[] = [
     description:
       "This looks like a single month's payslip rather than a year-end summary, and the year-to-date figure is partly cut off — I've read it as £4,180.00 but it's worth a check.",
     resolvedFields: [{ key: "employment", value: "£4,180.00", confidence: 0.34, label: "year-to-date pay" }],
-    trigger: "none",
-    followUpItemKey: null,
     unresolved: false,
   },
   {
@@ -66,8 +59,6 @@ export const MOCK_DOCUMENTS: ClassifyResult[] = [
     description:
       "Read a Gift Aid receipt from Shelter for £240.00. The date is faint, so I've assumed it falls in this tax year.",
     resolvedFields: [{ key: "charity", value: "£240.00", confidence: 0.71, label: "Gift Aid donation" }],
-    trigger: "none",
-    followUpItemKey: null,
     unresolved: false,
   },
   {
@@ -76,8 +67,6 @@ export const MOCK_DOCUMENTS: ClassifyResult[] = [
     taxYear: null,
     description: "That photo is too blurry to read — try a flatter, better-lit shot or the original PDF.",
     resolvedFields: [],
-    trigger: "none",
-    followUpItemKey: null,
     unresolved: true,
   },
 ];
