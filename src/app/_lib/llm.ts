@@ -6,11 +6,19 @@
 // nothing else.
 
 import Anthropic from "@anthropic-ai/sdk";
-import { UNRESOLVED_RESULT, type ClassifyResult } from "./classify";
+import {
+  UNRESOLVED_RESULT,
+  unresolvedVerdicts,
+  type ClassifyResult,
+  type OverlapRequestBody,
+  type OverlapVerdict,
+} from "./classify";
 import {
   CHAT_SYSTEM,
   CLASSIFY_PROMPT,
   CLASSIFY_SYSTEM,
+  OVERLAP_SYSTEM,
+  overlapPrompt,
   GET_DOCUMENT_NOT_FOUND,
   GET_DOCUMENT_TOOL_DESCRIPTION,
   GET_DOCUMENT_TOOL_NAME,
@@ -91,6 +99,56 @@ export async function classifyDocument(doc: DocumentInput): Promise<ClassifyResu
     // Model returned something that isn't JSON — degrade rather than throw.
     return UNRESOLVED_RESULT;
   }
+}
+
+/** Judges whether the figures a document just produced are money already
+ *  counted from an earlier document. A separate call from classification on
+ *  purpose: classification reads one document in isolation and can't see the
+ *  rest of the position. Degrades to zero-confidence verdicts, which route to
+ *  a confirm question rather than adding or dropping anything silently. */
+export async function checkOverlap(body: OverlapRequestBody): Promise<OverlapVerdict[]> {
+  const msg = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1024,
+    system: OVERLAP_SYSTEM,
+    ...EFFORT_PARAM,
+    messages: [{ role: "user", content: overlapPrompt(body) }],
+  });
+
+  const block = msg.content.find((b) => b.type === "text");
+  if (!block || block.type !== "text") return unresolvedVerdicts(body.candidates);
+
+  const raw = block.text
+    .trim()
+    .replace(/^```(?:json)?\n?/, "")
+    .replace(/\n?```$/, "");
+
+  let parsed: { verdicts?: unknown };
+  try {
+    parsed = JSON.parse(raw) as { verdicts?: unknown };
+  } catch {
+    return unresolvedVerdicts(body.candidates);
+  }
+  if (!Array.isArray(parsed.verdicts)) return unresolvedVerdicts(body.candidates);
+
+  // One verdict per candidate, in the order asked for. A candidate the model
+  // didn't answer for falls back to zero confidence, so it gets asked about
+  // rather than being assumed either way.
+  const byKey = new Map<string, OverlapVerdict>();
+  for (const raw of parsed.verdicts as OverlapVerdict[]) {
+    if (typeof raw?.key !== "string" || typeof raw?.overlaps !== "boolean") continue;
+    const confidence = typeof raw.confidence === "number" ? raw.confidence : 0;
+    byKey.set(raw.key, {
+      key: raw.key,
+      overlaps: raw.overlaps,
+      confidence: Math.min(1, Math.max(0, confidence)),
+      reason: typeof raw.reason === "string" ? raw.reason : "",
+    });
+  }
+
+  return body.candidates.map(
+    (c) => byKey.get(c.key) ?? unresolvedVerdicts([c])[0]
+  );
 }
 
 export interface ChatTurn {

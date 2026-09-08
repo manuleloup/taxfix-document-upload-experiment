@@ -130,6 +130,69 @@ export interface ClassifyResult {
   unresolved: boolean;
 }
 
+// ── Overlap between documents ─────────────────────────────────────────────
+// The same money can legitimately appear on more than one document from the
+// same employer and tax year: a P60 is cumulative for the year, a P45 runs to
+// the leaving date, and a year-end payslip carries year-to-date figures. Add
+// both and the income is counted twice.
+//
+// Deliberately limited to the three categories where this actually happens.
+// Everything else commits exactly as before, and this says nothing about the
+// same document scanned twice to different bytes — that's the content-hash
+// check in the upload page.
+export const OVERLAP_KEYS: ItemKey[] = ["employment", "pension", "studentLoan"];
+
+export function isOverlapKey(key: ItemKey): boolean {
+  return OVERLAP_KEYS.includes(key);
+}
+
+/** A figure from the newly-read document that needs judging. */
+export interface OverlapCandidate {
+  key: ItemKey;
+  value: string;
+  label: string;
+}
+
+/** One already-committed figure the new document might be duplicating. */
+export interface OverlapExisting {
+  key: ItemKey;
+  formatted: string;
+  docLabel: string;
+  org: string;
+  taxYear: string | null;
+  description: string;
+}
+
+export interface OverlapRequestBody {
+  newDoc: { label: string; org: string; taxYear: string | null; description: string };
+  candidates: OverlapCandidate[];
+  existing: OverlapExisting[];
+}
+
+/** The model's judgement about one candidate. `confidence` is how sure it is
+ *  of *this judgement* — not how clearly a figure was read off the page. */
+export interface OverlapVerdict {
+  key: ItemKey;
+  /** true = this figure is money already counted elsewhere. */
+  overlaps: boolean;
+  /** 0..1 */
+  confidence: number;
+  /** One short sentence, shown to the person. */
+  reason: string;
+}
+
+/** Used when the check fails or its reply can't be parsed. Zero confidence,
+ *  so every candidate routes to the confirm chip — nothing is silently added
+ *  and nothing is silently dropped. */
+export function unresolvedVerdicts(candidates: OverlapCandidate[]): OverlapVerdict[] {
+  return candidates.map((c) => ({
+    key: c.key,
+    overlaps: false,
+    confidence: 0,
+    reason: "I couldn't check this against your other documents.",
+  }));
+}
+
 export const UNRESOLVED_RESULT: ClassifyResult = {
   documentLabel: "",
   org: "",

@@ -323,10 +323,6 @@
 .pic-entry.manual {
   color: var(--primary-light);
 }
-/* Medium-confidence classification — the one accent permitted in this layout. */
-.pic-entry.needs-check {
-  color: var(--attention);
-}
 .pic-entry svg.pic-entry-icon {
   flex-shrink: 0;
 }

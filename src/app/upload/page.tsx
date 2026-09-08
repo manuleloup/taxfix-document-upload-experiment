@@ -6,7 +6,6 @@ import {
   CheckIcon,
   CircleCheckIcon,
   DocIcon,
-  LowConfidenceIcon,
   ChevronDownIcon,
   PencilIcon,
   PlusIcon,
@@ -16,12 +15,17 @@ import {
   statusIcon,
 } from "../_components/icons";
 import {
+  CONFIDENCE_HIGH,
   CONFIDENCE_LOW,
   FOLLOW_UP_TABLE,
   ITEM_META,
-  confidenceTier,
+  isOverlapKey,
   type ClassifyResult,
   type ItemKey,
+  type OverlapCandidate,
+  type OverlapExisting,
+  type OverlapVerdict,
+  type ResolvedField,
   type TriggerCode,
 } from "../_lib/classify";
 import Dialog from "../_components/dialog";
@@ -143,6 +147,43 @@ interface ChipOption {
   reply: string;
   /** "manual" = open the manual editor instead of committing the pending value. */
   action?: "manual";
+  /** Set on the chips of an overlap question; routes to answerOverlap, which
+   *  builds its own reply from whatever it ends up committing. */
+  overlapAnswer?: "additional" | "duplicate";
+}
+
+/** A figure held back pending the person's answer on whether it's additional
+ *  income or money already counted. */
+interface HeldOverlap {
+  itemKey: ItemKey;
+  value: string;
+  /** The reading confidence from classification, carried through unchanged:
+   *  the question answered was whether the money is additional, not how well
+   *  the figure was read. Recorded on the entry, not shown in the row. */
+  confidence: number;
+  source: string;
+  docId: number;
+  /** Documents whose figures this one appears to duplicate. */
+  becauseOfDocIds: number[];
+  reason: string;
+}
+
+/** A figure that was left out of the position because it duplicated an
+ *  earlier document. Recorded so that deleting the document it duplicated
+ *  can point out that the figure may now be needed. */
+interface Suppression {
+  /** The document the left-out figure came from. */
+  docId: number;
+  docLabel: string;
+  itemKey: ItemKey;
+  value: string;
+  becauseOfDocIds: number[];
+}
+
+/** "a, b and c" */
+function humanList(parts: string[]): string {
+  if (parts.length <= 1) return parts[0] ?? "";
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
 }
 
 interface ChatMessage {
@@ -154,6 +195,10 @@ interface ChatMessage {
   chips?: ChipOption[];
   chipsDisabled?: boolean;
   isExpenseQuestion?: boolean;
+  /** Set on a grouped "is this additional?" question. Its held figures live
+   *  in pendingOverlaps under this message's id, so two documents can each
+   *  hold their own question without one clobbering the other. */
+  isOverlapQuestion?: boolean;
   /** Set only on real free-text exchanges. The scripted status lines, chip
    *  questions and upload confirmations that also live in this log are UI
    *  narration, not conversation, and aren't sent to the model as history. */
@@ -184,6 +229,11 @@ export default function UploadPage() {
   const [dragOver, setDragOver] = useState(false);
   const [dropzoneHint, setDropzoneHint] = useState(false);
   const [pendingFollowUp, setPendingFollowUp] = useState<PendingFollowUp | null>(null);
+  // Keyed by the id of the question message holding them, so concurrent
+  // questions don't overwrite each other the way pendingFollowUp's single
+  // slot does.
+  const [pendingOverlaps, setPendingOverlaps] = useState<Record<number, HeldOverlap[]>>({});
+  const [suppressions, setSuppressions] = useState<Suppression[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
   const [submittedOpen, setSubmittedOpen] = useState(false);
@@ -233,10 +283,13 @@ export default function UploadPage() {
     .filter((k) => itemStatus(items[k]) === "pending")
     .map((k) => items[k].name);
 
-  function addMsg(msg: Omit<ChatMessage, "id">) {
+  /** Returns the new message's id, so a question can file the state it holds
+   *  against the message the person will answer on. */
+  function addMsg(msg: Omit<ChatMessage, "id">): number {
     msgIdRef.current += 1;
     const id = msgIdRef.current;
     setMessages((prev) => [...prev, { id, chipsDisabled: false, ...msg }]);
+    return id;
   }
 
   // Initial greeting — guarded against Strict Mode's double-invoked mount effect.
@@ -254,6 +307,19 @@ export default function UploadPage() {
   useEffect(() => {
     if (logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
   }, [messages, chatLoading]);
+
+  // The position and document list as they stand *now*. handleFiles awaits
+  // each upload in turn, so values captured from render are stale for every
+  // file after the first — and the overlap check has to see entries the
+  // previous file just committed. A classify fetch always separates one
+  // file's check from the next, so this mirror is current by the time it's
+  // read.
+  const itemsRef = useRef(items);
+  const documentsRef = useRef(documents);
+  useEffect(() => {
+    itemsRef.current = items;
+    documentsRef.current = documents;
+  }, [items, documents]);
 
   useEffect(() => {
     if (editingManualKey && manualInputRef.current) {
@@ -295,6 +361,189 @@ export default function UploadPage() {
       setExpenseKeys((prev) => (prev.includes("propertyExpenses") ? prev : [...prev, "propertyExpenses"]));
     }
     addDocEntry(key, value, source, docId, confidence);
+  }
+
+  /** Committed, document-sourced entries in this category that could be the
+   *  same money: same tax year, or either year not stated. Manual entries are
+   *  excluded — there's no document behind them to reason about. */
+  function matchingEntries(key: ItemKey, taxYear: string | null) {
+    const item = itemsRef.current[key];
+    if (!item) return [];
+    return item.docEntries.flatMap((entry) => {
+      const doc = documentsRef.current.find((d) => d.id === entry.docId);
+      if (!doc) return [];
+      const yearsCouldMatch = !doc.taxYear || !taxYear || doc.taxYear === taxYear;
+      return yearsCouldMatch ? [{ entry, doc }] : [];
+    });
+  }
+
+  function existingFor(key: ItemKey, taxYear: string | null): OverlapExisting[] {
+    return matchingEntries(key, taxYear).map(({ entry, doc }) => ({
+      key,
+      formatted: entry.formatted,
+      docLabel: doc.label,
+      org: doc.org,
+      taxYear: doc.taxYear,
+      description: doc.description,
+    }));
+  }
+
+  /** Judges figures that might duplicate an earlier document, then either
+   *  commits them, leaves them out with an explanation, or holds them for one
+   *  grouped question. */
+  async function resolveOverlaps(
+    fields: ResolvedField[],
+    result: ClassifyResult,
+    source: string,
+    docId: number
+  ) {
+    const candidates: OverlapCandidate[] = fields.map((f) => ({
+      key: f.key,
+      value: f.value,
+      label: f.label,
+    }));
+    const existing = fields.flatMap((f) => existingFor(f.key, result.taxYear));
+    const docLabel = result.documentLabel || "document";
+
+    setChatLoading(true);
+    let verdicts: OverlapVerdict[];
+    try {
+      const res = await fetch("/api/overlap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          newDoc: {
+            label: result.documentLabel,
+            org: result.org,
+            taxYear: result.taxYear,
+            description: result.description,
+          },
+          candidates,
+          existing,
+        }),
+      });
+      if (!res.ok) throw new Error(`Overlap check failed (${res.status})`);
+      const data: { verdicts?: OverlapVerdict[] } = await res.json();
+      if (!Array.isArray(data.verdicts)) throw new Error("No verdicts");
+      verdicts = data.verdicts;
+    } catch {
+      // Couldn't check — ask rather than guess in either direction.
+      verdicts = candidates.map((c) => ({
+        key: c.key,
+        overlaps: false,
+        confidence: 0,
+        reason: "I couldn't check this against your other documents.",
+      }));
+    } finally {
+      setChatLoading(false);
+    }
+
+    const held: HeldOverlap[] = [];
+
+    for (const field of fields) {
+      const verdict = verdicts.find((v) => v.key === field.key);
+      const becauseOfDocIds = [...new Set(matchingEntries(field.key, result.taxYear).map(({ doc }) => doc.id))];
+      // CONFIDENCE_HIGH is the product's existing "confident enough" bar; a
+      // judgement below it always goes to the person.
+      const confident = !!verdict && verdict.confidence >= CONFIDENCE_HIGH;
+
+      if (confident && verdict.overlaps) {
+        // Left out, said plainly, no confirm step. Reversible by hand on the
+        // row, which is also how a wrong call here gets corrected.
+        setSuppressions((prev) => [
+          ...prev,
+          { docId, docLabel, itemKey: field.key, value: field.value, becauseOfDocIds },
+        ]);
+        addMsg({
+          from: "assist",
+          text:
+            `I've left the ${field.value} for ${itemName(field.key).toLowerCase()} out of your picture — ` +
+            `${verdict.reason} If you think it's separate, you can add it by hand on that row.`,
+        });
+        continue;
+      }
+
+      if (confident && !verdict.overlaps) {
+        // Genuinely additional — a second employer, say. Today's behaviour.
+        applyResolvedField(field.key, field.value, field.confidence, source, docId);
+        continue;
+      }
+
+      held.push({
+        itemKey: field.key,
+        value: field.value,
+        confidence: field.confidence,
+        source,
+        docId,
+        becauseOfDocIds,
+        reason: verdict?.reason ?? "",
+      });
+    }
+
+    if (held.length === 0) return;
+
+    // One question for the whole document: the held figures are uncertain for
+    // the same underlying reason, so asking about each separately would be
+    // three ways of asking the same thing.
+    const listed = humanList(held.map((h) => `${h.value} for ${itemName(h.itemKey).toLowerCase()}`));
+    const reasons = [...new Set(held.map((h) => h.reason).filter(Boolean))].join(" ");
+    const msgId = addMsg({
+      from: "assist",
+      isOverlapQuestion: true,
+      text:
+        `This ${docLabel} gives ${listed}, which may be money already counted from a document you've added. ` +
+        `${reasons} Is it additional, or the same money?`,
+      chips: [
+        { label: "It's additional", reply: "", overlapAnswer: "additional" },
+        { label: "Already counted", reply: "", overlapAnswer: "duplicate" },
+      ],
+    });
+    setPendingOverlaps((prev) => ({ ...prev, [msgId]: held }));
+  }
+
+  function answerOverlap(msgId: number, chip: ChipOption) {
+    const held = pendingOverlaps[msgId];
+    if (!held) return;
+
+    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, chipsDisabled: true } : m)));
+    addMsg({ from: "user", text: chip.label });
+    setPendingOverlaps((prev) => {
+      const next = { ...prev };
+      delete next[msgId];
+      return next;
+    });
+
+    const listed = humanList(held.map((h) => `${h.value} for ${itemName(h.itemKey).toLowerCase()}`));
+
+    if (chip.overlapAnswer === "additional") {
+      for (const h of held) {
+        // Keeps the reading confidence rather than forcing 1: the question
+        // answered was whether the money is additional, not whether the
+        // figure was read correctly.
+        applyResolvedField(h.itemKey, h.value, h.confidence, h.source, h.docId);
+      }
+      setTimeout(() => addMsg({ from: "assist", text: `Thanks — I've added ${listed} to your picture.` }), 300);
+      return;
+    }
+
+    setSuppressions((prev) => [
+      ...prev,
+      ...held.map((h) => ({
+        docId: h.docId,
+        docLabel: documentsRef.current.find((d) => d.id === h.docId)?.label ?? "that document",
+        itemKey: h.itemKey,
+        value: h.value,
+        becauseOfDocIds: h.becauseOfDocIds,
+      })),
+    ]);
+    setTimeout(
+      () =>
+        addMsg({
+          from: "assist",
+          text: `Got it — I've left ${listed} out, so nothing gets counted twice.`,
+        }),
+      300
+    );
   }
 
   async function handleFileUpload(file: File) {
@@ -368,10 +617,24 @@ export default function UploadPage() {
     const matchedNames = result.resolvedFields.map((f) => itemName(f.key)).join(", ");
     addMsg({ from: "assist", attach: file.name, text: result.description, result: `Matched to ${matchedNames}` });
 
+    // Figures that could be money already counted from an earlier document
+    // are set aside and judged together, in one check, before anything is
+    // committed. A gated field keeps its existing trigger question instead:
+    // the two questions would collide over pendingFollowUp, and no trigger
+    // targets an overlap category today in any case.
+    const overlapFields: ResolvedField[] = [];
+    const plainFields: ResolvedField[] = [];
+    for (const field of result.resolvedFields) {
+      const isGated = result.trigger !== "none" && result.followUpItemKey === field.key;
+      const couldOverlap =
+        !isGated && isOverlapKey(field.key) && matchingEntries(field.key, result.taxYear).length > 0;
+      (couldOverlap ? overlapFields : plainFields).push(field);
+    }
+
     // Only one gated question can be held at a time — fine for the demo
     // documents this pass targets; a document producing more than one
     // gated field at once isn't handled yet (deliberately deferred).
-    for (const field of result.resolvedFields) {
+    for (const field of plainFields) {
       const isGated = result.trigger !== "none" && result.followUpItemKey === field.key;
       if (isGated) {
         const question = FOLLOW_UP_TABLE[result.trigger as Exclude<TriggerCode, "none">];
@@ -409,6 +672,10 @@ export default function UploadPage() {
         applyResolvedField(field.key, field.value, field.confidence, source, docId);
       }
     }
+
+    if (overlapFields.length > 0) {
+      await resolveOverlaps(overlapFields, result, source, docId);
+    }
   }
 
   async function handleFiles(fileList: FileList | null) {
@@ -438,6 +705,29 @@ export default function UploadPage() {
       from: "assist",
       text: `Removed ${doc.label} — I've taken out anything it added to your picture. Document-sourced values can only be removed this way, so nothing gets out of sync with what you've actually uploaded.`,
     });
+
+    // Figures left out because they duplicated *this* document may be needed
+    // now that it's gone. Deliberately not re-evaluated — that's a later
+    // piece of work — but a total that's quietly short with nothing
+    // explaining it would be worse than saying so.
+    const orphaned = suppressions.filter((s) => s.becauseOfDocIds.includes(id) && s.docId !== id);
+    setSuppressions((prev) => prev.filter((s) => s.docId !== id && !s.becauseOfDocIds.includes(id)));
+
+    if (orphaned.length > 0) {
+      const listed = humanList(
+        orphaned.map((s) => `${s.value} for ${itemName(s.itemKey).toLowerCase()} from ${s.docLabel}`)
+      );
+      setTimeout(
+        () =>
+          addMsg({
+            from: "assist",
+            text:
+              `One thing worth checking: I'd left ${listed} out because ${doc.label} already covered it. ` +
+              `Now that it's gone, that may need to go back in — you can add it by hand on the row.`,
+          }),
+        350
+      );
+    }
   }
 
   function startEditManual(key: string) {
@@ -630,11 +920,10 @@ export default function UploadPage() {
   }
 
   function renderDocEntryLine(entry: DocEntry, idx: number) {
-    const tier = confidenceTier(entry.confidence);
     return (
-      <div className={`pic-entry doc ${tier === "medium" ? "needs-check" : ""}`} key={idx}>
+      <div className="pic-entry doc" key={idx}>
         <span className="pic-entry-icon" style={{ display: "flex" }}>
-          {tier === "medium" ? <LowConfidenceIcon size={12} /> : <DocIcon size={12} />}
+          <DocIcon size={12} />
         </span>
         <span className="t-caption pic-entry-amount">{entry.formatted}</span>
         <span className="t-caption pic-entry-label">{entry.source}</span>
@@ -927,7 +1216,12 @@ export default function UploadPage() {
                 {m.chips && (
                   <div className="msg-chips">
                     {m.chips.map((c, i) => (
-                      <button key={i} className="tf-chip tf-chip--medium tf-chip--selectable t-caption" disabled={m.chipsDisabled} onClick={() => answerChip(m.id, c)}>
+                      <button
+                        key={i}
+                        className="tf-chip tf-chip--medium tf-chip--selectable t-caption"
+                        disabled={m.chipsDisabled}
+                        onClick={() => (m.isOverlapQuestion ? answerOverlap(m.id, c) : answerChip(m.id, c))}
+                      >
                         {c.label}
                       </button>
                     ))}

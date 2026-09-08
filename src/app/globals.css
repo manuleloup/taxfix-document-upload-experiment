@@ -58,7 +58,8 @@
   --error-action: #fbb3a2;
 
   /* The one permitted accent for this layout (brand: max one per layout).
-     Used for the medium-confidence "worth a check" state. */
+     Currently unspent: it carried the medium-confidence "worth a check"
+     state on Tax Position rows until that badge was removed. */
   --accent3-background-light: #ffefd3;
   --accent3-main: #66541a;
   --accent3-light: #f8a21a;
