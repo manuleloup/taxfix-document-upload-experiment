@@ -19,6 +19,7 @@ import {
   CONFIDENCE_LOW,
   FOLLOW_UP_TABLE,
   ITEM_META,
+  isExpenseKey,
   isOverlapKey,
   type ClassifyResult,
   type ItemKey,
@@ -62,7 +63,6 @@ function newItem(name: string, hint: string): Item {
 }
 
 function itemName(key: ItemKey): string {
-  if (key === "propertyExpenses") return "Property expenses";
   return ITEM_META[key].name;
 }
 
@@ -349,15 +349,13 @@ export default function UploadPage() {
     }));
   }
 
-  /** Commits a resolved field, lazily creating its item row if it doesn't exist yet
-   *  (e.g. a mortgage-interest statement arriving before the expense-chip flow ran). */
+  /** Commits a resolved field. Every category now has a row in INITIAL_ITEMS,
+   *  but an expense row stays hidden until something belongs in it — so a
+   *  mortgage-interest statement arriving before the expense-chip flow ran
+   *  reveals the row itself. */
   function applyResolvedField(key: ItemKey, value: string, confidence: number, source: string, docId: number) {
-    setItems((prev) => {
-      if (prev[key]) return prev;
-      return { ...prev, [key]: newItem(itemName(key), "") };
-    });
-    if (key === "propertyExpenses") {
-      setExpenseKeys((prev) => (prev.includes("propertyExpenses") ? prev : [...prev, "propertyExpenses"]));
+    if (isExpenseKey(key)) {
+      setExpenseKeys((prev) => (prev.includes(key) ? prev : [...prev, key]));
     }
     addDocEntry(key, value, source, docId, confidence);
   }
@@ -838,9 +836,12 @@ export default function UploadPage() {
 
     addMsg({ from: "user", text: selected.join(", ") });
     setTimeout(() => {
-      setItems((prev) =>
-        prev.propertyExpenses ? prev : { ...prev, propertyExpenses: newItem("Property expenses", selected.join(" · ")) }
-      );
+      // The row already exists; narrow its hint to the costs they picked, so
+      // it reads back what they told us rather than the generic examples.
+      setItems((prev) => ({
+        ...prev,
+        propertyExpenses: { ...prev.propertyExpenses, hint: selected.join(" · ") },
+      }));
       setExpenseKeys((prev) => (prev.includes("propertyExpenses") ? prev : [...prev, "propertyExpenses"]));
 
       let followText = `Noted — ${selected.join(", ").toLowerCase()}. `;

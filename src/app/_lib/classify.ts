@@ -14,13 +14,21 @@ export type ItemKey =
   | "charity"
   | "studentLoan"
   | "benefits"
-  | "propertyExpenses";
+  | "propertyExpenses"
+  | "selfEmploymentExpenses";
 
 // Single source of truth for item name/hint — used both to build the
-// upload page's INITIAL_ITEMS and to tell the model what each key means.
-// propertyExpenses is intentionally excluded: it's created lazily once the
-// expense-question flow (or a resolved field targeting it) actually needs it.
-export const ITEM_META: Record<Exclude<ItemKey, "propertyExpenses">, { name: string; hint: string }> = {
+// upload page's INITIAL_ITEMS and, via ITEM_KEY_LIST in prompts.ts, to tell
+// the model what each key means.
+//
+// Every key belongs here, expenses included. The expense keys were once left
+// out because their rows are only *shown* once something needs them, but that
+// also kept them out of the prompt's category list — so a document carrying a
+// cost had no valid destination and the model put it under income instead
+// (seen with a mortgage interest statement and a letting agent's deducted
+// fee). Lazy display is handled by expenseKeys in the upload page; it is not a
+// reason to hide a category from the model.
+export const ITEM_META: Record<ItemKey, { name: string; hint: string }> = {
   employment: { name: "Employment income", hint: "Salary, wages — from your P60 or payslips" },
   property: { name: "Property income", hint: "Rent from letting a property" },
   savings: { name: "Savings interest", hint: "Interest from banks and building societies" },
@@ -32,7 +40,24 @@ export const ITEM_META: Record<Exclude<ItemKey, "propertyExpenses">, { name: str
   charity: { name: "Charity donations", hint: "Gift Aid donations to charity" },
   studentLoan: { name: "Student loan repayments", hint: "Repayments deducted via PAYE or made directly" },
   benefits: { name: "Benefits received", hint: "Child Benefit, State Pension, JSA and similar" },
+  propertyExpenses: {
+    name: "Property expenses",
+    hint: "Costs of letting — mortgage interest, repairs, agent fees",
+  },
+  selfEmploymentExpenses: {
+    name: "Self-employment expenses",
+    hint: "Costs of your freelance, contracting or gig work",
+  },
 };
+
+/** Categories that sit in the Expenses group rather than Income or
+ *  Deductions, and whose rows appear only once a document or an answer puts
+ *  something in them. */
+export const EXPENSE_KEYS: ItemKey[] = ["propertyExpenses", "selfEmploymentExpenses"];
+
+export function isExpenseKey(key: ItemKey): boolean {
+  return EXPENSE_KEYS.includes(key);
+}
 
 export type ConfidenceTier = "high" | "medium" | "low";
 export const CONFIDENCE_HIGH = 0.85;
