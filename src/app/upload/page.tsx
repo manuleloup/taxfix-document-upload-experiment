@@ -138,6 +138,10 @@ interface DocumentRow {
   /** SHA-256 of the uploaded file, for spotting byte-identical re-uploads.
    *  "" when the browser couldn't hash it — see fileContentHash. */
   hash: string;
+  /** False when the model didn't think this was an original issued record
+   *  and the person chose to use it anyway. Lives on the document, not on
+   *  each figure: it's one fact about the file. */
+  issuedRecord: boolean;
   // The rest is what chat sends as this document's written summary, so a
   // question can usually be answered without re-reading the original file.
   taxYear: string | null;
@@ -154,6 +158,8 @@ interface ChipOption {
   /** Set on the chips of an overlap question; routes to answerOverlap, which
    *  builds its own reply from whatever it ends up committing. */
   overlapAnswer?: "additional" | "duplicate";
+  /** Set on the chips of a document-origin question; routes to answerOrigin. */
+  originAnswer?: "use" | "other";
 }
 
 /** A figure held back pending the person's answer on whether it's additional
@@ -203,6 +209,9 @@ interface ChatMessage {
    *  in pendingOverlaps under this message's id, so two documents can each
    *  hold their own question without one clobbering the other. */
   isOverlapQuestion?: boolean;
+  /** Set on "use it anyway?" for a file the model didn't judge to be an
+   *  original. Held figures live in pendingOrigins under this message's id. */
+  isOriginQuestion?: boolean;
   /** Set only on real free-text exchanges. The scripted status lines, chip
    *  questions and upload confirmations that also live in this log are UI
    *  narration, not conversation, and aren't sent to the model as history. */
@@ -246,6 +255,11 @@ export default function UploadPage() {
   // questions don't overwrite each other the way pendingFollowUp's single
   // slot does.
   const [pendingOverlaps, setPendingOverlaps] = useState<Record<number, HeldOverlap[]>>({});
+  // Figures read off a file the model didn't judge to be an original,
+  // waiting on "use it anyway?". Keyed by question message, same as above.
+  const [pendingOrigins, setPendingOrigins] = useState<
+    Record<number, { fields: ResolvedField[]; result: ClassifyResult; source: string; docId: number }>
+  >({});
   const [suppressions, setSuppressions] = useState<Suppression[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
@@ -424,6 +438,18 @@ export default function UploadPage() {
   function applyResolvedField(key: ItemKey, value: string, confidence: number, source: string, docId: number) {
     revealCategory(key);
     addDocEntry(key, value, source, docId, confidence);
+  }
+
+  /** Whether a figure came from a file the model didn't judge to be an
+   *  original and the person chose to use regardless. A separate signal from
+   *  low confidence: one is about where the figure came from, the other about
+   *  how well it was read, and an entry can carry both. */
+  function isUnverifiedDoc(docId: number): boolean {
+    // Read from state, not documentsRef: this runs during render, where the
+    // ref may still hold the previous value and the tag would appear a render
+    // late. The ref is for the async upload pipeline, which render is not.
+    const doc = documents.find((d) => d.id === docId);
+    return doc ? !doc.issuedRecord : false;
   }
 
   /** Committed, document-sourced entries in this category that could be the
@@ -668,6 +694,7 @@ export default function UploadPage() {
         org: result.org,
         source,
         hash: hash ?? "",
+        issuedRecord: result.issuedRecord,
         taxYear: result.taxYear,
         description: result.description,
         fields: result.resolvedFields.map((f) => ({ label: f.label, value: f.value })),
@@ -677,15 +704,98 @@ export default function UploadPage() {
     // or unreadable upload doesn't block a retry of the same file.
     if (hash) docHashesRef.current.set(hash, label);
 
+    // A file the model didn't judge to be an original still gets read, and
+    // what it read is still shown — the person decides whether to use it,
+    // rather than being handed a dead end. Nothing commits until they do.
+    if (!result.issuedRecord) {
+      addMsg({ from: "assist", attach: file.name, text: result.description });
+      const msgId = addMsg({
+        from: "assist",
+        isOriginQuestion: true,
+        text:
+          `I don't think this is an original ${label.toLowerCase()}${result.org ? ` from ${result.org}` : ""} — ` +
+          `it doesn't carry the marks of an issued record, so I've left it out of your picture for now. ` +
+          `I did read ${humanList(result.resolvedFields.map((f) => `${f.value} for ${itemName(f.key).toLowerCase()}`))}. Use it anyway?`,
+        chips: [
+          { label: "Use it anyway", reply: "", originAnswer: "use" },
+          { label: "I'll upload something else", reply: "", originAnswer: "other" },
+        ],
+      });
+      setPendingOrigins((prev) => ({
+        ...prev,
+        [msgId]: { fields: result.resolvedFields, result, source, docId },
+      }));
+      return;
+    }
+
     const matchedNames = result.resolvedFields.map((f) => itemName(f.key)).join(", ");
     addMsg({ from: "assist", attach: file.name, text: result.description, result: `Matched to ${matchedNames}` });
 
+    await processResolvedFields(result.resolvedFields, result, source, docId);
+  }
+
+  /** Answers "use it anyway?" for a file the model didn't judge to be an
+   *  original. Using it runs the identical pipeline a trusted document runs,
+   *  so the confidence gate and the overlap check still apply — the override
+   *  is about origin, and says nothing about whether a figure was read well
+   *  or already counted. The entries stay tagged via the document's
+   *  issuedRecord flag. */
+  async function answerOrigin(msgId: number, chip: ChipOption) {
+    const held = pendingOrigins[msgId];
+    if (!held) return;
+
+    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, chipsDisabled: true } : m)));
+    addMsg({ from: "user", text: chip.label });
+    setPendingOrigins((prev) => {
+      const next = { ...prev };
+      delete next[msgId];
+      return next;
+    });
+
+    if (chip.originAnswer === "other") {
+      // Same shape as the confidence gate's "I'll upload proof": commits
+      // nothing, holds nothing, just points at the dropzone.
+      setDropzoneHint(true);
+      setTimeout(() => setDropzoneHint(false), 2400);
+      setTimeout(
+        () =>
+          addMsg({
+            from: "assist",
+            text: "No problem — drop the original in on the left whenever you have it and I'll read that instead.",
+          }),
+        300
+      );
+      return;
+    }
+
+    setTimeout(
+      () =>
+        addMsg({
+          from: "assist",
+          text: "Added — I've marked those figures as not verified against an original, so your accountant can see where they came from.",
+        }),
+      300
+    );
+    await processResolvedFields(held.fields, held.result, held.source, held.docId);
+  }
+
+  /** Commits a document's figures: holds anything too unclear to trust,
+   *  sends anything that might duplicate an earlier document to the overlap
+   *  check, and commits the rest. Split out of handleFileUpload so the
+   *  "use it anyway" override runs the identical pipeline rather than a
+   *  parallel one that could drift from it. */
+  async function processResolvedFields(
+    fields: ResolvedField[],
+    result: ClassifyResult,
+    source: string,
+    docId: number
+  ) {
     // Figures that could be money already counted from an earlier document
     // are set aside and judged together, in one check, before anything is
     // committed.
     const overlapFields: ResolvedField[] = [];
     const plainFields: ResolvedField[] = [];
-    for (const field of result.resolvedFields) {
+    for (const field of fields) {
       const couldOverlap =
         isOverlapKey(field.key) && matchingEntries(field.key, result.taxYear).length > 0;
       (couldOverlap ? overlapFields : plainFields).push(field);
@@ -693,7 +803,7 @@ export default function UploadPage() {
 
     // A statement that itemises its own costs has already answered the
     // property-cost question, so it isn't asked again.
-    const docHadPropertyExpenses = result.resolvedFields.some((f) => f.key === "propertyExpenses");
+    const docHadPropertyExpenses = fields.some((f) => f.key === "propertyExpenses");
 
     for (const field of plainFields) {
       if (field.confidence < CONFIDENCE_LOW) {
@@ -737,6 +847,8 @@ export default function UploadPage() {
       await resolveOverlaps(overlapFields, result, source, docId);
     }
   }
+
+
 
   /** One document at a time. The picker can only offer one now that
    *  `multiple` is gone, but a drag-and-drop can still carry several — those
@@ -1024,6 +1136,7 @@ export default function UploadPage() {
     // Tagged per entry, not just per row: someone with a solid figure and a
     // shaky one needs to know which to go and check.
     const low = entry.confidence < CONFIDENCE_HIGH;
+    const unverified = isUnverifiedDoc(entry.docId);
     return (
       <div className={`pic-entry doc ${low ? "low-confidence" : ""}`} key={idx}>
         <span className="pic-entry-icon" style={{ display: "flex" }}>
@@ -1032,6 +1145,7 @@ export default function UploadPage() {
         <span className="t-caption pic-entry-amount">{entry.formatted}</span>
         <span className="t-caption pic-entry-label">{entry.source}</span>
         {low && <span className="t-caption pic-conf-tag">Low confidence</span>}
+        {unverified && <span className="t-caption pic-origin-tag">Not verified</span>}
       </div>
     );
   }
@@ -1084,6 +1198,8 @@ export default function UploadPage() {
     const it = items[key];
     const status = itemStatus(it);
     const lowConfidence = status === "confirmed" && hasLowConfidenceEntry(it);
+    const unverifiedOrigin =
+      status === "confirmed" && it.docEntries.some((e) => isUnverifiedDoc(e.docId));
 
     let action: React.ReactNode;
     if (status === "dismissed") {
@@ -1100,6 +1216,7 @@ export default function UploadPage() {
             <div className="pic-val-wrap">
               <div className="t-h5 pic-val">{itemTotal(it)}</div>
               {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
+              {unverifiedOrigin && <span className="t-caption pic-origin-tag">Not verified</span>}
             </div>
           ) : (
             <div className="t-body pic-pending-label">Pending</div>
@@ -1328,9 +1445,13 @@ export default function UploadPage() {
                     {m.chips.map((c, i) => (
                       <button
                         key={i}
-                        className="tf-chip tf-chip--medium tf-chip--selectable t-caption"
+                        className="tf-chip tf-chip--medium t-caption"
                         disabled={m.chipsDisabled}
-                        onClick={() => (m.isOverlapQuestion ? answerOverlap(m.id, c) : answerChip(m.id, c))}
+                        onClick={() => {
+                          if (m.isOriginQuestion) return void answerOrigin(m.id, c);
+                          if (m.isOverlapQuestion) return answerOverlap(m.id, c);
+                          answerChip(m.id, c);
+                        }}
                       >
                         {c.label}
                       </button>

@@ -71,18 +71,21 @@ export async function POST(request: Request) {
     const started = Date.now();
     const result = await classifyDocument({ base64, mediaType });
 
-    // The model judges whether the file looks like an issued record; the
-    // policy about it lives here. Normally an unissued file contributes
-    // nothing, however legible — its figures are discarded and the person is
-    // told what's needed instead. ALLOW_UNVERIFIED_DOCUMENTS=1 keeps them, so
-    // the flow can be tested with specimen-stamped fixtures without
-    // re-tuning a prompt to ignore the words printed on them.
+    // The model reports whether the file looks like an issued record; nothing
+    // is discarded on the strength of it. The figures travel with the flag so
+    // the person can be shown what was read and decide whether to use it —
+    // this is a judgement about origin, not a security control, and the one
+    // control here (the magic-byte sniff above) has no override at all.
+    //
+    // ALLOW_UNVERIFIED_DOCUMENTS=1 is the blunter dev version: it declares the
+    // file verified so no question is asked, for clicking through fixtures
+    // that print "SPECIMEN" without answering a chip every time.
     if (!result.issuedRecord) {
-      if (!ALLOW_UNVERIFIED) {
-        console.log(`[classify] ${file.name} → not an issued record, ${result.resolvedFields.length} field(s) discarded`);
-        return NextResponse.json({ ...result, resolvedFields: [], unresolved: true });
+      if (ALLOW_UNVERIFIED) {
+        console.warn(`[classify] ${file.name} → not an issued record, forced through (ALLOW_UNVERIFIED_DOCUMENTS=1)`);
+        return NextResponse.json({ ...result, issuedRecord: true });
       }
-      console.warn(`[classify] ${file.name} → not an issued record, kept anyway (ALLOW_UNVERIFIED_DOCUMENTS=1)`);
+      console.log(`[classify] ${file.name} → not an issued record, ${result.resolvedFields.length} field(s) offered for override`);
     }
 
     console.log(

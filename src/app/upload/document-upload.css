@@ -229,6 +229,24 @@
   font-weight: 500;
   white-space: nowrap;
 }
+/* Origin is a separate signal from confidence, and both can sit on one
+   entry — so this stays neutral rather than taking a second accent colour,
+   which the brand allows only one of per layout. */
+.pic-origin-tag {
+  color: var(--text-secondary);
+  border: 1px solid var(--grey-divider);
+  border-radius: var(--radius-full);
+  padding: 0 var(--space-075);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Base .tf-chip is the branded CTA treatment but the design system defines
+   no hover for it, only for --selectable. Added here rather than in ds.css
+   so the port stays a faithful copy. */
+.msg-chips .tf-chip:not(.tf-chip--selectable):hover:not(:disabled) {
+  background: var(--primary-background);
+}
 .pic-entry.low-confidence {
   color: var(--attention);
 }
