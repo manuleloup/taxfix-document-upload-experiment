@@ -225,7 +225,6 @@ export default function UploadPage() {
   const [editingManualKey, setEditingManualKey] = useState<string | null>(null);
   const [manualDraft, setManualDraft] = useState("");
   const [dropzoneLoading, setDropzoneLoading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [dropzoneHint, setDropzoneHint] = useState(false);
   const [pendingFollowUp, setPendingFollowUp] = useState<PendingFollowUp | null>(null);
@@ -678,14 +677,23 @@ export default function UploadPage() {
     }
   }
 
+  /** One document at a time. The picker can only offer one now that
+   *  `multiple` is gone, but a drag-and-drop can still carry several — those
+   *  take the first and say so plainly. Keeping it to one also means a
+   *  document's questions get answered before the next arrives, rather than
+   *  a batch burying them further up the log. */
   async function handleFiles(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
     const files = Array.from(fileList);
-    for (let i = 0; i < files.length; i++) {
-      setUploadProgress({ current: i + 1, total: files.length });
-      await handleFileUpload(files[i]);
+
+    if (files.length > 1) {
+      addMsg({
+        from: "assist",
+        text: "One document at a time for now — add the next once this one's processed.",
+      });
     }
-    setUploadProgress(null);
+
+    await handleFileUpload(files[0]);
   }
 
   function removeDocument(id: number) {
@@ -1138,7 +1146,6 @@ export default function UploadPage() {
                 ref={fileInputRef}
                 type="file"
                 accept="application/pdf,image/*"
-                multiple
                 hidden
                 onChange={(e) => {
                   handleFiles(e.target.files);
@@ -1148,15 +1155,12 @@ export default function UploadPage() {
               {dropzoneLoading ? (
                 <div className="dz-loading">
                   <div className="tf-spinner" />
-                  <span>
-                    Reading {uploadProgress && uploadProgress.total > 1 ? `${uploadProgress.current} of ${uploadProgress.total}` : "document"}
-                    …
-                  </span>
+                  <span>Reading document…</span>
                 </div>
               ) : (
                 <div className="dz-idle">
                   <div className="t-bodySmall dz-title">Drag a document here, or click to add one</div>
-                  <div className="t-bodySmall dz-sub">PDF, JPG or PNG — add as many as you have, any order</div>
+                  <div className="t-bodySmall dz-sub">PDF, JPG or PNG — one at a time, in any order</div>
                 </div>
               )}
             </div>
