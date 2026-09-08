@@ -23,6 +23,21 @@ export function CircleCheckIcon({ size = 24 }: IconProps) {
 }
 
 /* ── real: circle-question.svg ──────────────────────────────────────────── */
+/** The sibling of CircleCheckIcon: the same ring, drawn from the same two
+ *  subpaths (outer r=8, inner r=6.5), with the check removed. Reads as
+ *  "not reached yet" rather than "something is wrong", and pairs with the
+ *  check glyph as empty → filled. */
+export function CircleEmptyIcon({ size = 24 }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path
+        d="M10 3.5C6.40625 3.5 3.5 6.40625 3.5 10C3.5 13.5938 6.40625 16.5 10 16.5C13.5938 16.5 16.5 13.5938 16.5 10C16.5 6.40625 13.5938 3.5 10 3.5ZM10 18C5.59375 18 2 14.4062 2 10C2 5.59375 5.59375 2 10 2C14.4062 2 18 5.59375 18 10C18 14.4062 14.4062 18 10 18Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
 export function CircleQuestionIcon({ size = 24 }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -156,7 +171,7 @@ export function SendIcon({ size = 15 }: IconProps) {
 // Row status glyph: unresolved rows get circle-question, resolved and removed
 // rows both get circle-check — colour carries the difference.
 export function statusIcon(status: "pending" | "confirmed" | "dismissed") {
-  if (status === "pending") return <CircleQuestionIcon />;
+  if (status === "pending") return <CircleEmptyIcon />;
   return <CircleCheckIcon />;
 }
 

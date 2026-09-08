@@ -139,6 +139,11 @@ export interface ClassifyResult {
   description: string;
   /** 0..n — 0 for evidence-only docs (e.g. an unclear bank statement). */
   resolvedFields: ResolvedField[];
+  /** Whether the file shows the marks of a record issued by a named
+   *  organisation. The model only reports this; /api/classify decides what
+   *  to do about it, so the policy can be relaxed for testing without
+   *  re-tuning a prompt. */
+  issuedRecord: boolean;
   /** true = couldn't classify this file at all. */
   unresolved: boolean;
 }
@@ -221,5 +226,8 @@ export const UNRESOLVED_RESULT: ClassifyResult = {
   taxYear: null,
   description: "Couldn't read that document clearly — try a clearer scan or photo.",
   resolvedFields: [],
+  // Unreadable, which is a different thing from not being an issued record —
+  // don't tell someone their document looks fake because a parse failed.
+  issuedRecord: true,
   unresolved: true,
 };

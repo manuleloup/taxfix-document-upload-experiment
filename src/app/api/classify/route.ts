@@ -10,6 +10,11 @@ import { MOCK_DOCUMENTS } from "./mock-documents";
  *  and a page reload starts again from the first. */
 const MOCK = process.env.CLASSIFY_MOCK === "1";
 
+/** Testing escape hatch: keep the figures from a file the model judged not to
+ *  be an issued record. For specimen-stamped fixtures during development —
+ *  never set in anything resembling production. */
+const ALLOW_UNVERIFIED = process.env.ALLOW_UNVERIFIED_DOCUMENTS === "1";
+
 export async function POST(request: Request) {
   const form = await request.formData();
   const file = form.get("file");
@@ -65,6 +70,20 @@ export async function POST(request: Request) {
   try {
     const started = Date.now();
     const result = await classifyDocument({ base64, mediaType });
+
+    // The model judges whether the file looks like an issued record; the
+    // policy about it lives here. Normally an unissued file contributes
+    // nothing, however legible — its figures are discarded and the person is
+    // told what's needed instead. ALLOW_UNVERIFIED_DOCUMENTS=1 keeps them, so
+    // the flow can be tested with specimen-stamped fixtures without
+    // re-tuning a prompt to ignore the words printed on them.
+    if (!result.issuedRecord) {
+      if (!ALLOW_UNVERIFIED) {
+        console.log(`[classify] ${file.name} → not an issued record, ${result.resolvedFields.length} field(s) discarded`);
+        return NextResponse.json({ ...result, resolvedFields: [], unresolved: true });
+      }
+      console.warn(`[classify] ${file.name} → not an issued record, kept anyway (ALLOW_UNVERIFIED_DOCUMENTS=1)`);
+    }
 
     console.log(
       `[classify] ${file.name} → ${result.documentLabel || "unresolved"} ` +
