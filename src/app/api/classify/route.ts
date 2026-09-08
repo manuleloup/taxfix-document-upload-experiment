@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { LLM_CONFIG, classifyDocument } from "@/app/_lib/llm";
 import { isValidDocId, isValidSessionId, putDocument } from "@/app/_lib/document-store";
+import { sniffMediaType } from "@/app/_lib/file-type";
 import { MOCK_DOCUMENTS } from "./mock-documents";
 
 /** Set CLASSIFY_MOCK=1 in .env to click through the flow with no API key
@@ -24,19 +25,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing or invalid sessionId/docId" }, { status: 400 });
   }
 
-  const isPdf = file.type === "application/pdf";
-  const isImage = file.type.startsWith("image/");
-  if (!isPdf && !isImage) {
-    return NextResponse.json({ error: `Unsupported file type: ${file.type}` }, { status: 400 });
+  // The file's own bytes decide what it is. file.type is client-controlled and
+  // the extension is meaningless, so neither is consulted — and this runs
+  // before the store write, so an unrecognised file never lands on disk or
+  // reaches the model.
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const mediaType = sniffMediaType(bytes);
+  if (!mediaType) {
+    console.warn(`[classify] rejected ${file.name}: content is not PDF/JPEG/PNG/WebP/GIF` +
+      (file.type ? ` (client claimed ${file.type})` : ""));
+    return NextResponse.json(
+      { error: "That file isn't a PDF, JPEG, PNG, WebP or GIF." },
+      { status: 400 }
+    );
   }
 
-  const base64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+  const base64 = Buffer.from(bytes).toString("base64");
 
   // Kept for the rest of the session so /api/chat can re-read the original
   // if a question needs more than the extracted summary. Failing to store is
   // survivable — classification still works, chat just answers without it.
   try {
-    await putDocument(sessionId, docId, { base64, mediaType: file.type, filename: file.name });
+    await putDocument(sessionId, docId, { base64, mediaType, filename: file.name });
   } catch (err) {
     console.warn(`[classify] could not store ${file.name}:`, err);
   }
@@ -54,7 +64,7 @@ export async function POST(request: Request) {
 
   try {
     const started = Date.now();
-    const result = await classifyDocument({ base64, mediaType: file.type });
+    const result = await classifyDocument({ base64, mediaType });
 
     console.log(
       `[classify] ${file.name} → ${result.documentLabel || "unresolved"} ` +

@@ -6,6 +6,7 @@
 // nothing else.
 
 import Anthropic from "@anthropic-ai/sdk";
+import type { AcceptedMediaType } from "./file-type";
 import {
   UNRESOLVED_RESULT,
   unresolvedVerdicts,
@@ -42,8 +43,10 @@ const EFFORT_PARAM =
 
 export type DocumentInput = {
   base64: string;
-  /** "application/pdf" or an image/* type. */
-  mediaType: string;
+  /** Sniffed from the file's own bytes, never taken from the client — see
+   *  _lib/file-type.ts. Typed narrowly so the content block below needs no
+   *  cast: an unverified string can't reach the API as a media_type. */
+  mediaType: AcceptedMediaType;
 };
 
 /** Wraps a file as the content block the API expects — a `document` block
@@ -59,11 +62,7 @@ function documentContentBlock(
   }
   return {
     type: "image",
-    source: {
-      type: "base64",
-      media_type: doc.mediaType as "image/jpeg" | "image/png" | "image/gif" | "image/webp",
-      data: doc.base64,
-    },
+    source: { type: "base64", media_type: doc.mediaType, data: doc.base64 },
   };
 }
 

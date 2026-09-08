@@ -6,6 +6,7 @@ import {
   CheckIcon,
   CircleCheckIcon,
   DocIcon,
+  LowConfidenceIcon,
   ChevronDownIcon,
   PencilIcon,
   PlusIcon,
@@ -27,6 +28,7 @@ import {
   type OverlapVerdict,
   type ResolvedField,
 } from "../_lib/classify";
+import { ACCEPT_ATTRIBUTE } from "../_lib/file-type";
 import Dialog from "../_components/dialog";
 
 // Originally ported from taxfix-no-onboarding.html (a scripted wireframe).
@@ -108,6 +110,12 @@ function itemStatus(item: Item): Status {
   if (item.dismissed) return "dismissed";
   return item.docEntries.length > 0 || item.manualEntry ? "confirmed" : "pending";
 }
+/** True when any document-sourced figure in this row was read at less than
+ *  full confidence. Manual entries are excluded: a figure a person typed is
+ *  theirs, and the gate's "Yes, that's right" already commits at 1. */
+function hasLowConfidenceEntry(item: Item): boolean {
+  return item.docEntries.some((e) => e.confidence < CONFIDENCE_HIGH);
+}
 function itemTotal(item: Item): string {
   const sum =
     item.docEntries.reduce((s, e) => s + e.value, 0) + (item.manualEntry ? item.manualEntry.value : 0);
@@ -140,8 +148,9 @@ interface DocumentRow {
 interface ChipOption {
   label: string;
   reply: string;
-  /** "manual" = open the manual editor instead of committing the pending value. */
-  action?: "manual";
+  /** "manual" = open the manual editor instead of committing the pending
+   *  value. "document" = commit nothing and invite a clearer document. */
+  action?: "manual" | "document";
   /** Set on the chips of an overlap question; routes to answerOverlap, which
    *  builds its own reply from whatever it ends up committing. */
   overlapAnswer?: "additional" | "duplicate";
@@ -704,7 +713,16 @@ export default function UploadPage() {
               text: `This reads as ${field.value} for ${itemName(field.key).toLowerCase()} — does that look right?`,
               chips: [
                 { label: "Yes, that's right", reply: "Thanks, noted." },
-                { label: "Let me check it", reply: "No problem — take a look and adjust it.", action: "manual" },
+                {
+                  label: "Correct the figure",
+                  reply: "Sure — set it to what the document says.",
+                  action: "manual",
+                },
+                {
+                  label: "I'll upload proof",
+                  reply: `No problem — I'll leave ${itemName(field.key).toLowerCase()} out for now. Drop a clearer document in on the left and I'll read it again.`,
+                  action: "document",
+                },
               ],
             }),
           350
@@ -781,9 +799,16 @@ export default function UploadPage() {
     }
   }
 
-  function startEditManual(key: string) {
+  /** `seed` pre-fills the field. The confidence gate passes the figure it
+   *  questioned, so correcting a reading starts from that number rather than
+   *  an empty box — there is nothing else on screen to copy it from. */
+  function startEditManual(key: string, seed?: string) {
     setOpenMenu(null);
     setEditingManualKey(key);
+    if (seed !== undefined) {
+      setManualDraft(seed);
+      return;
+    }
     setManualDraft(items[key].manualEntry ? String(items[key].manualEntry!.value) : "");
   }
   function saveManualValue(key: string) {
@@ -845,7 +870,18 @@ export default function UploadPage() {
     setPendingFollowUp(null);
 
     if (chip.action === "manual") {
-      startEditManual(followUp.itemKey);
+      startEditManual(followUp.itemKey, String(parseMoney(followUp.value)));
+      return;
+    }
+
+    if (chip.action === "document") {
+      // Nothing commits. A second document can't confirm this figure by
+      // itself — it produces its own, which the overlap check then weighs
+      // against whatever is already counted — so the honest behaviour is to
+      // leave this one out and read the next document properly. The pending
+      // slot is already cleared above, so the next upload's gate is free.
+      setDropzoneHint(true);
+      setTimeout(() => setDropzoneHint(false), 2400);
       return;
     }
 
@@ -985,13 +1021,17 @@ export default function UploadPage() {
   }
 
   function renderDocEntryLine(entry: DocEntry, idx: number) {
+    // Tagged per entry, not just per row: someone with a solid figure and a
+    // shaky one needs to know which to go and check.
+    const low = entry.confidence < CONFIDENCE_HIGH;
     return (
-      <div className="pic-entry doc" key={idx}>
+      <div className={`pic-entry doc ${low ? "low-confidence" : ""}`} key={idx}>
         <span className="pic-entry-icon" style={{ display: "flex" }}>
-          <DocIcon size={12} />
+          {low ? <LowConfidenceIcon size={12} /> : <DocIcon size={12} />}
         </span>
         <span className="t-caption pic-entry-amount">{entry.formatted}</span>
         <span className="t-caption pic-entry-label">{entry.source}</span>
+        {low && <span className="t-caption pic-conf-tag">Low confidence</span>}
       </div>
     );
   }
@@ -1043,6 +1083,7 @@ export default function UploadPage() {
   function renderRow(key: string) {
     const it = items[key];
     const status = itemStatus(it);
+    const lowConfidence = status === "confirmed" && hasLowConfidenceEntry(it);
 
     let action: React.ReactNode;
     if (status === "dismissed") {
@@ -1056,7 +1097,10 @@ export default function UploadPage() {
       action = (
         <>
           {status === "confirmed" ? (
-            <div className="t-h5 pic-val">{itemTotal(it)}</div>
+            <div className="pic-val-wrap">
+              <div className="t-h5 pic-val">{itemTotal(it)}</div>
+              {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
+            </div>
           ) : (
             <div className="t-body pic-pending-label">Pending</div>
           )}
@@ -1126,7 +1170,7 @@ export default function UploadPage() {
     }
 
     return (
-      <div className={`pic-row ${status}`} key={key}>
+      <div className={`pic-row ${status} ${lowConfidence ? "low-confidence" : ""}`} key={key}>
         <div className="pic-icon">{statusIcon(status)}</div>
         <div className="pic-info">
           <div className="t-body pic-name">{it.name}</div>
@@ -1202,7 +1246,7 @@ export default function UploadPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="application/pdf,image/*"
+                accept={ACCEPT_ATTRIBUTE}
                 hidden
                 onChange={(e) => {
                   handleFiles(e.target.files);

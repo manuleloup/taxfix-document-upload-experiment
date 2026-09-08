@@ -205,6 +205,33 @@
 .pic-row.confirmed .pic-icon {
   color: var(--primary-light);
 }
+/* A committed row holding at least one figure the model wasn't sure of.
+   Amber rather than green: the figure is counted, but it's worth a look.
+   Spends the layout's one permitted accent (--accent3, via --attention). */
+.pic-row.confirmed.low-confidence {
+  background: var(--accent3-background-light);
+}
+.pic-row.confirmed.low-confidence .pic-name,
+.pic-row.confirmed.low-confidence .pic-val {
+  color: var(--accent3-main);
+}
+.pic-row.confirmed.low-confidence .pic-icon {
+  color: var(--accent3-light);
+}
+.pic-val-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.pic-conf-tag {
+  color: var(--attention);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.pic-entry.low-confidence {
+  color: var(--attention);
+}
 .pic-row.pending .pic-icon {
   color: var(--muted);
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { LLM_CONFIG, MAX_TOOL_CALLS, chatReply, type ChatTurn } from "@/app/_lib/llm";
 import { getDocument, isValidDocId, isValidSessionId } from "@/app/_lib/document-store";
+import { isAcceptedMediaType } from "@/app/_lib/file-type";
 import type { ChatDocumentSummary, ChatPositionLine } from "@/app/_lib/prompts";
 
 /** Same switch /api/classify uses — keeps the whole flow clickable with no
@@ -104,7 +105,10 @@ export async function POST(request: Request) {
       // document takes effect immediately, with nothing to clean up.
       loadDocument: async (docId) => {
         if (!documents.some((d) => d.docId === docId)) return null;
-        return getDocument(sessionId, docId);
+        const doc = await getDocument(sessionId, docId);
+        // Re-checked rather than trusted: the store is a directory on disk.
+        if (!doc || !isAcceptedMediaType(doc.mediaType)) return null;
+        return { base64: doc.base64, mediaType: doc.mediaType };
       },
     });
 
