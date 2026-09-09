@@ -23,6 +23,7 @@ import {
   isOverlapKey,
   type ClassifyResult,
   type ItemKey,
+  type ManualProposal,
   type OverlapCandidate,
   type OverlapExisting,
   type OverlapVerdict,
@@ -167,6 +168,8 @@ interface ChipOption {
   overlapAnswer?: "additional" | "duplicate";
   /** Set on the chips of a document-origin question; routes to answerOrigin. */
   originAnswer?: "use" | "other";
+  /** Set on the chips offering a figure the person mentioned in chat. */
+  proposalAnswer?: "add" | "adjust";
 }
 
 /** A figure held back pending the person's answer on whether it's additional
@@ -222,6 +225,9 @@ interface ChatMessage {
   /** Set on "use it anyway?" for a file the model didn't judge to be an
    *  original. Held figures live in pendingOrigins under this message's id. */
   isOriginQuestion?: boolean;
+  /** Set on an offer to add a figure the person stated in conversation. The
+   *  offer itself lives in pendingProposals under this message's id. */
+  isProposalQuestion?: boolean;
   /** Set only on real free-text exchanges. The scripted status lines, chip
    *  questions and upload confirmations that also live in this log are UI
    *  narration, not conversation, and aren't sent to the model as history. */
@@ -270,6 +276,9 @@ export default function UploadPage() {
   const [pendingOrigins, setPendingOrigins] = useState<
     Record<number, { fields: ResolvedField[]; result: ClassifyResult; source: string; docId: number }>
   >({});
+  // Figures the chat offered to add, waiting on the person. Nothing is
+  // committed while one sits here.
+  const [pendingProposals, setPendingProposals] = useState<Record<number, ManualProposal>>({});
   const [suppressions, setSuppressions] = useState<Suppression[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   // Freezing is a presentation state, not a data mutation: nothing is
@@ -654,6 +663,48 @@ export default function UploadPage() {
     );
   }
 
+  /** Answers an offer to add a figure from conversation. Adding runs the same
+   *  commit a typed value runs; adjusting opens the same pre-filled field the
+   *  confidence gate's "Correct the figure" opens. Neither is a new kind of
+   *  entry — the chat is a second way into the existing one. */
+  function answerProposal(msgId: number, chip: ChipOption) {
+    const proposal = pendingProposals[msgId];
+    if (!proposal) return;
+
+    setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, chipsDisabled: true } : m)));
+    addMsg({ from: "user", text: chip.label });
+    setPendingProposals((prev) => {
+      const next = { ...prev };
+      delete next[msgId];
+      return next;
+    });
+
+    if (chip.proposalAnswer === "adjust") {
+      startEditManual(proposal.itemKey, String(parseMoney(proposal.value)));
+      setTimeout(
+        () =>
+          addMsg({
+            from: "assist",
+            text: `Sure — set ${itemName(proposal.itemKey).toLowerCase()} to whatever it should be.`,
+          }),
+        300
+      );
+      return;
+    }
+
+    const added = commitManualValue(proposal.itemKey, proposal.value);
+    setTimeout(
+      () =>
+        addMsg({
+          from: "assist",
+          text: added
+            ? `Added ${proposal.value} to ${itemName(proposal.itemKey).toLowerCase()}, marked as added by you.`
+            : "I couldn't read that as an amount — add it on the row and it'll go straight in.",
+        }),
+      300
+    );
+  }
+
   function answerOverlap(msgId: number, chip: ChipOption) {
     const held = pendingOverlaps[msgId];
     if (!held) return;
@@ -1019,17 +1070,29 @@ export default function UploadPage() {
     }
     setManualDraft(items[key].manualEntry ? String(items[key].manualEntry!.value) : "");
   }
+  /** The one place a person-supplied figure becomes a ManualEntry. Typing it
+   *  into the row and confirming it from chat both land here, so there is one
+   *  kind of manual entry rather than two — it reads "Added by you" either
+   *  way, because either way it is. */
+  function commitManualValue(key: string, raw: string) {
+    const trimmed = raw.trim();
+    if (!trimmed) return false;
+    const amount = parseFloat(trimmed.replace(/[£,]/g, ""));
+    if (isNaN(amount)) return false;
+    // A chat proposal can name a category whose row isn't on screen yet;
+    // typing can't, but revealing is harmless when it's already visible.
+    revealCategory(key as ItemKey);
+    setItems((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], manualEntry: { value: amount, formatted: formatMoney(amount) } },
+    }));
+    return true;
+  }
+
   function saveManualValue(key: string) {
-    const raw = manualDraft.trim();
+    const raw = manualDraft;
     setEditingManualKey(null);
-    if (!raw) return;
-    const amount = parseFloat(raw.replace(/[£,]/g, ""));
-    if (!isNaN(amount)) {
-      setItems((prev) => ({
-        ...prev,
-        [key]: { ...prev[key], manualEntry: { value: amount, formatted: formatMoney(amount) } },
-      }));
-    }
+    commitManualValue(key, raw);
   }
   function deleteManualEntry(key: string) {
     setItems((prev) => ({ ...prev, [key]: { ...prev[key], manualEntry: null } }));
@@ -1205,9 +1268,26 @@ export default function UploadPage() {
         }),
       });
       if (!res.ok) throw new Error(`Chat failed (${res.status})`);
-      const data: { reply?: string } = await res.json();
+      const data: { reply?: string; proposals?: ManualProposal[] } = await res.json();
       if (!data.reply?.trim()) throw new Error("Empty reply");
       addMsg({ from: "assist", text: data.reply, conversational: true });
+
+      // Offers only. Each one is asked about; none commits on its own.
+      for (const proposal of data.proposals ?? []) {
+        if (!ITEM_META[proposal.itemKey]) continue;
+        const msgId = addMsg({
+          from: "assist",
+          isProposalQuestion: true,
+          text:
+            `Sounds like ${proposal.value} for ${itemName(proposal.itemKey).toLowerCase()}` +
+            `${proposal.source ? ` — ${proposal.source}` : ""}. Add that?`,
+          chips: [
+            { label: "Yes, add it", reply: "", proposalAnswer: "add" },
+            { label: "Let me adjust", reply: "", proposalAnswer: "adjust" },
+          ],
+        });
+        setPendingProposals((prev) => ({ ...prev, [msgId]: proposal }));
+      }
     } catch {
       addMsg({
         from: "assist",
@@ -1652,6 +1732,7 @@ export default function UploadPage() {
                         className="tf-chip tf-chip--medium t-caption"
                         disabled={m.chipsDisabled}
                         onClick={() => {
+                          if (m.isProposalQuestion) return answerProposal(m.id, c);
                           if (m.isOriginQuestion) return void answerOrigin(m.id, c);
                           if (m.isOverlapQuestion) return answerOverlap(m.id, c);
                           answerChip(m.id, c);

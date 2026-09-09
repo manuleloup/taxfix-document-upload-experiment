@@ -8,9 +8,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AcceptedMediaType } from "./file-type";
 import {
+  ITEM_KEYS,
   UNRESOLVED_RESULT,
   unresolvedVerdicts,
   type ClassifyResult,
+  type ItemKey,
+  type ManualProposal,
   type OverlapRequestBody,
   type OverlapVerdict,
 } from "./classify";
@@ -23,6 +26,10 @@ import {
   GET_DOCUMENT_NOT_FOUND,
   GET_DOCUMENT_TOOL_DESCRIPTION,
   GET_DOCUMENT_TOOL_NAME,
+  PROPOSE_MANUAL_ACK,
+  PROPOSE_MANUAL_REJECTED,
+  PROPOSE_MANUAL_TOOL_DESCRIPTION,
+  PROPOSE_MANUAL_TOOL_NAME,
   chatReferenceBlock,
   type ChatDocumentSummary,
   type ChatPositionLine,
@@ -194,6 +201,42 @@ const GET_DOCUMENT_TOOL: Anthropic.Tool = {
   },
 };
 
+const PROPOSE_MANUAL_TOOL: Anthropic.Tool = {
+  name: PROPOSE_MANUAL_TOOL_NAME,
+  description: PROPOSE_MANUAL_TOOL_DESCRIPTION,
+  strict: true,
+  input_schema: {
+    type: "object",
+    properties: {
+      itemKey: { type: "string", enum: ITEM_KEYS, description: "The category the figure belongs to." },
+      value: { type: "string", description: 'The amount exactly as they stated it, "£400.00" style.' },
+      source: {
+        type: "string",
+        description: 'A short quote or paraphrase of what they said, e.g. "renting my spare room".',
+      },
+    },
+    required: ["itemKey", "value", "source"],
+    additionalProperties: false,
+  },
+};
+
+/** Nothing is trusted from the tool input: an unknown category or an amount
+ *  with no digits in it is refused rather than passed to the client. */
+function parseProposal(input: unknown): ManualProposal | null {
+  const raw = input as { itemKey?: unknown; value?: unknown; source?: unknown };
+  if (typeof raw?.itemKey !== "string" || !ITEM_KEYS.includes(raw.itemKey as ItemKey)) return null;
+  // A bare amount only. "£400 a month" is refused rather than silently
+  // parsed to 400 and committed as a figure for the whole year.
+  if (typeof raw?.value !== "string" || !/^£?\s*\d[\d,]*(\.\d{1,2})?$/.test(raw.value.trim())) {
+    return null;
+  }
+  return {
+    itemKey: raw.itemKey as ItemKey,
+    value: raw.value,
+    source: typeof raw.source === "string" ? raw.source : "",
+  };
+}
+
 function firstText(msg: Anthropic.Message): string {
   const block = msg.content.find((b) => b.type === "text");
   return block && block.type === "text" ? block.text.trim() : "";
@@ -231,9 +274,16 @@ async function runGetDocument(
   };
 }
 
+export interface ChatResult {
+  reply: string;
+  /** Figures the person stated that the model has offered to add. Offers
+   *  only — the client asks before anything commits. */
+  proposals: ManualProposal[];
+}
+
 /** Answers one chat message, re-reading an original document only if the
- *  model asks for one. Returns the reply text. */
-export async function chatReply(req: ChatRequest): Promise<string> {
+ *  model asks for one, and collecting any figures it offers to add. */
+export async function chatReply(req: ChatRequest): Promise<ChatResult> {
   const messages: Anthropic.MessageParam[] = [
     ...req.history.map((turn) => ({ role: turn.role, content: turn.text })),
     {
@@ -249,6 +299,7 @@ export async function chatReply(req: ChatRequest): Promise<string> {
   ];
 
   let toolCalls = 0;
+  const proposals: ManualProposal[] = [];
 
   for (;;) {
     const atCap = toolCalls >= MAX_TOOL_CALLS;
@@ -258,7 +309,7 @@ export async function chatReply(req: ChatRequest): Promise<string> {
       max_tokens: 1024,
       system: CHAT_SYSTEM,
       ...EFFORT_PARAM,
-      tools: [GET_DOCUMENT_TOOL],
+      tools: [GET_DOCUMENT_TOOL, PROPOSE_MANUAL_TOOL],
       // Withdrawing the tool at the cap guarantees this loop terminates:
       // the model can no longer answer with tool_use.
       ...(atCap ? { tool_choice: { type: "none" as const } } : {}),
@@ -268,7 +319,7 @@ export async function chatReply(req: ChatRequest): Promise<string> {
     if (msg.stop_reason !== "tool_use") {
       const text = firstText(msg);
       if (!text) throw new Error(`No text in model response (stop_reason: ${msg.stop_reason})`);
-      return text;
+      return { reply: text, proposals };
     }
 
     messages.push({ role: "assistant", content: msg.content });
@@ -278,7 +329,25 @@ export async function chatReply(req: ChatRequest): Promise<string> {
     const uses = msg.content.filter((b): b is Anthropic.ToolUseBlock => b.type === "tool_use");
     const results: Anthropic.ToolResultBlockParam[] = [];
     for (const use of uses) {
+      // Both tools draw on the same budget, so a conversation that mixes
+      // them can't get twice the allowance.
       toolCalls += 1;
+
+      if (use.name === PROPOSE_MANUAL_TOOL_NAME) {
+        const proposal = parseProposal(use.input);
+        if (proposal) proposals.push(proposal);
+        console.log(
+          `[chat] propose_manual_value(${proposal?.itemKey ?? "?"}, ${proposal?.value ?? "?"}) → ` +
+            (proposal ? "offered for confirmation" : "refused")
+        );
+        results.push({
+          type: "tool_result",
+          tool_use_id: use.id,
+          content: proposal ? PROPOSE_MANUAL_ACK : PROPOSE_MANUAL_REJECTED,
+        });
+        continue;
+      }
+
       results.push(await runGetDocument(use, req.loadDocument));
     }
     messages.push({ role: "user", content: results });

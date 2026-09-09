@@ -89,12 +89,13 @@ export async function POST(request: Request) {
     return NextResponse.json({
       reply:
         "I've noted that and will flag it for your accountant to check. (Mock mode — set CLASSIFY_MOCK=0 for a real answer.)",
+      proposals: [],
     });
   }
 
   try {
     const started = Date.now();
-    const reply = await chatReply({
+    const { reply, proposals } = await chatReply({
       message,
       history: parseHistory(body.history),
       documents,
@@ -113,11 +114,12 @@ export async function POST(request: Request) {
     });
 
     console.log(
-      `[chat] "${message.slice(0, 60)}" → ${reply.length} chars ` +
-        `(${documents.length} doc(s) in context, ≤${MAX_TOOL_CALLS} re-reads) ` +
+      `[chat] "${message.slice(0, 60)}" → ${reply.length} chars, ` +
+        `${proposals.length} proposal(s) ` +
+        `(${documents.length} doc(s) in context, ≤${MAX_TOOL_CALLS} tool call(s)) ` +
         `${LLM_CONFIG.model}/${LLM_CONFIG.effort} in ${Date.now() - started}ms`
     );
-    return NextResponse.json({ reply });
+    return NextResponse.json({ reply, proposals });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("[chat]", message);

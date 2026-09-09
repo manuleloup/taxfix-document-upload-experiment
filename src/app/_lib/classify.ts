@@ -96,7 +96,11 @@ export const ITEM_META: Record<ItemKey, { name: string; hint: string; group: Ite
   },
 };
 
-const KEYS = Object.keys(ITEM_META) as ItemKey[];
+/** Every category key, in ITEM_META order. Exported so the chat tool's
+ *  schema can constrain itself to exactly these — the model can't name a
+ *  category that doesn't exist. */
+export const ITEM_KEYS = Object.keys(ITEM_META) as ItemKey[];
+const KEYS = ITEM_KEYS;
 
 export function keysInGroup(group: ItemGroup): ItemKey[] {
   return KEYS.filter((k) => ITEM_META[k].group === group);
@@ -146,6 +150,18 @@ export interface ClassifyResult {
   issuedRecord: boolean;
   /** true = couldn't classify this file at all. */
   unresolved: boolean;
+}
+
+/** A figure the person stated in conversation, which the chat has offered to
+ *  add. Nothing commits from this alone: it is put to them for confirmation,
+ *  and confirming runs the same manual-entry path as typing it in by hand. */
+export interface ManualProposal {
+  itemKey: ItemKey;
+  /** As the model read it back, "£400.00" style. */
+  value: string;
+  /** A short quote or paraphrase of what they said, e.g. "renting my spare
+   *  room" — shown so the offer is traceable to their own words. */
+  source: string;
 }
 
 // ── Overlap between documents ─────────────────────────────────────────────
