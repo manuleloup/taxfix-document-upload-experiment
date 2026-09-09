@@ -157,24 +157,29 @@
 .picture-title {
   display: flex;
   align-items: center;
-  gap: var(--space-125);
-  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
 }
-/* Deliberately "Early access", not "Beta" — and present in both the editable
-   and frozen states, since the caveat applies to both. */
+/* Deliberately "Early access", not "Beta"; same corner in both the editable
+   and frozen states. Solid near-black so it reads as a system label about
+   the product, clearly not another light data-chip about a figure. */
 .early-tag {
-  border: 1px solid var(--grey-divider);
+  background: var(--grey-graphics1);
+  color: var(--text-contrast);
   border-radius: var(--radius-full);
-  padding: 0 var(--space-1);
-  color: var(--text-secondary);
+  padding: var(--space-025) var(--space-1);
   font-weight: 500;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+.pic-review-note {
+  color: var(--muted);
 }
 
 /* ── Frozen tax picture ──────────────────────────────────────────────────
    Same data, presented as a summary: no glyph, no hint, no breakdown, and
-   nothing clickable inside the card. The two real signals (low confidence,
-   not verified) carry through untouched. */
+   nothing clickable inside the card. The two real signals ("Low confidence"
+   and "Unconfirmed document") carry through untouched. */
 .pic-row.frozen {
   align-items: center;
   background: none;
@@ -207,10 +212,10 @@
 }
 .frozen-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
   gap: var(--space-125);
-  align-items: stretch;
-  max-width: 320px;
+  flex-wrap: wrap;
 }
 .frozen-actions .tf-btn {
   justify-content: center;
@@ -370,6 +375,49 @@
 .pic-pending-label {
   color: var(--muted);
   white-space: nowrap;
+  transition: opacity 150ms;
+}
+/* The action overlays the label instead of sitting beside it, so revealing
+   it costs no layout shift. Faded rather than display:none so it stays in
+   the tab order — a hover-only control would otherwise be unreachable by
+   keyboard. */
+.pic-pending-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.pic-add-manual {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-05);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary-main);
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 150ms;
+}
+.pic-add-manual svg {
+  flex-shrink: 0;
+}
+.pic-row:hover .pic-add-manual,
+.pic-add-manual:focus-visible {
+  opacity: 1;
+}
+.pic-row:hover .pic-pending-label,
+.pic-pending-slot:focus-within .pic-pending-label {
+  opacity: 0;
+}
+.pic-add-manual:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .pic-overflow-wrap {

@@ -6,8 +6,8 @@ import {
   CheckIcon,
   CircleCheckIcon,
   DocIcon,
+  EllipsisIcon,
   LowConfidenceIcon,
-  ChevronDownIcon,
   PencilIcon,
   PlusIcon,
   SendIcon,
@@ -1154,7 +1154,7 @@ export default function UploadPage() {
         <span className="t-caption pic-entry-amount">{entry.formatted}</span>
         <span className="t-caption pic-entry-label">{entry.source}</span>
         {low && <span className="t-caption pic-conf-tag">Low confidence</span>}
-        {unverified && <span className="t-caption pic-origin-tag">Not verified</span>}
+        {unverified && <span className="t-caption pic-origin-tag">Unconfirmed document</span>}
       </div>
     );
   }
@@ -1220,7 +1220,7 @@ export default function UploadPage() {
           <div className="pic-val-wrap">
             <div className="t-h5 pic-val">{itemTotal(it)}</div>
             {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
-            {unverifiedOrigin && <span className="t-caption pic-origin-tag">Not verified</span>}
+            {unverifiedOrigin && <span className="t-caption pic-origin-tag">Unconfirmed document</span>}
           </div>
         </div>
       </div>
@@ -1249,10 +1249,28 @@ export default function UploadPage() {
             <div className="pic-val-wrap">
               <div className="t-h5 pic-val">{itemTotal(it)}</div>
               {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
-              {unverifiedOrigin && <span className="t-caption pic-origin-tag">Not verified</span>}
+              {unverifiedOrigin && (
+                <span className="t-caption pic-origin-tag">Unconfirmed document</span>
+              )}
             </div>
           ) : (
-            <div className="t-body pic-pending-label">Pending</div>
+            /* "Pending" and the promoted action share one slot: the action sits
+               over the label rather than beside it, so revealing it doesn't
+               shift the row, and it stays keyboard-reachable because it is
+               faded rather than removed. */
+            <div className="pic-pending-slot">
+              <div className="t-body pic-pending-label">Pending</div>
+              <button
+                className="t-bodySmall pic-add-manual"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startEditManual(key);
+                }}
+              >
+                <PlusIcon />
+                <span>Add value manually</span>
+              </button>
+            </div>
           )}
           <div className="pic-overflow-wrap">
             <button
@@ -1263,19 +1281,24 @@ export default function UploadPage() {
                 setOpenMenu(open ? null : key);
               }}
             >
-              <ChevronDownIcon />
+              <EllipsisIcon size={16} />
             </button>
             <div className={`pic-overflow-menu ${open ? "open" : ""}`}>
-              <button
-                className="t-bodySmall pic-overflow-item"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  startEditManual(key);
-                }}
-              >
-                <PlusIcon />
-                <span>Add a value manually</span>
-              </button>
+              {/* A confirmed row's slot is taken by its figure, so manual
+                  entry stays in the menu there. A pending row reaches it from
+                  the row itself, leaving only the minor action here. */}
+              {status === "confirmed" && (
+                <button
+                  className="t-bodySmall pic-overflow-item"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startEditManual(key);
+                  }}
+                >
+                  <PlusIcon />
+                  <span>Add a value manually</span>
+                </button>
+              )}
               <button
                 className="t-bodySmall pic-overflow-item"
                 onClick={(e) => {
@@ -1427,6 +1450,11 @@ export default function UploadPage() {
                 Every figure below comes from a document or a question you answered. This is an
                 overview, not a final tax calculation.
               </p>
+              {/* Global and unconditional — not a per-row signal, and
+                  deliberately worded so it can't be read as one. */}
+              <p className="t-bodySmall pic-review-note">
+                None of this has been checked by an accountant yet — that happens once you finish.
+              </p>
             </div>
             <div className="pic-groups">
               {GROUPS.map((group) => {
@@ -1461,8 +1489,9 @@ export default function UploadPage() {
                   Edit your tax picture
                 </button>
                 <p className="t-bodySmall frozen-note">
-                  This is an overview built from what you&rsquo;ve shared — not a final number. Talk
-                  it through with one of our accountants, free, no obligation.
+                  This is an overview built from what you&rsquo;ve shared — not a final number. Book
+                  a free call with our team if you&rsquo;d like to talk through your options, no
+                  obligation.
                 </p>
                 <div className="frozen-actions">
                   <a
@@ -1474,7 +1503,7 @@ export default function UploadPage() {
                     Book a free call
                   </a>
                   <a
-                    className="tf-btn tf-btn--secondary tf-btn--large t-button"
+                    className="tf-btn tf-btn--tertiary-outlined tf-btn--large t-button"
                     href={PRICING_URL || undefined}
                     target={PRICING_URL ? "_blank" : undefined}
                     rel={PRICING_URL ? "noreferrer" : undefined}
