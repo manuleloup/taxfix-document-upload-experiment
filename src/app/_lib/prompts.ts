@@ -62,6 +62,12 @@ What is genuinely additional:
 - A period the earlier document does not cover, such as a payslip from after a P45's leaving date.
 - A single payslip figure that is clearly for one period only, where the earlier document covers a different period.
 
+Which record is the fuller one, when they do overlap:
+- A P60 is the complete cumulative record for that employment and tax year. Prefer it over a P45 or a payslip covering any part of the same period.
+- A P45 covers that employment up to the leaving date. Prefer it over a payslip that falls before that date.
+- A later year-to-date figure supersedes an earlier one from the same employment and year, because it contains it.
+- When the documents don't settle it — neither states the employer clearly, or neither states the tax year — say "existing" rather than guessing. Preferring the wrong record silently changes a figure the person has already seen.
+
 Rules:
 - Judge only from what the documents say. Never invent a figure, a period, or an employer that isn't in what you were given, and never state a figure you can't point to.
 - Employer names may be written differently on different documents ("Vantage Retail Ltd" and "Vantage Retail"). Treat them as the same employer when they plainly refer to one company, and as different employers when they plainly don't.
@@ -115,6 +121,7 @@ Return ONLY a valid JSON object:
       "key": <the key being judged, exactly as given above>,
       "overlaps": <true if this figure is money already counted, false if genuinely additional>,
       "confidence": <0.0-1.0, how sure you are of this judgement>,
+      "preferred": <"existing" or "new" — which record is the fuller account of this figure; only used when overlaps is true>,
       "reason": <one short plain-English sentence a taxpayer would understand, naming the document it does or doesn't overlap with>
     }
   ]

@@ -66,6 +66,7 @@ export async function POST(request: Request) {
       key: c.key,
       overlaps: true,
       confidence: 0.93,
+      preferred: "existing",
       reason: `This looks like the same ${c.label || "figure"} already covered by "${
         body.existing[0]?.docLabel || "an earlier document"
       }" for the same employer and tax year.`,

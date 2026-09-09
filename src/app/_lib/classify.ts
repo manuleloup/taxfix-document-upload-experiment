@@ -204,6 +204,11 @@ export interface OverlapVerdict {
   overlaps: boolean;
   /** 0..1 */
   confidence: number;
+  /** Which of the two records is the fuller account of this figure. Only
+   *  consulted when `overlaps` is true: it decides which one survives, so
+   *  that a P60 arriving after a P45 supersedes it instead of being thrown
+   *  away for arriving second. */
+  preferred: "existing" | "new";
   /** One short sentence, shown to the person. */
   reason: string;
 }
@@ -216,6 +221,9 @@ export function unresolvedVerdicts(candidates: OverlapCandidate[]): OverlapVerdi
     key: c.key,
     overlaps: false,
     confidence: 0,
+    // Keeping what is already counted is the conservative default: it
+    // changes nothing the person hasn't already seen.
+    preferred: "existing",
     reason: "I couldn't check this against your other documents.",
   }));
 }

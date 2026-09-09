@@ -141,6 +141,8 @@ export async function checkOverlap(body: OverlapRequestBody): Promise<OverlapVer
       key: raw.key,
       overlaps: raw.overlaps,
       confidence: Math.min(1, Math.max(0, confidence)),
+      // Anything but an explicit "new" keeps what's already counted.
+      preferred: raw.preferred === "new" ? "new" : "existing",
       reason: typeof raw.reason === "string" ? raw.reason : "",
     });
   }

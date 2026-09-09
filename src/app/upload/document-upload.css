@@ -13,7 +13,11 @@
   margin: var(--space-12) auto var(--space-8);
   padding: 0 var(--space-35);
   display: grid;
-  grid-template-columns: 3fr 2fr;
+  /* The chat column is a fixed track rather than a fraction: as 2fr it grew
+     and shrank with its own content, so one long filename resized the whole
+     page. minmax(0, 1fr) lets the left column absorb the remainder without
+     long words forcing it wider than the grid. */
+  grid-template-columns: minmax(0, 1fr) 380px;
   gap: var(--space-35);
 }
 /* 18px above and below the standfirst, per the design's off-grid rhythm. */
@@ -67,7 +71,9 @@
 }
 .doc-row-name {
   font-weight: 700;
-  flex-shrink: 0;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 .doc-row-org {
@@ -617,6 +623,17 @@
 .msg-attach svg {
   flex-shrink: 0;
   color: var(--muted);
+}
+.msg-attach span {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A single unbroken filename inside a message body has no space to wrap at,
+   so let it break rather than push the bubble past the column. */
+.msg-bubble {
+  overflow-wrap: anywhere;
 }
 .msg-result {
   display: flex;

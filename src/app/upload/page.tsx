@@ -182,6 +182,9 @@ interface HeldOverlap {
   docId: number;
   /** Documents whose figures this one appears to duplicate. */
   becauseOfDocIds: number[];
+  /** Which record the model judged the fuller one. "new" means this figure
+   *  should replace what's already counted rather than be dropped. */
+  preferred: "existing" | "new";
   reason: string;
 }
 
@@ -452,18 +455,6 @@ export default function UploadPage() {
     addDocEntry(key, value, source, docId, confidence);
   }
 
-  /** Whether a figure came from a file the model didn't judge to be an
-   *  original and the person chose to use regardless. A separate signal from
-   *  low confidence: one is about where the figure came from, the other about
-   *  how well it was read, and an entry can carry both. */
-  function isUnverifiedDoc(docId: number): boolean {
-    // Read from state, not documentsRef: this runs during render, where the
-    // ref may still hold the previous value and the tag would appear a render
-    // late. The ref is for the async upload pipeline, which render is not.
-    const doc = documents.find((d) => d.id === docId);
-    return doc ? !doc.issuedRecord : false;
-  }
-
   /** Committed, document-sourced entries in this category that could be the
    *  same money: same tax year, or either year not stated. Manual entries are
    *  excluded — there's no document behind them to reason about. */
@@ -533,6 +524,7 @@ export default function UploadPage() {
         key: c.key,
         overlaps: false,
         confidence: 0,
+        preferred: "existing" as const,
         reason: "I couldn't check this against your other documents.",
       }));
     } finally {
@@ -549,6 +541,19 @@ export default function UploadPage() {
       const confident = !!verdict && verdict.confidence >= CONFIDENCE_HIGH;
 
       if (confident && verdict.overlaps) {
+        if (verdict.preferred === "new") {
+          // The new document is the fuller record — a P60 after a P45 — so it
+          // takes the place of what's counted rather than being dropped for
+          // arriving second. Still exactly one figure either way.
+          const replaced = replaceOverlappingEntries(field, source, docId, becauseOfDocIds);
+          addMsg({
+            from: "assist",
+            text:
+              `I've replaced ${replaced || "the earlier figure"} with the ${field.value} for ` +
+              `${itemName(field.key).toLowerCase()} from this document — ${verdict.reason}`,
+          });
+          continue;
+        }
         // Left out, said plainly, no confirm step. Reversible by hand on the
         // row, which is also how a wrong call here gets corrected.
         setSuppressions((prev) => [
@@ -577,6 +582,7 @@ export default function UploadPage() {
         source,
         docId,
         becauseOfDocIds,
+        preferred: verdict?.preferred ?? "existing",
         reason: verdict?.reason ?? "",
       });
     }
@@ -600,6 +606,52 @@ export default function UploadPage() {
       ],
     });
     setPendingOverlaps((prev) => ({ ...prev, [msgId]: held }));
+  }
+
+  /** Swaps the figures a document duplicated for the new document's own,
+   *  keeping exactly one. Returns a description of what was displaced, for
+   *  the chat line — "I've left X out" is the wrong sentence when it's the
+   *  earlier figure that went. */
+  function replaceOverlappingEntries(
+    field: { key: ItemKey; value: string; confidence: number },
+    source: string,
+    docId: number,
+    becauseOfDocIds: number[]
+  ): string {
+    const displaced = (itemsRef.current[field.key]?.docEntries ?? []).filter((e) =>
+      becauseOfDocIds.includes(e.docId)
+    );
+
+    // Recorded against the document that displaced them, so removing the
+    // newer record points out that the older figure may be needed again.
+    setSuppressions((prev) => [
+      ...prev,
+      ...displaced.map((e) => ({
+        docId: e.docId,
+        docLabel: documentsRef.current.find((d) => d.id === e.docId)?.label ?? "an earlier document",
+        itemKey: field.key,
+        value: e.formatted,
+        becauseOfDocIds: [docId],
+      })),
+    ]);
+
+    setItems((prev) => ({
+      ...prev,
+      [field.key]: {
+        ...prev[field.key],
+        docEntries: prev[field.key].docEntries.filter((e) => !becauseOfDocIds.includes(e.docId)),
+      },
+    }));
+    applyResolvedField(field.key, field.value, field.confidence, source, docId);
+
+    return humanList(
+      displaced.map(
+        (e) =>
+          `the ${e.formatted} from ${
+            documentsRef.current.find((d) => d.id === e.docId)?.label ?? "an earlier document"
+          }`
+      )
+    );
   }
 
   function answerOverlap(msgId: number, chip: ChipOption) {
@@ -627,9 +679,25 @@ export default function UploadPage() {
       return;
     }
 
+    // "Already counted" doesn't mean "discard the new one": whichever record
+    // is the fuller account of the figure is the one kept.
+    const supersedes = held.filter((h) => h.preferred === "new");
+    const dropped = held.filter((h) => h.preferred !== "new");
+
+    const replacedText = supersedes
+      .map((h) =>
+        replaceOverlappingEntries(
+          { key: h.itemKey, value: h.value, confidence: h.confidence },
+          h.source,
+          h.docId,
+          h.becauseOfDocIds
+        )
+      )
+      .filter(Boolean);
+
     setSuppressions((prev) => [
       ...prev,
-      ...held.map((h) => ({
+      ...dropped.map((h) => ({
         docId: h.docId,
         docLabel: documentsRef.current.find((d) => d.id === h.docId)?.label ?? "that document",
         itemKey: h.itemKey,
@@ -637,11 +705,27 @@ export default function UploadPage() {
         becauseOfDocIds: h.becauseOfDocIds,
       })),
     ]);
+
+    const sentences: string[] = [];
+    if (dropped.length) {
+      sentences.push(
+        `I've left ${humanList(
+          dropped.map((h) => `${h.value} for ${itemName(h.itemKey).toLowerCase()}`)
+        )} out`
+      );
+    }
+    if (supersedes.length) {
+      sentences.push(
+        `I've kept ${humanList(
+          supersedes.map((h) => `${h.value} for ${itemName(h.itemKey).toLowerCase()}`)
+        )} from this document instead of ${humanList(replacedText) || "the earlier figure"}`
+      );
+    }
     setTimeout(
       () =>
         addMsg({
           from: "assist",
-          text: `Got it — I've left ${listed} out, so nothing gets counted twice.`,
+          text: `Got it — ${humanList(sentences)}, so nothing gets counted twice.`,
         }),
       300
     );
@@ -1145,7 +1229,6 @@ export default function UploadPage() {
     // Tagged per entry, not just per row: someone with a solid figure and a
     // shaky one needs to know which to go and check.
     const low = entry.confidence < CONFIDENCE_HIGH;
-    const unverified = isUnverifiedDoc(entry.docId);
     return (
       <div className={`pic-entry doc ${low ? "low-confidence" : ""}`} key={idx}>
         <span className="pic-entry-icon" style={{ display: "flex" }}>
@@ -1154,7 +1237,6 @@ export default function UploadPage() {
         <span className="t-caption pic-entry-amount">{entry.formatted}</span>
         <span className="t-caption pic-entry-label">{entry.source}</span>
         {low && <span className="t-caption pic-conf-tag">Low confidence</span>}
-        {unverified && <span className="t-caption pic-origin-tag">Unconfirmed document</span>}
       </div>
     );
   }
@@ -1209,7 +1291,6 @@ export default function UploadPage() {
   function renderFrozenRow(key: string) {
     const it = items[key];
     const lowConfidence = hasLowConfidenceEntry(it);
-    const unverifiedOrigin = it.docEntries.some((e) => isUnverifiedDoc(e.docId));
     return (
       <div className="pic-row frozen" key={key}>
         <div className="pic-info">
@@ -1220,7 +1301,6 @@ export default function UploadPage() {
           <div className="pic-val-wrap">
             <div className="t-h5 pic-val">{itemTotal(it)}</div>
             {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
-            {unverifiedOrigin && <span className="t-caption pic-origin-tag">Unconfirmed document</span>}
           </div>
         </div>
       </div>
@@ -1231,8 +1311,6 @@ export default function UploadPage() {
     const it = items[key];
     const status = itemStatus(it);
     const lowConfidence = status === "confirmed" && hasLowConfidenceEntry(it);
-    const unverifiedOrigin =
-      status === "confirmed" && it.docEntries.some((e) => isUnverifiedDoc(e.docId));
 
     let action: React.ReactNode;
     if (status === "dismissed") {
@@ -1249,9 +1327,6 @@ export default function UploadPage() {
             <div className="pic-val-wrap">
               <div className="t-h5 pic-val">{itemTotal(it)}</div>
               {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
-              {unverifiedOrigin && (
-                <span className="t-caption pic-origin-tag">Unconfirmed document</span>
-              )}
             </div>
           ) : (
             /* "Pending" and the promoted action share one slot: the action sits
@@ -1380,8 +1455,17 @@ export default function UploadPage() {
               {shownDocs.map((d) => (
                 <div className="doc-row" key={d.id}>
                   <DocIcon size={20} />
-                  <span className="t-body doc-row-name">{d.label}</span>
-                  <span className="t-bodySmall doc-row-org">{d.org}</span>
+                  <span className="t-body doc-row-name" title={d.label}>
+                    {d.label}
+                  </span>
+                  <span className="t-bodySmall doc-row-org" title={d.org}>
+                    {d.org}
+                  </span>
+                  {/* A property of the document, so stated once here rather
+                      than repeated on every figure it produced. */}
+                  {!d.issuedRecord && (
+                    <span className="t-caption pic-origin-tag">Unconfirmed document</span>
+                  )}
                   <button className="tf-iconbtn tf-iconbtn--small doc-row-del" title="Remove this document" onClick={() => setPendingDelete(d.id)}>
                     <TrashIcon />
                   </button>
@@ -1544,7 +1628,7 @@ export default function UploadPage() {
               <div className={`msg ${m.from}`} key={m.id}>
                 {m.attach && (
                   <>
-                    <div className="t-caption msg-attach">
+                    <div className="t-caption msg-attach" title={m.attach}>
                       <DocIcon />
                       <span>{m.attach}</span>
                     </div>
