@@ -394,10 +394,6 @@
   justify-content: flex-end;
 }
 .pic-add-manual {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   gap: var(--space-05);
@@ -412,6 +408,108 @@
 }
 .pic-add-manual svg {
   flex-shrink: 0;
+}
+/* Pending rows only: the action covers the "Pending" label, so revealing it
+   costs no layout shift. A populated row has no label to cover — its button
+   sits under the figure, reserving its space so hover doesn't reflow. */
+.pic-add-manual--overlay {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.pic-row:hover .pic-add-manual,
+.pic-add-manual:focus-visible {
+  opacity: 1;
+}
+.pic-row:hover .pic-pending-label,
+.pic-pending-slot:focus-within .pic-pending-label {
+  opacity: 0;
+}
+.pic-add-manual:hover {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.pic-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-025);
+  min-width: 0;
+}
+.pic-name {
+  font-weight: 700;
+}
+.pic-row.pending .pic-name {
+  color: var(--muted);
+}
+.pic-row.dismissed .pic-name {
+  color: var(--text-disabled);
+}
+.pic-hint {
+  color: var(--muted);
+}
+/* Mirrors the doc-row spacer: value and controls sit hard right. */
+.pic-spacer {
+  flex: 1 0 0;
+  min-width: 1px;
+}
+/* Unused since groups render nothing at all when they have no rows — kept
+   only if an empty-state message comes back. */
+.pic-group-empty {
+  color: var(--dim);
+  font-style: italic;
+}
+.pic-action {
+  display: flex;
+  align-items: center;
+  gap: var(--space-15);
+  flex-shrink: 0;
+}
+.pic-val {
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--heading);
+}
+.pic-pending-label {
+  color: var(--muted);
+  white-space: nowrap;
+  transition: opacity 150ms;
+}
+/* The action overlays the label instead of sitting beside it, so revealing
+   it costs no layout shift. Faded rather than display:none so it stays in
+   the tab order — a hover-only control would otherwise be unreachable by
+   keyboard. */
+.pic-pending-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.pic-add-manual {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-05);
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary-main);
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 150ms;
+}
+.pic-add-manual svg {
+  flex-shrink: 0;
+}
+/* Pending rows only: the action covers the "Pending" label, so revealing it
+   costs no layout shift. A populated row has no label to cover — its button
+   sits under the figure, reserving its space so hover doesn't reflow. */
+.pic-add-manual--overlay {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
 }
 .pic-row:hover .pic-add-manual,
 .pic-add-manual:focus-visible {

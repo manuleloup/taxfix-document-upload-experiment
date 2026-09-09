@@ -6,13 +6,11 @@ import {
   CheckIcon,
   CircleCheckIcon,
   DocIcon,
-  EllipsisIcon,
   LowConfidenceIcon,
   PencilIcon,
   PlusIcon,
   SendIcon,
   TrashIcon,
-  XIcon,
   statusIcon,
 } from "../_components/icons";
 import {
@@ -260,7 +258,6 @@ export default function UploadPage() {
   const [documents, setDocuments] = useState<DocumentRow[]>([]);
   const [expandedDocs, setExpandedDocs] = useState(false);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [editingManualKey, setEditingManualKey] = useState<string | null>(null);
   const [manualDraft, setManualDraft] = useState("");
   const [dropzoneLoading, setDropzoneLoading] = useState(false);
@@ -418,14 +415,6 @@ export default function UploadPage() {
     }
   }, [editingManualKey]);
 
-  // Close any open row overflow menu on an outside click.
-  useEffect(() => {
-    function handleWindowClick() {
-      if (openMenu) setOpenMenu(null);
-    }
-    window.addEventListener("click", handleWindowClick);
-    return () => window.removeEventListener("click", handleWindowClick);
-  }, [openMenu]);
 
   function addDocEntry(key: string, formattedValue: string, source: string, docId: number, confidence: number) {
     setItems((prev) => ({
@@ -1062,7 +1051,6 @@ export default function UploadPage() {
    *  questioned, so correcting a reading starts from that number rather than
    *  an empty box — there is nothing else on screen to copy it from. */
   function startEditManual(key: string, seed?: string) {
-    setOpenMenu(null);
     setEditingManualKey(key);
     if (seed !== undefined) {
       setManualDraft(seed);
@@ -1107,19 +1095,6 @@ export default function UploadPage() {
     });
   }
 
-  function dismiss(key: string) {
-    setOpenMenu(null);
-    setItems((prev) => ({ ...prev, [key]: { ...prev[key], dismissed: true } }));
-    addMsg({ from: "user", text: `${items[key].name} doesn't apply to me` });
-    setTimeout(
-      () =>
-        addMsg({
-          from: "assist",
-          text: `Got it — I'll leave ${items[key].name.toLowerCase()} out of your picture. Tap the + next to it any time if that changes.`,
-        }),
-      300
-    );
-  }
   function reactivate(key: string) {
     setItems((prev) => ({ ...prev, [key]: { ...prev[key], dismissed: false } }));
     addMsg({ from: "user", text: `Actually, add ${items[key].name.toLowerCase()} back` });
@@ -1301,7 +1276,6 @@ export default function UploadPage() {
   function freezePicture() {
     if (confirmedCount === 0) return;
     setFrozen(true);
-    setOpenMenu(null);
     setEditingManualKey(null);
   }
 
@@ -1400,21 +1374,15 @@ export default function UploadPage() {
         </button>
       );
     } else {
-      const open = openMenu === key;
       action = (
         <>
           {status === "confirmed" ? (
             <div className="pic-val-wrap">
               <div className="t-h5 pic-val">{itemTotal(it)}</div>
               {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
-            </div>
-          ) : (
-            /* "Pending" and the promoted action share one slot: the action sits
-               over the label rather than beside it, so revealing it doesn't
-               shift the row, and it stays keyboard-reachable because it is
-               faded rather than removed. */
-            <div className="pic-pending-slot">
-              <div className="t-body pic-pending-label">Pending</div>
+              {/* A populated row's slot is taken by its figure, so the action
+                  goes underneath it rather than over it. Rendered always and
+                  faded, so appearing on hover doesn't reflow the list. */}
               <button
                 className="t-bodySmall pic-add-manual"
                 onClick={(e) => {
@@ -1426,46 +1394,25 @@ export default function UploadPage() {
                 <span>Add value manually</span>
               </button>
             </div>
-          )}
-          <div className="pic-overflow-wrap">
-            <button
-              className={`tf-iconbtn tf-iconbtn--small pic-overflow-btn ${open ? "open" : ""}`}
-              title="More options"
-              onClick={(e) => {
-                e.stopPropagation();
-                setOpenMenu(open ? null : key);
-              }}
-            >
-              <EllipsisIcon size={16} />
-            </button>
-            <div className={`pic-overflow-menu ${open ? "open" : ""}`}>
-              {/* A confirmed row's slot is taken by its figure, so manual
-                  entry stays in the menu there. A pending row reaches it from
-                  the row itself, leaving only the minor action here. */}
-              {status === "confirmed" && (
-                <button
-                  className="t-bodySmall pic-overflow-item"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    startEditManual(key);
-                  }}
-                >
-                  <PlusIcon />
-                  <span>Add a value manually</span>
-                </button>
-              )}
+          ) : (
+            /* "Pending" and the promoted action share one slot: the action sits
+               over the label rather than beside it, so revealing it doesn't
+               shift the row, and it stays keyboard-reachable because it is
+               faded rather than removed. */
+            <div className="pic-pending-slot">
+              <div className="t-body pic-pending-label">Pending</div>
               <button
-                className="t-bodySmall pic-overflow-item"
+                className="t-bodySmall pic-add-manual pic-add-manual--overlay"
                 onClick={(e) => {
                   e.stopPropagation();
-                  dismiss(key);
+                  startEditManual(key);
                 }}
               >
-                <XIcon />
-                <span>Remove section</span>
+                <PlusIcon />
+                <span>Add value manually</span>
               </button>
             </div>
-          </div>
+          )}
         </>
       );
     }
