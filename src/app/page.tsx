@@ -22,7 +22,7 @@ export default function Landing() {
             }}
           >
             {/* Brand: headlines take full-stops for rhythm. */}
-            <h1 className="t-h2 t-heavy">Your tax position. Before anything else.</h1>
+            <h1 className="t-h2 t-heavy">Your tax picture. Before anything else.</h1>
             <p className="t-bodyLong t-muted landing-value">
               Drop in whatever tax documents you have. We&rsquo;ll work out what they tell us and build your
               tax picture as we go — no questionnaire.

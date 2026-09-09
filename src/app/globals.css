@@ -47,7 +47,7 @@
   --primary-hover: rgba(169, 212, 129, 0.2);
   --primary-contrast: #154618;
 
-  /* Secondary — the Tax Position card's tinted surface in the Figma design
+  /* Secondary — the Tax picture card's tinted surface in the Figma design
      (node 7711:11833 fill = Secondary/Background light). */
   --secondary-background-light: #e8f0ff;
   --secondary-main: #4c4991;
@@ -59,7 +59,7 @@
 
   /* The one permitted accent for this layout (brand: max one per layout).
      Currently unspent: it carried the medium-confidence "worth a check"
-     state on Tax Position rows until that badge was removed. */
+     state on Tax picture rows until that badge was removed. */
   --accent3-background-light: #ffefd3;
   --accent3-main: #66541a;
   --accent3-light: #f8a21a;

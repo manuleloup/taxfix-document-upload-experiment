@@ -21,7 +21,7 @@ export type ItemKey =
   | "benefitsInKind"
   | "limitedCompanyDirector";
 
-/** Which block of the Tax Position a category belongs to.
+/** Which block of the Tax picture a category belongs to.
  *
  *  "triggered" is not a place on the page so much as a rule: those rows are
  *  not rendered at all until a document or an answer puts something in them.

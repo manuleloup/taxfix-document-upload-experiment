@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
   }
   // The client allocates the document id before uploading, so the stored
-  // file lands under the same id the Tax Position and chat use to refer to it.
+  // file lands under the same id the Tax picture and chat use to refer to it.
   if (!isValidSessionId(sessionId) || !isValidDocId(docId)) {
     return NextResponse.json({ error: "Missing or invalid sessionId/docId" }, { status: 400 });
   }

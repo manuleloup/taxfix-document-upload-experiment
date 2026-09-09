@@ -33,7 +33,7 @@ import Dialog from "../_components/dialog";
 
 // Originally ported from taxfix-no-onboarding.html (a scripted wireframe).
 // Upload is now real: a dropped/selected file is sent to /api/classify and
-// the response drives the Tax Picture — see handleFileUpload below. Chat
+// the response drives the tax picture — see handleFileUpload below. Chat
 // rendering, manual-entry editing, dismiss/reactivate, the expense-chip
 // flow, and submit-for-review are otherwise unchanged from that port.
 
@@ -121,6 +121,13 @@ function itemTotal(item: Item): string {
     item.docEntries.reduce((s, e) => s + e.value, 0) + (item.manualEntry ? item.manualEntry.value : 0);
   return formatMoney(sum);
 }
+
+/** Empty until the real destinations exist: Nick's Calendly isn't set up
+ *  yet, and there is no pricing route in this app (the pricing page lives on
+ *  the marketing site). An <a> with no href renders inert, which is honest —
+ *  better than navigating somewhere that isn't there. */
+const BOOK_CALL_URL = "";
+const PRICING_URL = "";
 
 const EXPENSE_OPTIONS = [
   "Mortgage interest",
@@ -262,8 +269,10 @@ export default function UploadPage() {
   >({});
   const [suppressions, setSuppressions] = useState<Suppression[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [finishConfirmOpen, setFinishConfirmOpen] = useState(false);
-  const [submittedOpen, setSubmittedOpen] = useState(false);
+  // Freezing is a presentation state, not a data mutation: nothing is
+  // destroyed, and "Edit your tax picture" returns to the editable view with
+  // everything intact.
+  const [frozen, setFrozen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<number | null>(null);
   const [composeValue, setComposeValue] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -345,9 +354,12 @@ export default function UploadPage() {
     ...revealedKeys,
   ];
   const resolvedCount = visibleKeys.filter((k) => itemStatus(items[k]) !== "pending").length;
-  const unresolvedNames = visibleKeys
-    .filter((k) => itemStatus(items[k]) === "pending")
-    .map((k) => items[k].name);
+  /** Every row either group could show, ignoring what is folded away — the
+   *  frozen view has no "Show more", so a confirmed row hidden behind one
+   *  still belongs in it. */
+  const allGroupKeys = GROUPS.flatMap((g) => [...g.primary, ...g.secondary]);
+  const confirmedCount = allGroupKeys.filter((k) => itemStatus(items[k]) === "confirmed").length;
+  const pendingCount = visibleKeys.filter((k) => itemStatus(items[k]) === "pending").length;
 
   /** Returns the new message's id, so a question can file the state it holds
    *  against the message the person will answer on. */
@@ -639,7 +651,7 @@ export default function UploadPage() {
     setDropzoneLoading(true);
 
     // A byte-identical re-upload is a no-op: no classify call (so no spend),
-    // no second row, and nothing added to the Tax Position twice. Only exact
+    // no second row, and nothing added to the Tax picture twice. Only exact
     // duplicates are caught — the same document re-scanned to different bytes,
     // and the P60/P45/payslip overlap, are separate problems.
     const hash = await fileContentHash(file);
@@ -655,7 +667,7 @@ export default function UploadPage() {
     }
 
     // Allocated before the upload so the server can file the stored original
-    // under the same id this document keeps in the Tax Position and in chat.
+    // under the same id this document keeps in the Tax picture and in chat.
     // An unreadable document burns an id — harmless, they're internal.
     docIdRef.current += 1;
     const docId = docIdRef.current;
@@ -1060,7 +1072,7 @@ export default function UploadPage() {
     }, 300);
   }
 
-  /** What the model sees of the Tax Position: every line it should know
+  /** What the model sees of the Tax picture: every line it should know
    *  about, whether or not it has a figure, so it can answer "what's left?"
    *  as well as "what's in?". */
   function positionLines() {
@@ -1122,14 +1134,11 @@ export default function UploadPage() {
     }
   }
 
-  function attemptFinish() {
-    const unresolved = visibleKeys.filter((k) => itemStatus(items[k]) === "pending");
-    if (unresolved.length === 0) {
-      setFinishConfirmOpen(false);
-      setSubmittedOpen(true);
-      return;
-    }
-    setFinishConfirmOpen(true);
+  function freezePicture() {
+    if (confirmedCount === 0) return;
+    setFrozen(true);
+    setOpenMenu(null);
+    setEditingManualKey(null);
   }
 
   function renderDocEntryLine(entry: DocEntry, idx: number) {
@@ -1192,6 +1201,30 @@ export default function UploadPage() {
       );
     }
     return null;
+  }
+
+  /** The frozen row: category, total, and the two real signals. No hint, no
+   *  status glyph (everything shown is resolved by definition), no breakdown
+   *  lines, and nothing clickable. */
+  function renderFrozenRow(key: string) {
+    const it = items[key];
+    const lowConfidence = hasLowConfidenceEntry(it);
+    const unverifiedOrigin = it.docEntries.some((e) => isUnverifiedDoc(e.docId));
+    return (
+      <div className="pic-row frozen" key={key}>
+        <div className="pic-info">
+          <div className="t-body pic-name">{it.name}</div>
+        </div>
+        <div className="pic-spacer" />
+        <div className="pic-action">
+          <div className="pic-val-wrap">
+            <div className="t-h5 pic-val">{itemTotal(it)}</div>
+            {lowConfidence && <span className="t-caption pic-conf-tag">Low confidence</span>}
+            {unverifiedOrigin && <span className="t-caption pic-origin-tag">Not verified</span>}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   function renderRow(key: string) {
@@ -1308,7 +1341,7 @@ export default function UploadPage() {
       <div className="page">
         <main>
           <div className="main-intro">
-            <h1 className="t-h3">Upload your documents to see your tax position</h1>
+            <h1 className="t-h3">Upload your documents to see your tax picture</h1>
             <p className="t-body">
               Drop in whatever you have. We will work out what it tells us — and ask the odd quick question for
               anything a document cannot answer on its own.
@@ -1384,20 +1417,35 @@ export default function UploadPage() {
             </div>
           </div>
 
-          <div className="tf-card picture-card">
+          <div className={`tf-card picture-card ${frozen ? "is-frozen" : ""}`}>
             <div className="picture-head">
-              <h2 className="t-h5">Your Tax Position so far</h2>
-              <p className="t-bodySmall">Every figure below comes from a document you gave us, or a question you answered.</p>
+              <div className="picture-title">
+                <h2 className="t-h5">{frozen ? "Your tax picture" : "Your tax picture so far"}</h2>
+                <span className="t-caption early-tag">Early access</span>
+              </div>
+              <p className="t-bodySmall">
+                Every figure below comes from a document or a question you answered. This is an
+                overview, not a final tax calculation.
+              </p>
             </div>
             <div className="pic-groups">
               {GROUPS.map((group) => {
-                const rows = [...group.primary, ...(group.expanded ? group.secondary : [])];
+                // Frozen shows everything resolved, folded away or not, since
+                // there is no "Show more" to open. A group with nothing
+                // resolved in it isn't rendered at all.
+                const rows = frozen
+                  ? [...group.primary, ...group.secondary].filter(
+                      (k) => itemStatus(items[k]) !== "pending"
+                    )
+                  : [...group.primary, ...(group.expanded ? group.secondary : [])];
                 if (!rows.length) return null;
                 return (
                   <div className="pic-group" key={group.label}>
                     <div className="t-overline pic-group-label">{group.label}</div>
-                    <div className="pic-rows">{rows.map((key) => renderRow(key))}</div>
-                    {group.secondary.length > 0 && (
+                    <div className="pic-rows">
+                      {rows.map((key) => (frozen ? renderFrozenRow(key) : renderRow(key)))}
+                    </div>
+                    {!frozen && group.secondary.length > 0 && (
                       <button className="t-caption pic-more-toggle" onClick={group.toggle}>
                         {group.expanded ? "Show less" : "Show more"}
                       </button>
@@ -1406,14 +1454,57 @@ export default function UploadPage() {
                 );
               })}
             </div>
-            <div className="picture-footer">
-              <span className="t-bodySmall pf-note">
-                {resolvedCount} of {visibleKeys.length} sorted
-              </span>
-              <button className="tf-btn tf-btn--primary tf-btn--large t-button" onClick={attemptFinish}>
-                Submit for review
-              </button>
-            </div>
+
+            {frozen ? (
+              <div className="frozen-foot">
+                <button className="t-bodySmall frozen-edit" onClick={() => setFrozen(false)}>
+                  Edit your tax picture
+                </button>
+                <p className="t-bodySmall frozen-note">
+                  This is an overview built from what you&rsquo;ve shared — not a final number. Talk
+                  it through with one of our accountants, free, no obligation.
+                </p>
+                <div className="frozen-actions">
+                  <a
+                    className="tf-btn tf-btn--primary tf-btn--large t-button"
+                    href={BOOK_CALL_URL || undefined}
+                    target={BOOK_CALL_URL ? "_blank" : undefined}
+                    rel={BOOK_CALL_URL ? "noreferrer" : undefined}
+                  >
+                    Book a free call
+                  </a>
+                  <a
+                    className="tf-btn tf-btn--secondary tf-btn--large t-button"
+                    href={PRICING_URL || undefined}
+                    target={PRICING_URL ? "_blank" : undefined}
+                    rel={PRICING_URL ? "noreferrer" : undefined}
+                  >
+                    Explore pricing
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="picture-footer">
+                <div className="pf-left">
+                  <span className="t-bodySmall pf-note">
+                    {resolvedCount} of {visibleKeys.length} sorted
+                  </span>
+                  {pendingCount > 0 && confirmedCount > 0 && (
+                    <span className="t-caption pf-hint">
+                      Anything left blank won&rsquo;t show once you finish
+                    </span>
+                  )}
+                </div>
+                <button
+                  className="tf-btn tf-btn--primary tf-btn--large t-button"
+                  onClick={freezePicture}
+                  disabled={confirmedCount === 0}
+                  title={confirmedCount === 0 ? "Add a figure first — there's nothing to show yet" : undefined}
+                >
+                  Complete
+                </button>
+              </div>
+            )}
           </div>
         </main>
 
@@ -1519,61 +1610,6 @@ export default function UploadPage() {
         </aside>
       </div>
 
-      {finishConfirmOpen && (
-        <Dialog
-          title="A few things are still unresolved"
-          onClose={() => setFinishConfirmOpen(false)}
-          actions={
-            <>
-              <button
-                className="tf-btn tf-btn--secondary tf-btn--medium t-buttonSmall"
-                onClick={() => setFinishConfirmOpen(false)}
-              >
-                Go back
-              </button>
-              <button
-                className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall"
-                onClick={() => {
-                  setFinishConfirmOpen(false);
-                  setSubmittedOpen(true);
-                }}
-              >
-                Continue anyway
-              </button>
-            </>
-          }
-        >
-          <p className="t-bodySmall">
-            You can still submit — your accountant will flag anything missing before filing.
-          </p>
-          <ul className="t-bodySmall tf-dialog-list">
-            {unresolvedNames.map((n) => (
-              <li key={n}>{n}</li>
-            ))}
-          </ul>
-        </Dialog>
-      )}
-
-      {submittedOpen && (
-        <Dialog
-          title="Sent for review"
-          onClose={() => setSubmittedOpen(false)}
-          actions={
-            <button
-              className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall"
-              onClick={() => setSubmittedOpen(false)}
-            >
-              Done
-            </button>
-          }
-        >
-          <p className="t-bodySmall">
-            One of our accountants will check your documents and this conversation, then email you. In the
-            real product this would take you through to your tax position summary.
-          </p>
-        </Dialog>
-      )}
-
       {pendingDelete !== null && (
         <Dialog
           title="Remove this document?"
@@ -1599,7 +1635,7 @@ export default function UploadPage() {
           }
         >
           <p className="t-bodySmall">
-            Anything it added to your tax position will be removed too. This is the only way to take out a
+            Anything it added to your tax picture will be removed too. This is the only way to take out a
             figure that came from a document, so nothing gets out of sync with what you uploaded.
           </p>
         </Dialog>

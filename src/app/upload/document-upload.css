@@ -132,7 +132,7 @@
   padding: var(--space-1) 0;
 }
 
-/* ── Tax position card ───────────────────────────────────────────────────
+/* ── Tax picture card ───────────────────────────────────────────────────
    Matches Figma node 7711:11833 "Tax picture card": a tinted
    secondary/background-light surface (not white), 20px padding, and rows
    separated by gap rather than rules. Status is carried entirely by the
@@ -152,6 +152,77 @@
   margin-bottom: var(--space-4);
 }
 .picture-head p {
+  color: var(--muted);
+}
+.picture-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-125);
+  flex-wrap: wrap;
+}
+/* Deliberately "Early access", not "Beta" — and present in both the editable
+   and frozen states, since the caveat applies to both. */
+.early-tag {
+  border: 1px solid var(--grey-divider);
+  border-radius: var(--radius-full);
+  padding: 0 var(--space-1);
+  color: var(--text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Frozen tax picture ──────────────────────────────────────────────────
+   Same data, presented as a summary: no glyph, no hint, no breakdown, and
+   nothing clickable inside the card. The two real signals (low confidence,
+   not verified) carry through untouched. */
+.pic-row.frozen {
+  align-items: center;
+  background: none;
+  padding: var(--space-05) var(--space-1);
+}
+.pic-row.frozen .pic-name,
+.pic-row.frozen .pic-val {
+  color: var(--heading);
+}
+.frozen-foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+  padding-top: var(--space-25);
+  border-top: 1px solid var(--grey-divider);
+}
+.frozen-edit {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary-main);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.frozen-note {
+  color: var(--muted);
+  max-width: 46ch;
+}
+.frozen-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-125);
+  align-items: stretch;
+  max-width: 320px;
+}
+.frozen-actions .tf-btn {
+  justify-content: center;
+  text-align: center;
+}
+
+.pf-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-025);
+}
+.pf-hint {
   color: var(--muted);
 }
 

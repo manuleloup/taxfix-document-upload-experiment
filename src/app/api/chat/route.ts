@@ -9,7 +9,7 @@ import type { ChatDocumentSummary, ChatPositionLine } from "@/app/_lib/prompts";
 const MOCK = process.env.CLASSIFY_MOCK === "1";
 
 /** Nothing is kept between requests: the browser sends the conversation, the
- *  document summaries and the current Tax Position each time. The only
+ *  document summaries and the current Tax picture each time. The only
  *  server-side state is the uploaded files themselves, which the browser
  *  refers to by id rather than resending — see _lib/document-store.ts. */
 interface ChatBody {
