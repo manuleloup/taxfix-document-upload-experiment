@@ -524,52 +524,6 @@
   text-underline-offset: 2px;
 }
 
-.pic-overflow-wrap {
-  position: relative;
-}
-.pic-overflow-btn {
-  opacity: 0;
-}
-.pic-row:hover .pic-overflow-btn,
-.pic-overflow-btn.open {
-  opacity: 1;
-}
-.pic-overflow-menu {
-  position: absolute;
-  top: 26px;
-  right: 0;
-  z-index: 10;
-  display: none;
-  background: var(--surface);
-  border: 1px solid var(--grey-divider);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-2);
-  min-width: 180px;
-  padding: var(--space-05);
-}
-.pic-overflow-menu.open {
-  display: block;
-}
-.pic-overflow-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  width: 100%;
-  text-align: left;
-  padding: var(--space-1) var(--space-125);
-  border-radius: var(--radius-sm);
-  border: none;
-  background: none;
-  color: var(--text);
-}
-.pic-overflow-item svg {
-  flex-shrink: 0;
-  color: var(--muted);
-}
-.pic-overflow-item:hover {
-  background: var(--grey-surface2);
-}
-
 /* Provenance lines, indented 12px under the row name. The design renders
    these in success/light green — document-derived and manually-added alike,
    distinguished by their leading glyph (file-lines vs. pen-to-square). */
