@@ -1,6 +1,6 @@
 # Migration plan: local app → Vercel + Supabase
 
-Written 8 September 2026, updated same day after feedback. Builds on `DEPLOYMENT-NOTES.md` (already tracked in the repo) and the doc-upload handoff from the `remove-trigger-followups` branch. Scope: hosting and storage only.
+Written 8 September 2026, updated same day after feedback. Builds on `DEPLOYMENT-NOTES.md` (already tracked in the repo) and the doc-upload handoff from the `doc-upload-experiment` branch. Scope: hosting and storage only.
 
 ## Current status
 
