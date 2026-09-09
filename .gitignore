@@ -13,3 +13,17 @@ next-env.d.ts
 *.pem
 npm-debug.log*
 .vercel
+
+# Licensed and proprietary assets — deliberately untracked while this repo is
+# PUBLIC. public/fonts is the real licensed ABC ROM that globals.css serves
+# @font-face from, docs/brand holds the brand asset archive, and .cursor/rules
+# holds internal brand/design/content guidance. Ignored rather than merely
+# untracked so a `git add -A` can't publish them by accident.
+#
+# If the repo becomes private, these can be tracked — delete these lines and
+# commit them. Note the cost of leaving them out: a fresh clone renders in the
+# fallback font stack, not the real type.
+public/
+docs/
+.cursor/
+zz1/
