@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// Chat with document re-reads can take 20–40 s.
+export const maxDuration = 60;
 import { LLM_CONFIG, MAX_TOOL_CALLS, chatReply, type ChatTurn } from "@/app/_lib/llm";
 import { getDocument, isValidDocId, isValidSessionId } from "@/app/_lib/document-store";
 import { isAcceptedMediaType } from "@/app/_lib/file-type";

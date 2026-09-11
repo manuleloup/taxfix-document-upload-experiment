@@ -12,7 +12,7 @@
     "legacy:server": "node server.js"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.123.0",
+    "@google/generative-ai": "^0.21.0",
     "dotenv": "^16.4.7",
     "express": "^4.19.2",
     "multer": "^1.4.5-lts.1",

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import "./globals.css";
 import "./typography.css";
 import "./ds.css";
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
     "Experiment: document-upload onboarding flow with an AI-guided tax picture.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body>

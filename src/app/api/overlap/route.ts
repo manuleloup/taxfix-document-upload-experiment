@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// Overlap check is a fast text-only call but give it headroom.
+export const maxDuration = 30;
 import { LLM_CONFIG, checkOverlap } from "@/app/_lib/llm";
 import { isOverlapKey, type OverlapRequestBody, type OverlapVerdict } from "@/app/_lib/classify";
 import type { ItemKey } from "@/app/_lib/classify";

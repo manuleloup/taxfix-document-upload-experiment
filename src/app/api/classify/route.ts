@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+
+// Gemini classification can take 10–30 s on large documents.
+export const maxDuration = 60;
 import { LLM_CONFIG, classifyDocument } from "@/app/_lib/llm";
 import { isValidDocId, isValidSessionId, putDocument } from "@/app/_lib/document-store";
 import { sniffMediaType } from "@/app/_lib/file-type";
