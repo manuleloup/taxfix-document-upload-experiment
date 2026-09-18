@@ -386,8 +386,7 @@ export default function UploadPage() {
     greeted.current = true;
     addMsg({
       from: "assist",
-      text:
-        "Drop your documents in on the left, in any order. I'll read them and build your picture as we go — I'll only ask you something if a document can't answer it on its own.",
+      text: "Welcome! What kind of income do you have?",
     });
   }, []);
 
@@ -1474,6 +1473,7 @@ export default function UploadPage() {
           </div>
 
           <div className="tf-card tf-card--filled docs-card">
+
             <div className="docs-head">
               <h2 className="t-h5">Your documents</h2>
               <span className="t-bodySmall t-muted docs-count">{documents.length} added</span>
@@ -1551,6 +1551,110 @@ export default function UploadPage() {
             </div>
           </div>
 
+          <div className="tf-card tf-card--outlined convo-card">
+            <div className="t-overline convo-title">Conversation</div>
+            <div className="convo-log" ref={logRef}>
+              {messages.map((m) => (
+                <div className={`msg ${m.from}`} key={m.id}>
+                  {m.attach && (
+                    <>
+                      <div className="t-caption msg-attach" title={m.attach}>
+                        <DocIcon />
+                        <span>{m.attach}</span>
+                      </div>
+                      <br />
+                    </>
+                  )}
+                  <div className="t-bodySmall msg-bubble">
+                    {m.text}
+                    {m.result && (
+                      <div className="t-caption msg-result">
+                        <CheckIcon size={12} />
+                        <span>{m.result}</span>
+                      </div>
+                    )}
+                  </div>
+                  {m.chips && (
+                    <div className="msg-chips">
+                      {m.chips.map((c, i) => (
+                        <button
+                          key={i}
+                          className="tf-chip tf-chip--medium t-caption"
+                          disabled={m.chipsDisabled}
+                          onClick={() => {
+                            if (m.isProposalQuestion) return answerProposal(m.id, c);
+                            if (m.isOriginQuestion) return void answerOrigin(m.id, c);
+                            if (m.isOverlapQuestion) return answerOverlap(m.id, c);
+                            answerChip(m.id, c);
+                          }}
+                        >
+                          {c.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {m.isExpenseQuestion && (
+                    <>
+                      <div className="msg-chips">
+                        {EXPENSE_OPTIONS.map((o) => (
+                          <button
+                            key={o}
+                            className={`tf-chip tf-chip--medium tf-chip--selectable t-caption ${expenseSelected.has(o) ? "is-selected" : ""}`}
+                            disabled={expenseLocked}
+                            onClick={() => toggleExpenseChip(o)}
+                          >
+                            {o}
+                          </button>
+                        ))}
+                        <button className="tf-chip tf-chip--medium tf-chip--selectable t-caption" disabled={expenseLocked} onClick={() => finishExpenseChips(true)}>
+                          None of these
+                        </button>
+                      </div>
+                      {expenseSelected.size > 0 && !expenseLocked && (
+                        <div className="msg-chips">
+                          <button className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall" onClick={() => finishExpenseChips(false)}>
+                            Add these
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+              {chatLoading && (
+                <div className="msg assist" aria-live="polite">
+                  <div className="msg-bubble msg-typing">
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="compose">
+              <input
+                type="text"
+                placeholder="Ask a question about your documents…"
+                value={composeValue}
+                disabled={chatLoading}
+                onChange={(e) => setComposeValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") sendComposeMessage();
+                }}
+              />
+              <button
+                aria-label="Send"
+                className="tf-iconbtn tf-iconbtn--medium"
+                disabled={chatLoading}
+                onClick={sendComposeMessage}
+              >
+                <SendIcon />
+              </button>
+            </div>
+          </div>
+        </main>
+
+        <aside>
           <div className={`tf-card picture-card ${frozen ? "is-frozen" : ""}`}>
             <div className="picture-head">
               <div className="picture-title">
@@ -1561,17 +1665,12 @@ export default function UploadPage() {
                 Every figure below comes from a document or a question you answered. This is an
                 overview, not a final tax calculation.
               </p>
-              {/* Global and unconditional — not a per-row signal, and
-                  deliberately worded so it can't be read as one. */}
               <p className="t-bodySmall pic-review-note">
                 None of this has been checked by an accountant yet — that happens once you finish.
               </p>
             </div>
             <div className="pic-groups">
               {GROUPS.map((group) => {
-                // Frozen shows everything resolved, folded away or not, since
-                // there is no "Show more" to open. A group with nothing
-                // resolved in it isn't rendered at all.
                 const rows = frozen
                   ? [...group.primary, ...group.secondary].filter(
                       (k) => itemStatus(items[k]) !== "pending"
@@ -1645,108 +1744,6 @@ export default function UploadPage() {
                 </button>
               </div>
             )}
-          </div>
-        </main>
-
-        <aside className="tf-card tf-card--outlined convo-card">
-          <div className="t-overline convo-title">Conversation</div>
-          <div className="convo-log" ref={logRef}>
-            {messages.map((m) => (
-              <div className={`msg ${m.from}`} key={m.id}>
-                {m.attach && (
-                  <>
-                    <div className="t-caption msg-attach" title={m.attach}>
-                      <DocIcon />
-                      <span>{m.attach}</span>
-                    </div>
-                    <br />
-                  </>
-                )}
-                <div className="t-bodySmall msg-bubble">
-                  {m.text}
-                  {m.result && (
-                    <div className="t-caption msg-result">
-                      <CheckIcon size={12} />
-                      <span>{m.result}</span>
-                    </div>
-                  )}
-                </div>
-                {m.chips && (
-                  <div className="msg-chips">
-                    {m.chips.map((c, i) => (
-                      <button
-                        key={i}
-                        className="tf-chip tf-chip--medium t-caption"
-                        disabled={m.chipsDisabled}
-                        onClick={() => {
-                          if (m.isProposalQuestion) return answerProposal(m.id, c);
-                          if (m.isOriginQuestion) return void answerOrigin(m.id, c);
-                          if (m.isOverlapQuestion) return answerOverlap(m.id, c);
-                          answerChip(m.id, c);
-                        }}
-                      >
-                        {c.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {m.isExpenseQuestion && (
-                  <>
-                    <div className="msg-chips">
-                      {EXPENSE_OPTIONS.map((o) => (
-                        <button
-                          key={o}
-                          className={`tf-chip tf-chip--medium tf-chip--selectable t-caption ${expenseSelected.has(o) ? "is-selected" : ""}`}
-                          disabled={expenseLocked}
-                          onClick={() => toggleExpenseChip(o)}
-                        >
-                          {o}
-                        </button>
-                      ))}
-                      <button className="tf-chip tf-chip--medium tf-chip--selectable t-caption" disabled={expenseLocked} onClick={() => finishExpenseChips(true)}>
-                        None of these
-                      </button>
-                    </div>
-                    {expenseSelected.size > 0 && !expenseLocked && (
-                      <div className="msg-chips">
-                        <button className="tf-btn tf-btn--primary tf-btn--medium t-buttonSmall" onClick={() => finishExpenseChips(false)}>
-                          Add these
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            ))}
-            {chatLoading && (
-              <div className="msg assist" aria-live="polite">
-                <div className="msg-bubble msg-typing">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="compose">
-            <input
-              type="text"
-              placeholder="Ask a question about your documents…"
-              value={composeValue}
-              disabled={chatLoading}
-              onChange={(e) => setComposeValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendComposeMessage();
-              }}
-            />
-            <button
-              aria-label="Send"
-              className="tf-iconbtn tf-iconbtn--medium"
-              disabled={chatLoading}
-              onClick={sendComposeMessage}
-            >
-              <SendIcon />
-            </button>
           </div>
         </aside>
       </div>

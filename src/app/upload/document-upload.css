@@ -150,6 +150,9 @@
   /* tf-card clips to its radius; the row overflow menu is positioned outside
      the card edge (as in the design), so it must not be clipped here. */
   overflow: visible;
+  /* Now in the right-hand aside — stick to the viewport top as main scrolls. */
+  position: sticky;
+  top: var(--space-3);
 }
 .picture-head {
   display: flex;
@@ -626,9 +629,10 @@
   padding: var(--space-2);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 140px);
-  position: sticky;
-  top: var(--space-3);
+  /* Convo panel is now inline in main, below the docs card — give it a fixed
+     height so the log scrolls within it rather than stretching the page. */
+  height: 480px;
+  margin-top: var(--space-2);
 }
 .convo-title {
   margin-bottom: var(--space-15);
@@ -773,6 +777,8 @@
   }
   .convo-card {
     height: auto;
+  }
+  .picture-card {
     position: static;
   }
 }
