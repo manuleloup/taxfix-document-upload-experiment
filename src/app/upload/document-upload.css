@@ -138,7 +138,7 @@
   padding: var(--space-1) 0;
 }
 
-/* ── Tax picture card ───────────────────────────────────────────────────
+/* ── Tax picture card (now in aside column) ─────────────────────────────
    Matches Figma node 7711:11833 "Tax picture card": a tinted
    secondary/background-light surface (not white), 20px padding, and rows
    separated by gap rather than rules. Status is carried entirely by the
@@ -150,6 +150,8 @@
   /* tf-card clips to its radius; the row overflow menu is positioned outside
      the card edge (as in the design), so it must not be clipped here. */
   overflow: visible;
+  position: sticky;
+  top: var(--space-3);
 }
 .picture-head {
   display: flex;
@@ -621,14 +623,13 @@
 /* The submit-for-review confirmation and the completion notice are dialogs
    now (see _components/dialog.tsx), not an inline block at the card's foot. */
 
-/* ── Conversation sidebar ────────────────────────────────────────────── */
+/* ── Conversation (now in main column) ──────────────────────────────── */
 .convo-card {
   padding: var(--space-2);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 140px);
-  position: sticky;
-  top: var(--space-3);
+  height: 480px;
+  margin-top: var(--space-2);
 }
 .convo-title {
   margin-bottom: var(--space-15);
@@ -773,6 +774,8 @@
   }
   .convo-card {
     height: auto;
+  }
+  .picture-card {
     position: static;
   }
 }

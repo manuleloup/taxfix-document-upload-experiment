@@ -1551,104 +1551,7 @@ export default function UploadPage() {
             </div>
           </div>
 
-          <div className={`tf-card picture-card ${frozen ? "is-frozen" : ""}`}>
-            <div className="picture-head">
-              <div className="picture-title">
-                <h2 className="t-h5">{frozen ? "Your tax picture" : "Your tax picture so far"}</h2>
-                <span className="t-caption early-tag">Early access</span>
-              </div>
-              <p className="t-bodySmall">
-                Every figure below comes from a document or a question you answered. This is an
-                overview, not a final tax calculation.
-              </p>
-              {/* Global and unconditional — not a per-row signal, and
-                  deliberately worded so it can't be read as one. */}
-              <p className="t-bodySmall pic-review-note">
-                None of this has been checked by an accountant yet — that happens once you finish.
-              </p>
-            </div>
-            <div className="pic-groups">
-              {GROUPS.map((group) => {
-                // Frozen shows everything resolved, folded away or not, since
-                // there is no "Show more" to open. A group with nothing
-                // resolved in it isn't rendered at all.
-                const rows = frozen
-                  ? [...group.primary, ...group.secondary].filter(
-                      (k) => itemStatus(items[k]) !== "pending"
-                    )
-                  : [...group.primary, ...(group.expanded ? group.secondary : [])];
-                if (!rows.length) return null;
-                return (
-                  <div className="pic-group" key={group.label}>
-                    <div className="t-overline pic-group-label">{group.label}</div>
-                    <div className="pic-rows">
-                      {rows.map((key) => (frozen ? renderFrozenRow(key) : renderRow(key)))}
-                    </div>
-                    {!frozen && group.secondary.length > 0 && (
-                      <button className="t-caption pic-more-toggle" onClick={group.toggle}>
-                        {group.expanded ? "Show less" : "Show more"}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {frozen ? (
-              <div className="frozen-foot">
-                <button className="t-bodySmall frozen-edit" onClick={() => setFrozen(false)}>
-                  Edit your tax picture
-                </button>
-                <p className="t-bodySmall frozen-note">
-                  This is an overview built from what you&rsquo;ve shared — not a final number. Book
-                  a free call with our team if you&rsquo;d like to talk through your options, no
-                  obligation.
-                </p>
-                <div className="frozen-actions">
-                  <a
-                    className="tf-btn tf-btn--primary tf-btn--large t-button"
-                    href={BOOK_CALL_URL || undefined}
-                    target={BOOK_CALL_URL ? "_blank" : undefined}
-                    rel={BOOK_CALL_URL ? "noreferrer" : undefined}
-                  >
-                    Book a free call
-                  </a>
-                  <a
-                    className="tf-btn tf-btn--tertiary-outlined tf-btn--large t-button"
-                    href={PRICING_URL || undefined}
-                    target={PRICING_URL ? "_blank" : undefined}
-                    rel={PRICING_URL ? "noreferrer" : undefined}
-                  >
-                    Explore pricing
-                  </a>
-                </div>
-              </div>
-            ) : (
-              <div className="picture-footer">
-                <div className="pf-left">
-                  <span className="t-bodySmall pf-note">
-                    {resolvedCount} of {visibleKeys.length} sorted
-                  </span>
-                  {pendingCount > 0 && confirmedCount > 0 && (
-                    <span className="t-caption pf-hint">
-                      Anything left blank won&rsquo;t show once you finish
-                    </span>
-                  )}
-                </div>
-                <button
-                  className="tf-btn tf-btn--primary tf-btn--large t-button"
-                  onClick={freezePicture}
-                  disabled={confirmedCount === 0}
-                  title={confirmedCount === 0 ? "Add a figure first — there's nothing to show yet" : undefined}
-                >
-                  Complete
-                </button>
-              </div>
-            )}
-          </div>
-        </main>
-
-        <aside className="tf-card tf-card--outlined convo-card">
+          <div className="tf-card tf-card--outlined convo-card">
           <div className="t-overline convo-title">Conversation</div>
           <div className="convo-log" ref={logRef}>
             {messages.map((m) => (
@@ -1748,6 +1651,102 @@ export default function UploadPage() {
               <SendIcon />
             </button>
           </div>
+        </main>
+
+        <aside className={`tf-card picture-card ${frozen ? "is-frozen" : ""}`}>
+            <div className="picture-head">
+              <div className="picture-title">
+                <h2 className="t-h5">{frozen ? "Your tax picture" : "Your tax picture so far"}</h2>
+                <span className="t-caption early-tag">Early access</span>
+              </div>
+              <p className="t-bodySmall">
+                Every figure below comes from a document or a question you answered. This is an
+                overview, not a final tax calculation.
+              </p>
+              {/* Global and unconditional — not a per-row signal, and
+                  deliberately worded so it can't be read as one. */}
+              <p className="t-bodySmall pic-review-note">
+                None of this has been checked by an accountant yet — that happens once you finish.
+              </p>
+            </div>
+            <div className="pic-groups">
+              {GROUPS.map((group) => {
+                // Frozen shows everything resolved, folded away or not, since
+                // there is no "Show more" to open. A group with nothing
+                // resolved in it isn't rendered at all.
+                const rows = frozen
+                  ? [...group.primary, ...group.secondary].filter(
+                      (k) => itemStatus(items[k]) !== "pending"
+                    )
+                  : [...group.primary, ...(group.expanded ? group.secondary : [])];
+                if (!rows.length) return null;
+                return (
+                  <div className="pic-group" key={group.label}>
+                    <div className="t-overline pic-group-label">{group.label}</div>
+                    <div className="pic-rows">
+                      {rows.map((key) => (frozen ? renderFrozenRow(key) : renderRow(key)))}
+                    </div>
+                    {!frozen && group.secondary.length > 0 && (
+                      <button className="t-caption pic-more-toggle" onClick={group.toggle}>
+                        {group.expanded ? "Show less" : "Show more"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {frozen ? (
+              <div className="frozen-foot">
+                <button className="t-bodySmall frozen-edit" onClick={() => setFrozen(false)}>
+                  Edit your tax picture
+                </button>
+                <p className="t-bodySmall frozen-note">
+                  This is an overview built from what you&rsquo;ve shared — not a final number. Book
+                  a free call with our team if you&rsquo;d like to talk through your options, no
+                  obligation.
+                </p>
+                <div className="frozen-actions">
+                  <a
+                    className="tf-btn tf-btn--primary tf-btn--large t-button"
+                    href={BOOK_CALL_URL || undefined}
+                    target={BOOK_CALL_URL ? "_blank" : undefined}
+                    rel={BOOK_CALL_URL ? "noreferrer" : undefined}
+                  >
+                    Book a free call
+                  </a>
+                  <a
+                    className="tf-btn tf-btn--tertiary-outlined tf-btn--large t-button"
+                    href={PRICING_URL || undefined}
+                    target={PRICING_URL ? "_blank" : undefined}
+                    rel={PRICING_URL ? "noreferrer" : undefined}
+                  >
+                    Explore pricing
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="picture-footer">
+                <div className="pf-left">
+                  <span className="t-bodySmall pf-note">
+                    {resolvedCount} of {visibleKeys.length} sorted
+                  </span>
+                  {pendingCount > 0 && confirmedCount > 0 && (
+                    <span className="t-caption pf-hint">
+                      Anything left blank won&rsquo;t show once you finish
+                    </span>
+                  )}
+                </div>
+                <button
+                  className="tf-btn tf-btn--primary tf-btn--large t-button"
+                  onClick={freezePicture}
+                  disabled={confirmedCount === 0}
+                  title={confirmedCount === 0 ? "Add a figure first — there's nothing to show yet" : undefined}
+                >
+                  Complete
+                </button>
+              </div>
+            )}
         </aside>
       </div>
 
