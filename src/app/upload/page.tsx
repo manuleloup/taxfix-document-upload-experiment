@@ -386,7 +386,7 @@ export default function UploadPage() {
     greeted.current = true;
     addMsg({
       from: "assist",
-      text: "Welcome! What kind of income do you have?",
+      text: "What kind of income did you have this year? Salary, self-employment, rental income — just tell me, or upload a document and I'll read it.",
     });
   }, []);
 
@@ -1465,10 +1465,10 @@ export default function UploadPage() {
       <div className="page">
         <main>
           <div className="main-intro">
-            <h1 className="t-h3">Upload your documents to see your tax picture</h1>
+            <h1 className="t-h3">Your tax picture</h1>
             <p className="t-body">
-              Drop in whatever you have. We will work out what it tells us — and ask the odd quick question for
-              anything a document cannot answer on its own.
+              Drop in whatever you have. We'll work out what it tells us — and ask the odd
+              question for anything a document can't answer on its own.
             </p>
           </div>
 
@@ -1544,8 +1544,8 @@ export default function UploadPage() {
                 </div>
               ) : (
                 <div className="dz-idle">
-                  <div className="t-bodySmall dz-title">Drag a document here, or click to add one</div>
-                  <div className="t-bodySmall dz-sub">PDF, JPG or PNG — one at a time, in any order</div>
+                  <div className="t-bodySmall dz-title">Drag a document here, or click to browse</div>
+                  <div className="t-bodySmall dz-sub">PDF, JPG or PNG · one at a time, in any order</div>
                 </div>
               )}
             </div>

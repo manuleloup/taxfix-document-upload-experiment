@@ -46,8 +46,8 @@ export default function LoginPage() {
           <span style={styles.brand}>Taxfix</span>
         </div>
 
-        <h1 style={styles.heading}>Enter password to continue</h1>
-        <p style={styles.sub}>This demo is password-protected.</p>
+        <h1 style={styles.heading}>This is an invite-only preview</h1>
+        <p style={styles.sub}>You'll need the password from whoever sent you the link.</p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <input
