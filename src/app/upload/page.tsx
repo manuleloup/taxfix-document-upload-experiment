@@ -1651,6 +1651,7 @@ export default function UploadPage() {
               <SendIcon />
             </button>
           </div>
+        </div>
         </main>
 
         <aside className={`tf-card picture-card ${frozen ? "is-frozen" : ""}`}>
